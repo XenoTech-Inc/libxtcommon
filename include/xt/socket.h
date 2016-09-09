@@ -334,7 +334,8 @@ unsigned xtSocketPollGetSize(xtSocketPoll *p);
  */
 xtSocket xtSocketPollGetSocket(xtSocketPoll *p, unsigned index);
 /**
- * Removes the specified socket from monitoring. 
+ * Removes the specified socket from monitoring.
+ * @returns True if the socket was found and is removed, false is the socket was not found.
  */
 bool xtSocketPollRemove(xtSocketPoll *p, xtSocket sock);
 /**

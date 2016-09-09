@@ -507,9 +507,18 @@ xtSocket xtSocketPollGetSocket(xtSocketPoll *p, unsigned index)
 	return p->sockets[index];
 }
 
-bool xtSocketPollRemove(xtSocketPoll *p, unsigned index)
+bool xtSocketPollRemove(xtSocketPoll *p, xtSocket socket)
 {
-	if (index > p->size || p->sockets[index] == XT_SOCKET_INVALID_FD)
+	// Find the socket
+	// Clean up possible sensitive data
+	unsigned index = UINT_MAX;
+	for (unsigned i = 0; i < p->size; ++i) {
+		if (p->sockets[i] == socket) {
+			index = i;
+			break;
+		}
+	}
+	if (index == UINT_MAX)
 		return false;
 	// Use memmmove, which is much faster than moving everything with a for loop
 	// Shift all elements back one position
