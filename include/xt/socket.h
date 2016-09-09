@@ -71,24 +71,12 @@ uint32_t xtSockaddrGetAddressAny(void);
 uint32_t xtSockaddrGetAddressLocalHost(void);
 uint16_t xtSockaddrGetPort(const xtSockaddr *sa);
 /**
- * Returns a pointer to the native sockaddr_in.
- */
-void *xtSockaddrGetNativeImpl(xtSockaddr *sa);
-/**
- * Returns a pointer to the native sockaddr_in as const.
- */
-const void *xtSockaddrGetNativeImplConst(const xtSockaddr *sa);
-/**
  * Initializes a sockaddr. This MUST be done before it can be used by any sockets. 
  * All xtSockaddr functions which SET a value in the sockaddr do this automatically to be safe. By calling this function, 
  * you can do it manually incase that is desired.
  */
 void xtSockaddrInit(xtSockaddr *sa);
 void xtSockaddrSetAddress(xtSockaddr *sa, uint32_t addr);
-/**
- * Copies the values from \a nsa to \a sa. \a nsa is expected to be the native implementation.
- */
-void xtSockaddrSetAll(xtSockaddr *sa, const void *nsa);
 void xtSockaddrSetPort(xtSockaddr *sa, uint16_t port);
 /**
  * Returns this address as a string formatted as : [IP]:[PORT]. 
@@ -124,14 +112,6 @@ typedef enum xtSockProto {
  * However, no normal packet should have this huge header, or a payload of this size.
  */
 #define XT_SOCKET_UDP_MAXIMUM_PAYLOAD_SIZE 65507
-/**
- * Blocks until an incoming TCP connection is accepted or if the socket is closed, or if the timeout has expired.
- * @param peerSock - This parameter will be filled with the socket of the peer that has connected.
- * @param peerAddr - This parameter will be filled with the address of the peer socket.
- * @return Zero if a peer has connected successfully, otherwise an error code.
- * @remarks The socket must be in listen mode for this function to work.
- */
-int xtSocketAccept(xtSocket sock, xtSocket *peerSock, xtSockaddr *peerAddr);
 /**
  * Binds the socket to the specified interface.
  * @param port - The port to bind to. Port 0 lets the kernel pick a random port.
@@ -175,10 +155,6 @@ int xtSocketCreate(xtSocket *sock, xtSocketProto proto);
  * to use any socket functionality.
  */
 void xtSocketDestruct(void);
-/**
- * Checks if two sockets are the same.
- */
-bool xtSocketEquals(xtSocket sock1, xtSocket sock2);
 /**
  * Tells you the address of the interface where \a sock is bound to. 
  * Even if the socket is not bound yet, this function will succeed.
@@ -242,19 +218,6 @@ bool xtSocketIsOpen(const xtSocket sock);
  */
 int xtSocketListen(xtSocket sock, unsigned backlog);
 /**
- * Blocks until "some" data has been read on the socket. This does not necessarily have to be the size of \a buflen.
- * @param bytesRead - Receives the amount of bytes that have been read.
- * @returns Zero if the operation has succeeded, otherwise an error code.
- */
-int xtSocketTCPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRead);
-/**
- * Blocks until "some" data has been read on the socket. This does not necessarily have to be the size of \a buflen.
- * @param sender - Receives the address of the sender. For UDP connected sockets, you can specify a null pointer.
- * @param bytesRead - Receives the amount of bytes that have been read.
- * @returns Zero if the operation has succeeded, otherwise an error code.
- */
-int xtSocketUDPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRead, xtSockaddr *sender);
-/**
  * Sets a socket to blocking mode or non-blocking mode. Sockets are by default always in blocking mode. 
  * This means that when socket functions are called, the calling thread is paused until the kernel has 
  * processed the request. With non-blocking sockets functions can return immidiately without blocking.
@@ -299,6 +262,21 @@ int xtSocketSetTCPNoDelay(xtSocket sock, bool flag);
  */
 int xtSocketSetSoReuseAddress(xtSocket sock, bool flag);
 /**
+ * Blocks until an incoming TCP connection is accepted or until the socket is closed, or if the socket is non-blocking, 
+ * it will return immidiately.
+ * @param peerSock - This parameter will be filled with the socket of the peer that has connected.
+ * @param peerAddr - This parameter will be filled with the address of the peer socket.
+ * @return Zero if a peer has connected successfully, otherwise an error code.
+ * @remarks The socket must be in listen mode for this function to work.
+ */
+int xtSocketTCPAccept(xtSocket sock, xtSocket *peerSock, xtSockaddr *peerAddr);
+/**
+ * Blocks until "some" data has been read on the socket. This does not necessarily have to be the size of \a buflen.
+ * @param bytesRead - Receives the amount of bytes that have been read.
+ * @returns Zero if the operation has succeeded, otherwise an error code.
+ */
+int xtSocketTCPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRead);
+/**
  * Writes the data in \a buf to the connected remote socket.
  * @param dest - Contains the address of the destination.
  * @param bytesSent - Receives the amount of bytes that have been sent.
@@ -306,12 +284,72 @@ int xtSocketSetSoReuseAddress(xtSocket sock, bool flag);
  */
 int xtSocketTCPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *bytesSent);
 /**
+ * Blocks until "some" data has been read on the socket. This does not necessarily have to be the size of \a buflen.
+ * @param sender - Receives the address of the sender. For UDP connected sockets, you can specify a null pointer.
+ * @param bytesRead - Receives the amount of bytes that have been read.
+ * @returns Zero if the operation has succeeded, otherwise an error code.
+ */
+int xtSocketUDPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRead, xtSockaddr *sender);
+/**
  * Writes the data in \a buf to the address of \a dest.
  * @param dest - Contains the address of the destination.
  * @param bytesSent - Receives the amount of bytes that have been sent.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
 int xtSocketUDPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *bytesSent, const xtSockaddr *dest);
+/**
+ * Typedef for an opaque pointer.
+ */
+typedef struct xtSocketPoll xtSocketPoll;
+/**
+ * Adds a socket for monitoring. 
+ * After a successful call to this function, the socket will be monitored 
+ * by the system.
+ * @param data - The data to associate with the socket.
+ */
+int xtSocketPollAdd(xtSocketPoll *p, xtSocket sock, void *data);
+/**
+ * Initiates the poll structure for socket monitoring.
+ * @param size - The amount of sockets that will fit into the structure.
+ */
+int xtSocketPollCreate(xtSocketPoll **p, unsigned size);
+/**
+ * Destroys the structure and cleans up all resources. 
+ * The structure is rendered unuseable after calling this function. 
+ * The sockets remain unaffected.
+ */
+void xtSocketPollDestroy(xtSocketPoll *p);
+unsigned xtSocketPollGetCount(const xtSocketPoll *p);
+/**
+ * Returns the data that is associated with the socket at \a index.
+ * @remarks No bounds checking is performed. Specifying a too high index 
+ * results in undefined behavior.
+ */
+void *xtSocketPollGetData(xtSocketPoll *p, unsigned index);
+unsigned xtSocketPollGetSize(xtSocketPoll *p);
+/**
+ * Returns the socket at \a index.
+ * @remarks No bounds checking is performed. Specifying a too high index 
+ * results in undefined behavior.
+ */
+xtSocket xtSocketPollGetSocket(xtSocketPoll *p, unsigned index);
+/**
+ * Removes the specified socket from monitoring. 
+ */
+bool xtSocketPollRemove(xtSocketPoll *p, xtSocket sock);
+/**
+ * Determines the status of one or more sockets. 
+ * All sockets are automically rearmed for the next call to this function. 
+ * This means that if some sockets have data waiting to be read, and you skip reading 
+ * it, it is possible that the data will be discarded.
+ * @param timeout - The time to wait at maximum before returning in milliseconds. 
+ * Different values are accepted.
+ * -1: Block indefinitely.
+ * 0 : Return immidiately.
+ * >1: Block for that amount of time at maximum.
+ * @param socketsReady - Will receive that amount of sockets the status is updated.
+ */
+int xtSocketPollWait(xtSocketPoll *p, int timeout, unsigned *socketsReady);
 
 #ifdef __cplusplus
 }
