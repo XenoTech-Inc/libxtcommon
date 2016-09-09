@@ -1,0 +1,70 @@
+#!/bin/sh
+set -e
+CC="gcc"
+# This configure file, as well as the Makefile, need to be run trough Cygwin, because of commands and such, so be
+# careful to choose the correct GCC compiler. (Cygwin's GCC or the GCC on your Windows)
+
+# The (Path) name for the .a file
+LIBPATH="lib"
+LIBNAME="libxt.a"
+FINALLIBPATH="$LIBPATH/$LIBNAME"
+
+SYSTEM=`uname -s 2>/dev/null`
+case "$SYSTEM" in
+	Linux*)
+		OS_DIR="src/linux"
+		CFLAGS="-std=gnu99 -O3 -Wall -Wextra -pedantic -g"
+		;;
+	CYGWIN*)
+		OS_DIR="src/windows"
+		# 1282 is Win XP with SP2
+		# 1536 is Windows Vista
+		CFLAGS="-std=c99 -O3 -Wall -Wextra -pedantic -g -DWINVER=1536 -D_WIN32_WINNT=1536"
+		;;
+esac
+
+MAKEFILE="Makefile"
+echo Creating cross platform Makefile...
+cat << EOF >$MAKEFILE
+.PHONY: default clean
+
+CC=$CC
+INCS=-I"include/"
+CFLAGS=\$(INCS) $CFLAGS
+CXXFLAGS=\$(CFLAGS)
+
+EOF
+
+FILES=`find src/generic $OS_DIR -name "*.c" -o -name "*.cpp"`
+printf "OBJECTS =" >>$MAKEFILE
+for i in $FILES; do
+	printf " \\\\\n\t%s" `echo $i | sed -e 's/c$/o/' | sed -e 's/cpp$/o/'` >>$MAKEFILE
+done
+
+cat <<EOF >>$MAKEFILE
+
+
+default: $FINALLIBPATH \$(OBJECTS)
+
+install: $FINALLIBPATH
+	sudo cp -R include/* /usr/include
+	sudo cp lib/libxt.a /usr/lib
+
+$FINALLIBPATH: \$(OBJECTS)
+	mkdir -p $LIBPATH
+	ar -cr $FINALLIBPATH \$(OBJECTS)
+
+EOF
+for i in $FILES; do
+	dirs=$(dirname "${i}"); echo `echo "$dirs/" | sed -e 's/\.\///'``$CC $CFLAGS -MM $INCS $i | sed -e 's/\\\\/ /'` >>$MAKEFILE
+	# Print an extra newline
+	echo "" >>$MAKEFILE
+done
+cat <<EOF >>$MAKEFILE
+clean:
+	rm -f $FINALLIBPATH \$(OBJECTS)
+EOF
+
+cd ..
+
+echo 'Makefile generated'

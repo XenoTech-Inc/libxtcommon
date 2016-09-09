@@ -1,0 +1,11 @@
+docs
+dropped
+lib
+
+*.tmp
+*.swp
+*.vim
+*.o
+
+Makefile
+test
