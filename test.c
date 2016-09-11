@@ -38,8 +38,9 @@ static void tMainTask(xtThread *restrict t1, xtThread *restrict t2) {
 	printf("TMain: Is T2 alive?: %s\n", (xtThreadIsAlive(t2) ? "Yes" : "No"));
 }
 
-static void *t1Task(void *arg)
+static void *t1Task(xtThread *t, void *arg)
 {
+	(void) t;
 	char nbuf[32];
 	xtSleepMS(50);
 	xtMutex *m = arg;
@@ -54,8 +55,9 @@ static void *t1Task(void *arg)
 	return NULL;
 }
 
-static void *t2Task(void *arg)
+static void *t2Task(xtThread *t, void *arg)
 {
+	(void) t;
 	char nbuf[32];
 	xtSleepMS(50);
 	xtMutex *m = arg;
@@ -108,8 +110,9 @@ static void timeTest(void)
 	printf("Time mono diff %u msecs later (in usecs): %llu\n", sleepTimeMS, (timeLater - timeNow));
 }
 
-static void *socketTestT2(void *arg)
+static void *socketTestT2(xtThread *t, void *arg)
 {
+	(void) t;
 	(void) arg;
 	char sbuf[256];
 	int ret;
@@ -159,7 +162,7 @@ static void socketTest(void)
 	const int maxTries = 10;
 	for (int i = 0; i < maxTries; ++i) {
 		printf("Accepting %d/%d\n", i + 1, maxTries);
-		ret = xtSocketAccept(serverSock, &peerSocket, &peerAddr);
+		ret = xtSocketTCPAccept(serverSock, &peerSocket, &peerAddr);
 		xtSleepMS(0);
 		printf("Socket accept: %s\n", xtGetErrorStr(ret));
 		if (ret == 0) {
@@ -183,12 +186,25 @@ static void stringTest(void)
 	printf("Max LLU value uint64 to string : %s\n", xtUint64ToStr(ULLONG_MAX, nbuf, 32));
 }
 
+static void *threadTestSleep(xtThread *t, void *arg)
+{
+	puts("Going to suspend soon!");
+	xtThreadSuspend(t);
+	puts("Awoken!");
+	return NULL;
+}
 int main(int argc, char** argv) {
 	char nbuf[22];
 	puts("--------------------------------------------------------------------------------\n-- OS TEST");
 	osTest();
 	puts("--------------------------------------------------------------------------------\n-- THREAD TEST");
 	threadTest();
+	puts("--------------------------------------------------------------------------------\n-- THREAD SLEEP TEST");
+		xtThread t;
+		xtThreadCreate(&t, threadTestSleep, NULL, 64);
+		xtSleepMS(500);
+		xtThreadContinue(&t);
+		xtThreadJoin(&t);
 	puts("--------------------------------------------------------------------------------\n-- TIME TEST");
 	timeTest();
 	puts("--------------------------------------------------------------------------------\n-- SOCKET TEST");

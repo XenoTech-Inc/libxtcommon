@@ -46,22 +46,25 @@ static unsigned __stdcall _xtThreadStart(void *arg)
 {
 	xtThread *t = arg;
 	// Execute the function
-	t->func(t->arg);
+	t->func(t, t->arg);
 	// The thread has forfilled it's purpose now, let it die in peace
 	SetEvent(t->exitEvent); // Signal that the thread has ended
 	// Let the join function do the cleanup. That way thread status can still be requested
 	return 0;
 }
 
-int xtThreadCreate(xtThread *t, void *(*func) (void *arg), void *arg, unsigned stackSizeKB)
+int xtThreadContinue(xtThread *t)
+{
+	return ResumeThread(t->nativeThread);
+}
+
+int xtThreadCreate(xtThread *t, void *(*func) (xtThread *t, void *arg), void *arg, unsigned stackSizeKB)
 {
 	// Turn it into KB's
 	stackSizeKB *= 1024;
 	// If it's zero, it will be the default size
 	// If it's larger than zero but small than the minimum stack size, make it the minimum size
-	if (stackSizeKB == 0)
-		stackSizeKB = 1024 * 1024 * 1;
-	else if (stackSizeKB < 65535)
+	if (stackSizeKB < 65535)
 		stackSizeKB = 65535;
 	t->func = func;
 	t->arg = arg;
@@ -99,6 +102,13 @@ bool xtThreadJoin(xtThread *t)
 	// No need to check if the thread is alive. This check should always block until the thread has terminated, 
 	// and otherwise return immidiately
 	return WaitForSingleObject(t->exitEvent, INFINITE) == WAIT_OBJECT_0;
+}
+
+int xtThreadSuspend(xtThread *t)
+{
+	if (xtThreadGetID(t) != xtThreadGetID(NULL))
+		return 0;
+	return SuspendThread(t->nativeThread);
 }
 
 void xtThreadYield(void)
