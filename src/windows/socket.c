@@ -412,14 +412,13 @@ struct xtSocketPoll {
 
 int xtSocketPollAdd(xtSocketPoll *p, xtSocket sock, void *data)
 {
-	// Don't subtract one, or things get messy if there isn't an element in the array already
 	unsigned index = p->count;
 	if (index == p->size)
 		return XT_ENOBUFS;
 	p->fds[index].fd = sock;
 	// Assign the events we want to be informed of, errors are added automatically
 	p->fds[index].events = POLLRDNORM | POLLRDBAND;
-	// Reset it, or else you get unwanted results
+	// Reset it, or else we get unwanted results
 	p->fds[index].revents = 0;
 	p->data[index] = data;
 	++p->count;
@@ -455,7 +454,7 @@ int xtSocketPollCreate(xtSocketPoll **p, unsigned size)
 		_p->fds[i].fd = XT_SOCKET_INVALID_FD;
 		// Assign the events we want to be informed of, errors are added automatically
 		_p->fds[i].events = POLLRDNORM | POLLRDBAND;
-		// Reset it, or else you get unwanted results
+		// Reset it, or we get unwanted results
 		_p->fds[i].revents = 0;
 		_p->data[i] = NULL;
 		_p->indexes[i] = 0;
@@ -525,7 +524,7 @@ bool xtSocketPollRemove(xtSocketPoll *p, xtSocket socket)
 	memmove(&p->sockets[index], &p->sockets[index + 1], (p->count - index) * sizeof(xtSocket*));
 	memmove(&p->data[index], &p->data[index + 1], (p->count - index) * sizeof(void*));
 	unsigned newIndex = p->indexes[index];
-	memmove(&p->indexes[index], &p->indexes[index + 1], (p->count - index) * sizeof(unsigned));
+	memmove(&p->indexes[newIndex], &p->indexes[newIndex + 1], (p->count - newIndex) * sizeof(unsigned));
 	memmove(&p->fds[newIndex], &p->fds[newIndex + 1], (p->count - newIndex) * sizeof(struct pollfd));
 	--p->count;
 	return true;
