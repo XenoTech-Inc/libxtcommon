@@ -146,12 +146,20 @@ static void socketTest(void)
 	xtSocket serverSock;
 	ret = xtSocketCreate(&serverSock, XT_SOCKET_PROTO_TCP);
 	
+
 	xtThread t;
 	xtThreadCreate(&t, socketTestT2, NULL, 64);
 	
 	ret = xtSocketBindToAny(serverSock, 25659);
 	xtSocketGetLocalSocketAddress(serverSock, &sa);
 	printf("Socket bind to %s: %s\n", xtSockaddrToString(&sa, sbuf, sizeof(sbuf)), xtGetErrorStr(ret));
+	
+	unsigned size;
+	xtSocketGetSoReceiveBufferSize(serverSock, &size);
+	printf("Size : %u\n", size);
+	xtSocketSetSoReceiveBufferSize(serverSock, 16384);
+	xtSocketGetSoReceiveBufferSize(serverSock, &size);
+	printf("Size : %u\n", size);
 	
 	ret = xtSocketListen(serverSock, 10);
 	printf("Socket listen: %s\n", xtGetErrorStr(ret));

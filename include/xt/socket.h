@@ -8,7 +8,8 @@
  * No strange things are done like Java does. These sockets are made for speed!
  * 
  * All functions are NOT thread safe. Unless otherwise noted.
- * You should treat all structures that are part of the sockets as if they were opaque.
+ * You should treat all structures that are part of the sockets as if they were opaque. 
+ * Unless otherwise noted.
  * @file socket.h
  * @author Tom Everaarts
  * @date 2016
@@ -185,6 +186,11 @@ int xtSocketGetSoKeepAlive(const xtSocket sock, bool *flag);
  */
 int xtSocketGetSoLinger(const xtSocket sock, bool *on, int *linger);
 /**
+ * Tells you the current SO_RCVBUF size in bytes for the specified socket.
+ * @return Zero if the property has been fetched successfully, otherwise an error code.
+ */
+int xtSocketGetSoReceiveBufferSize(xtSocket sock, unsigned *size);
+/**
  * Tells you if the socket has it's SO_REUSEADDR option enabled or disabled.
  * @param flag - Will receive the result of the property on success.
  * @return Zero if the property has been fetched successfully, otherwise an error code.
@@ -245,12 +251,12 @@ int xtSocketSetSoKeepAlive(xtSocket sock, bool flag);
  */
 int xtSocketSetSoLinger(xtSocket sock, bool on, int linger);
 /**
- * Enables or disables TCP_NODELAY.\n
- * \a flag = true : Send the data (partial frames) the moment you get them, regardless if you have enough frames for a full network packet.\n
- * \a flag = false : Enable Nagle's algorithm  which means send the data when it is bigger than the MSS or waiting for the receiving acknowledgement before sending data which is smaller.\n
- * @return Zero is the option has been changed successfully, otherwise an error code.
+ * Sets the SO_RCVBUF option to the specified value for this Socket. 
+ * The SO_RCVBUF option is used by the platform's networking code as a hint for the size to set the underlying network I/O buffers.
+ * Because this is a just a hint to the implementation, you should check the buffers afterwards by calling xtSocketGetSoReceiveBufferSize().
+ * @remarks It is best practice to call this function before connecting or binding the socket. This prevents certain problems.
  */
-int xtSocketSetTCPNoDelay(xtSocket sock, bool flag);
+int xtSocketSetSoReceiveBufferSize(xtSocket sock, unsigned size);
 /**
  * Enables or disables SO_REUSEADDR. 
  * When a socket is closed the connection may remain in a timeout state for a period of time after the connection is closed. 
@@ -261,6 +267,13 @@ int xtSocketSetTCPNoDelay(xtSocket sock, bool flag);
  * @remarks Execute this function PRIOR to binding the socket! Otherwise this function will have no effect.
  */
 int xtSocketSetSoReuseAddress(xtSocket sock, bool flag);
+/**
+ * Enables or disables TCP_NODELAY.\n
+ * \a flag = true : Send the data (partial frames) the moment you get them, regardless if you have enough frames for a full network packet.\n
+ * \a flag = false : Enable Nagle's algorithm  which means send the data when it is bigger than the MSS or waiting for the receiving acknowledgement before sending data which is smaller.\n
+ * @return Zero is the option has been changed successfully, otherwise an error code.
+ */
+int xtSocketSetTCPNoDelay(xtSocket sock, bool flag);
 /**
  * Blocks until an incoming TCP connection is accepted or until the socket is closed, or if the socket is non-blocking, 
  * it will return immidiately.
@@ -334,7 +347,9 @@ unsigned xtSocketPollGetSize(xtSocketPoll *p);
  */
 xtSocket xtSocketPollGetSocket(xtSocketPoll *p, unsigned index);
 /**
- * Removes the specified socket from monitoring.
+ * Removes the specified socket from monitoring. If the socket is removed after 
+ * xtSocketPollWait() has succeeded, the socket will still for that moment be present in the "ready" array until 
+ * xtSocketPollWait() is called again. The socket's associated data will be set to null. The socket fd in the "ready" array is invalidated also.
  * @returns True if the socket was found and is removed, false is the socket was not found.
  */
 bool xtSocketPollRemove(xtSocketPoll *p, xtSocket sock);
@@ -342,13 +357,19 @@ bool xtSocketPollRemove(xtSocketPoll *p, xtSocket sock);
  * Determines the status of one or more sockets. 
  * All sockets are automically rearmed for the next call to this function. 
  * This means that if some sockets have data waiting to be read, and you skip reading 
- * it, it is possible that the data will be discarded.
+ * it, it is possible that the data will be discarded. This function is only meant to be 
+ * used when trying to READ data from sockets. Not for other non-blocking operations!
  * @param timeout - The time to wait at maximum before returning in milliseconds. 
  * Different values are accepted.
  * -1: Block indefinitely.
  * 0 : Return immidiately.
  * >1: Block for that amount of time at maximum.
- * @param socketsReady - Will receive that amount of sockets the status is updated.
+ * @param socketsReady - Will receive that amount of sockets the status is updated. This is 
+ * left untouched on an error.
+ * @return Zero is the function has executed successfully, otherwise an error code.
+ * @remarks On Windows, when there are no sockets present in the structure, this function will 
+ * return immidiately with zero sockets ready, and a return code of zero also. Although it sounds like 
+ * it will consume the whole CPU, it won't.
  */
 int xtSocketPollWait(xtSocketPoll *p, int timeout, unsigned *socketsReady);
 

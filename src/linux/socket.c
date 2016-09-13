@@ -262,6 +262,17 @@ int xtSocketGetSoLinger(const xtSocket sock, bool *on, int *linger)
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
+int xtSocketGetSoReceiveBufferSize(xtSocket sock, unsigned *size)
+{
+	int val = 0;
+	socklen_t len = sizeof(val);
+	if (getsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char*) &val, &len) == 0) {
+		*size = val / 2; // Divided by two, since the kernel doubles it
+		return 0;
+	}
+	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
+}
+
 int xtSocketGetSoReuseAddress(const xtSocket sock, bool *flag)
 {
 	int val = 0;
@@ -339,10 +350,10 @@ int xtSocketSetSoLinger(xtSocket sock, bool on, int linger)
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
-int xtSocketSetTCPNoDelay(xtSocket sock, bool flag)
+int xtSocketSetSoReceiveBufferSize(xtSocket sock, unsigned size)
 {
-	int val = (flag) ? 1 : 0;
-	if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (const char*) &val, sizeof(val)) == 0)
+	int val = size;
+	if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (const char*) &val, sizeof(val)) == 0)
 		return 0;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
@@ -351,6 +362,14 @@ int xtSocketSetSoReuseAddress(xtSocket sock, bool flag)
 {
 	int val = flag ? 1 : 0;
 	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*) &val, sizeof(val)) == 0)
+		return 0;
+	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
+}
+
+int xtSocketSetTCPNoDelay(xtSocket sock, bool flag)
+{
+	int val = (flag) ? 1 : 0;
+	if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (const char*) &val, sizeof(val)) == 0)
 		return 0;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
@@ -422,41 +441,37 @@ int xtSocketUDPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *
 	return 0;
 }
 
-struct _xt_epoll_data {
+struct _xt_poll_data {
 	xtSocket fd;
 	void *data;
 };
 
 struct xtSocketPoll {
-	struct _xt_epoll_data *data;
+	struct _xt_poll_data *data;
 	struct epoll_event *events;
 	int epollfd;
-	unsigned size, socketCount, socketsReady;
+	unsigned size, count, socketsReady;
 };
 
 int xtSocketPollAdd(xtSocketPoll *p, xtSocket sock, void *data)
 {
-	if (p->socketCount == p->size)
+	if (p->count == p->size)
 		return XT_ENOBUFS;
 	struct epoll_event event;
-	memset(&event, 1, sizeof(event)); // Prevent "uninitialised value(s)" warnings in Valgrind
+	memset(&event, 0, sizeof(event)); // Prevent "uninitialised value(s)" warnings in Valgrind
 	event.events = EPOLLIN | EPOLLPRI | EPOLLHUP | EPOLLERR;
 	// Search for a free index
-	unsigned dataIndex = 0;
 	for (unsigned i = 0; i < p->size; ++i) {
 		if (p->data[i].fd == XT_SOCKET_INVALID_FD) {
-			dataIndex = i;
+			event.data.ptr = &p->data[i];
+			if (epoll_ctl(p->epollfd, EPOLL_CTL_ADD, sock, &event) == 0) {
+				p->data[i].fd = sock;
+				p->data[i].data = data;
+				++p->count;
+				return 0;
+			}
 			break;
 		}
-	}
-	event.data.ptr = &p->data[dataIndex];
-	if (epoll_ctl(p->epollfd, EPOLL_CTL_ADD, sock, &event) == 0) {
-		p->data[dataIndex].fd = sock;
-		p->data[dataIndex].data = data;
-		++p->socketCount;
-		return 0;
-	} else {
-		
 	}
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
@@ -474,7 +489,7 @@ int xtSocketPollCreate(xtSocketPoll **p, unsigned size)
 	size = (int) size <= 0 ? 64 : size;
 	if (!(_p->events = malloc(sizeof(struct epoll_event) * size)))
 		goto error;
-	if (!(_p->data = malloc(sizeof(struct _xt_epoll_data) * size)))
+	if (!(_p->data = malloc(sizeof(struct _xt_poll_data) * size)))
 		goto error;
 	int epollfd = epoll_create(size);
 	if (epollfd == -1)
@@ -486,7 +501,7 @@ int xtSocketPollCreate(xtSocketPoll **p, unsigned size)
 	}
 	_p->epollfd = epollfd;
 	_p->size = size;
-	_p->socketCount = 0;
+	_p->count = 0;
 	_p->socketsReady = 0;
 	*p = _p;
 	return 0;
@@ -494,7 +509,6 @@ error:
 	free(_p->data);
 	free(_p->events);
 	free(_p);
-	*p = NULL;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
@@ -515,12 +529,12 @@ void xtSocketPollDestroy(xtSocketPoll *p)
 
 unsigned xtSocketPollGetCount(const xtSocketPoll *p)
 {
-	return p->socketCount;
+	return p->count;
 }
 
 void *xtSocketPollGetData(xtSocketPoll *p, unsigned index)
 {
-	return ((struct _xt_epoll_data*) p->events[index].data.ptr)->data;
+	return ((struct _xt_poll_data*) p->events[index].data.ptr)->data;
 }
 
 unsigned xtSocketPollGetSize(xtSocketPoll *p)
@@ -530,21 +544,13 @@ unsigned xtSocketPollGetSize(xtSocketPoll *p)
 
 xtSocket xtSocketPollGetSocket(xtSocketPoll *p, unsigned index)
 {
-	return ((struct _xt_epoll_data*) p->events[index].data.ptr)->fd;
+	return ((struct _xt_poll_data*) p->events[index].data.ptr)->fd;
 }
 
 bool xtSocketPollRemove(xtSocketPoll *p, xtSocket socket)
 {
 	epoll_ctl(p->epollfd, EPOLL_CTL_DEL, socket, NULL);
-	// Clean up possible sensitive data
-	for (unsigned i = 0; i < p->size; ++i) {
-		if (p->data[i].fd == socket) {
-			p->data[i].fd = XT_SOCKET_INVALID_FD;
-			p->data[i].data = NULL;
-			break;
-		}
-	}
-	--p->socketCount;
+	--p->count;
 	return true;
 }
 

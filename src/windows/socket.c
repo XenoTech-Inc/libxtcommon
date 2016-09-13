@@ -245,6 +245,17 @@ int xtSocketGetSoLinger(const xtSocket sock, bool *on, int *linger)
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
+int xtSocketGetSoReceiveBufferSize(xtSocket sock, unsigned *size)
+{
+	int val = 0;
+	socklen_t len = sizeof(val);
+	if (getsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char*) &val, &len) == 0) {
+		*size = val;
+		return 0;
+	}
+	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
+}
+
 int xtSocketGetSoReuseAddress(const xtSocket sock, bool *flag)
 {
 	int val = 0;
@@ -319,10 +330,10 @@ int xtSocketSetSoLinger(xtSocket sock, bool on, int linger)
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
-int xtSocketSetTCPNoDelay(xtSocket sock, bool flag)
+int xtSocketSetSoReceiveBufferSize(xtSocket sock, unsigned size)
 {
-	int val = (flag) ? 1 : 0;
-	if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (const char*) &val, sizeof(val)) == 0)
+	int val = size;
+	if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (const char*) &val, sizeof(val)) == 0)
 		return 0;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
@@ -331,6 +342,14 @@ int xtSocketSetSoReuseAddress(xtSocket sock, bool flag)
 {
 	int val = flag ? 1 : 0;
 	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*) &val, sizeof(val)) == 0)
+		return 0;
+	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
+}
+
+int xtSocketSetTCPNoDelay(xtSocket sock, bool flag)
+{
+	int val = (flag) ? 1 : 0;
+	if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (const char*) &val, sizeof(val)) == 0)
 		return 0;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
@@ -402,11 +421,15 @@ int xtSocketUDPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *
 	return 0;
 }
 
+struct _xt_poll_data {
+	xtSocket fd;
+	void *data;
+};
+
 struct xtSocketPoll {
+	struct _xt_poll_data *data;
+	struct _xt_poll_data *readyData;
 	struct pollfd *fds;
-	xtSocket *sockets;
-	void **data;
-	unsigned *indexes;
 	unsigned size, count, socketsReady;
 };
 
@@ -420,7 +443,8 @@ int xtSocketPollAdd(xtSocketPoll *p, xtSocket sock, void *data)
 	p->fds[index].events = POLLRDNORM | POLLRDBAND;
 	// Reset it, or else we get unwanted results
 	p->fds[index].revents = 0;
-	p->data[index] = data;
+	p->data[index].fd = sock;
+	p->data[index].data = data;
 	++p->count;
 	return 0;
 }
@@ -434,43 +458,40 @@ int xtSocketPollCreate(xtSocketPoll **p, unsigned size)
 		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 	_p->fds = NULL;
 	_p->data = NULL;
-	_p->indexes = NULL;
-	_p->sockets = NULL;
+	_p->readyData = NULL;
 	// Overflow control
 	size = (int) size <= 0 ? 64 : size;
 	_p->fds = malloc(size * sizeof(struct pollfd));
 	if (!_p->fds)
 		goto error;
-	_p->data = malloc(size * sizeof(void*));
+	_p->data = malloc(size * sizeof(struct _xt_poll_data));
 	if (!_p->data)
 		goto error;
-	_p->indexes = malloc(size * sizeof(unsigned));
-	if (!_p->indexes)
+	_p->readyData = malloc(size * sizeof(struct _xt_poll_data));
+	if (!_p->readyData)
 		goto error;
-	_p->sockets = malloc(size * sizeof(xtSocket));
-	if (!_p->sockets)
-		goto error;
+	// Prepare the array for usage
 	for (unsigned i = 0; i < size; ++i) {
 		_p->fds[i].fd = XT_SOCKET_INVALID_FD;
 		// Assign the events we want to be informed of, errors are added automatically
 		_p->fds[i].events = POLLRDNORM | POLLRDBAND;
 		// Reset it, or we get unwanted results
 		_p->fds[i].revents = 0;
-		_p->data[i] = NULL;
-		_p->indexes[i] = 0;
-		_p->sockets[i] = XT_SOCKET_INVALID_FD;
+		_p->data[i].fd = XT_SOCKET_INVALID_FD;
+		_p->data[i].data = NULL;
+		_p->readyData[i].fd = XT_SOCKET_INVALID_FD;
+		_p->readyData[i].data = NULL;
 	}
 	_p->size = size;
 	_p->count = 0;
+	_p->socketsReady = 0;
 	*p = _p;
 	return 0;
 error:
 	free(_p->fds);
 	free(_p->data);
-	free(_p->indexes);
-	free(_p->sockets);
+	free(_p->readyData);
 	free(_p);
-	*p = NULL;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
@@ -480,8 +501,7 @@ void xtSocketPollDestroy(xtSocketPoll *p)
 		return;
 	free(p->fds);
 	free(p->data);
-	free(p->indexes);
-	free(p->sockets);
+	free(p->readyData);
 	free(p);
 }
 
@@ -493,7 +513,7 @@ unsigned xtSocketPollGetCount(const xtSocketPoll *p)
 void *xtSocketPollGetData(xtSocketPoll *p, unsigned index)
 {
 	
-	return p->data[p->indexes[index]];
+	return p->readyData[index].data;
 }
 
 unsigned xtSocketPollGetSize(xtSocketPoll *p)
@@ -503,7 +523,7 @@ unsigned xtSocketPollGetSize(xtSocketPoll *p)
 
 xtSocket xtSocketPollGetSocket(xtSocketPoll *p, unsigned index)
 {
-	return p->sockets[index];
+	return p->readyData[index].fd;
 }
 
 bool xtSocketPollRemove(xtSocketPoll *p, xtSocket socket)
@@ -512,20 +532,23 @@ bool xtSocketPollRemove(xtSocketPoll *p, xtSocket socket)
 	// Clean up possible sensitive data
 	unsigned index = UINT_MAX;
 	for (unsigned i = 0; i < p->size; ++i) {
-		if (p->sockets[i] == socket) {
+		if (p->fds[i].fd == socket) {
 			index = i;
 			break;
 		}
 	}
 	if (index == UINT_MAX)
 		return false;
-	// Use memmmove, which is much faster than moving everything with a for loop
-	// Shift all elements back one position
-	memmove(&p->sockets[index], &p->sockets[index + 1], (p->count - index) * sizeof(xtSocket*));
-	memmove(&p->data[index], &p->data[index + 1], (p->count - index) * sizeof(void*));
-	unsigned newIndex = p->indexes[index];
-	memmove(&p->indexes[newIndex], &p->indexes[newIndex + 1], (p->count - newIndex) * sizeof(unsigned));
-	memmove(&p->fds[newIndex], &p->fds[newIndex + 1], (p->count - newIndex) * sizeof(struct pollfd));
+	if (index == p->size) {
+		p->fds[index].fd = XT_SOCKET_INVALID_FD;
+		p->data[index].fd = XT_SOCKET_INVALID_FD;
+		p->data[index].data = NULL;
+	} else {
+		// Use memmmove, which is much faster than moving everything with a for loop
+		// Shift all elements back one position
+		memmove(&p->fds[index], &p->fds[index + 1], (p->count - index) * sizeof(struct pollfd));
+		memmove(&p->data[index], &p->data[index + 1], (p->count - index) * sizeof(struct _xt_poll_data));
+	}
 	--p->count;
 	return true;
 }
@@ -533,16 +556,23 @@ bool xtSocketPollRemove(xtSocketPoll *p, xtSocket socket)
 int xtSocketPollWait(xtSocketPoll *p, int timeout, unsigned *socketsReady)
 {
 	int eventCount = WSAPoll(p->fds, p->count, timeout);
-	if (eventCount == -1)
-		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
+	if (eventCount == -1) {
+		int syserr = XT_SOCKET_LAST_ERROR;
+		if (syserr == WSAEINVAL && p->count == 0) {
+			if (socketsReady)
+				*socketsReady = 0;
+			return 0;
+		} else
+			return _xtTranslateSysError(syserr);
+	}
 	p->socketsReady = eventCount;
 	if (socketsReady)
 		*socketsReady = eventCount;
 	for (unsigned i = 0, socketsHandled = 0; i < p->size && socketsHandled < (unsigned) eventCount; ++i) {
 		if (p->fds[i].revents & (POLLRDNORM | POLLRDBAND)) {
 			p->fds[i].revents = 0;
-			p->sockets[socketsHandled] = p->fds[i].fd;
-			p->indexes[socketsHandled] = i;
+			p->readyData[socketsHandled].fd = p->fds[i].fd;
+			p->readyData[socketsHandled].data = p->data[i].data;
 			++socketsHandled;
 			continue;
 		}
