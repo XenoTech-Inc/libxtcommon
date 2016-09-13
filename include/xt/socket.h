@@ -236,7 +236,13 @@ int xtSocketGetTCPNoDelay(const xtSocket sock, bool *flag);
  * The reason for failure can vary across systems, so there is no error code for this.
  */
 bool xtSocketInit(void);
+/**
+ * Tells you if the specified socket is closed. A socket is only closed when it has been closed explicitly.
+ */
 bool xtSocketIsClosed(const xtSocket sock);
+/**
+ * Tells you if the specified socket is still open. A socket is still open when it has not yet been closed explicitly.
+ */
 bool xtSocketIsOpen(const xtSocket sock);
 /**
  * Marks the specified socket as a passive socket willing to accept connections to it. 

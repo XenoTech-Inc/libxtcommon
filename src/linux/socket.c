@@ -411,7 +411,7 @@ int xtSocketTCPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRe
 	ret = recv(sock, buf, buflen, 0);
 	if (ret == -1) {
 		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-	} else if (ret == 0) { // Gracefull shutdown
+	} else if (ret == 0) { // Graceful shutdown
 		*bytesRead = 0;
 		return XT_ESHUTDOWN;
 	} else {
@@ -439,7 +439,7 @@ int xtSocketUDPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRe
 	ret = recvfrom(sock, buf, buflen, 0, (struct sockaddr*) sender, &dummyLen);
 	if (ret == -1) {
 		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-	} else if (ret == 0) { // Gracefull shutdown
+	} else if (ret == 0) { // Graceful shutdown
 		*bytesRead = 0;
 		return XT_ESHUTDOWN;
 	} else {
@@ -478,7 +478,7 @@ int xtSocketPollAdd(xtSocketPoll *p, xtSocket sock, void *data)
 		return XT_ENOBUFS;
 	struct epoll_event event;
 	memset(&event, 0, sizeof(event)); // Prevent "uninitialised value(s)" warnings in Valgrind
-	event.events = EPOLLIN | EPOLLPRI | EPOLLHUP | EPOLLERR;
+	event.events = EPOLLIN | EPOLLOUT | EPOLLPRI | EPOLLHUP | EPOLLERR;
 	// Search for a free index
 	for (unsigned i = 0; i < p->size; ++i) {
 		if (p->data[i].fd == XT_SOCKET_INVALID_FD) {
