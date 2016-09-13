@@ -47,7 +47,7 @@ int xtBatteryGetPowerLevel(void)
 			continue;
 		int retval = read(fd, sbuf, 64);
 		close(fd);
-		return retval > 0 ? atoi(sbuf) : -1;
+		return retval > 0 ? strtol(sbuf, NULL, 10) : -1;
 	}
 	return -1;
 }
@@ -140,35 +140,34 @@ bool xtCPUGetInfo(xtCPU *cpuInfo)
 		cpuInfo->L3Cache = cacheSizes[2];
 	}
 #else
-	char sbuf[128];
-	char *word2, *word3, *word4;
+	char sbuf[128], sbuf2[128];
+	char *tokens[4];
+	unsigned numTokens;
 	FILE *fp = popen("lscpu", "r");
 	if (fp) {
 		// Retrieve a lot of values!!
 		while (xtStringReadLine(sbuf, sizeof(sbuf), NULL, fp)) {
-			word2 = xtStringGetWord(sbuf, 2);
-			word3 = xtStringGetWord(word2, 2);
-			word4 = xtStringGetWord(word3, 2);
+			strncpy(sbuf2, sbuf, 128);
+			numTokens = sizeof(tokens) / sizeof(tokens[0]);
+			xtStringSplit(sbuf, " \t", tokens, &numTokens);
+			printf("Words fetched: %u\n", numTokens);
 			if (xtStringStartsWith(sbuf, "Architecture")) {
-				if (strcmp(word2, "x86_64") == 0)
+				if (strcmp(tokens[1], "x86_64") == 0)
 					cpuInfo->architecture = XT_CPU_ARCH_X64;
-				else if (xtStringStartsWith(word2, "arm"))
+				else if (xtStringStartsWith(tokens[1], "arm"))
 					cpuInfo->architecture = XT_CPU_ARCH_ARM;
-				else if (xtStringEndsWith(word2, "86"))
+				else if (xtStringEndsWith(tokens[1], "86"))
 					cpuInfo->architecture = XT_CPU_ARCH_X86;
 			} else if (xtStringStartsWith(sbuf, "CPU(s)"))
-				cpuInfo->logicalCores = atoi(word2);
-			else if (xtStringStartsWith(sbuf, "Core(s) per socket"))
-				cpuInfo->physicalCores = atoi(word4);
-			else if (xtStringStartsWith(sbuf, "L1d cache")) {
-				sbuf[strlen(sbuf) - 1] = '\0';
-				cpuInfo->L1Cache = atoi(word3);
-			} else if (xtStringStartsWith(sbuf, "L2 cache")) {
-				sbuf[strlen(sbuf) - 1] = '\0';
-				cpuInfo->L2Cache = atoi(word3);
-			} else if (xtStringStartsWith(sbuf, "L3 cache")) {
-				sbuf[strlen(sbuf) - 1] = '\0';
-				cpuInfo->L3Cache = atoi(word3);
+				cpuInfo->logicalCores = strtoul(tokens[1], NULL, 10);
+			else if (xtStringStartsWith(sbuf, "Core(s)"))
+				cpuInfo->physicalCores = strtoul(tokens[3], NULL, 10);
+			else if (xtStringStartsWith(sbuf, "L1d")) {
+				cpuInfo->L1Cache = strtoul(tokens[2], NULL, 10);
+			} else if (xtStringStartsWith(sbuf, "L2")) {
+				cpuInfo->L2Cache = strtoul(tokens[2], NULL, 10);
+			} else if (xtStringStartsWith(sbuf, "L3")) {
+				cpuInfo->L3Cache = strtoul(tokens[2], NULL, 10);
 			}
 		}
 		pclose(fp);
@@ -187,7 +186,7 @@ bool xtCPUGetInfo(xtCPU *cpuInfo)
 	if (fp) {
 		while (xtStringReadLine(sbuf, sizeof(sbuf), NULL, fp)) {
 			if (xtStringStartsWith(sbuf, "model name")) {
-				strncpy(cpuInfo->name, xtStringGetWord(sbuf, 4), sizeof(cpuInfo->name));
+				strncpy(cpuInfo->name, strchr(sbuf, ':') + 2, sizeof(cpuInfo->name));
 				break;
 			}
 		}

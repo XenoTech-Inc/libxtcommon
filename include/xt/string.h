@@ -69,19 +69,19 @@ char *xtStringReadLine(char *restrict str, size_t num, size_t *restrict bytesRea
  */
 bool xtStringEndsWith(const char *haystack, const char *needle);
 /**
- * Retrieves a word in a string.
- * Negative wordindex searches backwards.
- * If wordindex is too large or too small, null is returned.
- * Passing a null pointer is safe.
- * @remark You will have to free the returned string yourself.
- */
-char *xtStringGetWord(const char *str, int wordindex);
-/**
  * Reverses the string in-place up to \a len characters.
  * @returns A pointer to \a str.
  */
 char *xtStringReverseLen(char *str, size_t len);
 char *xtStringReverse(char *str);
+/**
+ * A more friendly version of strtok_r.
+ * @param str - Pointer to a null-terminated string which is editable.
+ * @param delim - The delimeter to use. It may be more than one character long.
+ * @param tokens - Will receive pointers to all found tokens. All of these will be null-terminated.
+ * @param num - A pointer to the maximum amount of words to look up. This pointer will receive how many words were found.
+ */
+void xtStringSplit(char *str, const char *delim, char **tokens, unsigned *num);
 /**
  * Checks if the haystack starts with the needle.
  */

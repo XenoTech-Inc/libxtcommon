@@ -6,17 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *xtFormatCommasLLU(unsigned long long v, char *buf, int sep);
-char *xtFormatCommasLL(long long v, char *buf, int sep)
-{
-	if (v < 0) {
-		buf[0] = '-';
-		v = llabs(v);
-		return xtFormatCommasLLU(v, buf + 1, sep);
-	} else
-		return xtFormatCommasLLU(v, buf, sep);
-}
-
 char *xtFormatCommasLLU(unsigned long long v, char *buf, int sep)
 {
 	int n = 3; // Format every thousand
@@ -43,6 +32,16 @@ char *xtFormatCommasLLU(unsigned long long v, char *buf, int sep)
 		v /= 10;
 	} while (v);
 	return buf;
+}
+
+char *xtFormatCommasLL(long long v, char *buf, int sep)
+{
+	if (v < 0) {
+		buf[0] = '-';
+		v = llabs(v);
+		return xtFormatCommasLLU(v, buf + 1, sep);
+	} else
+		return xtFormatCommasLLU(v, buf, sep);
 }
 
 void xtRot13(void *buf, size_t buflen)
@@ -129,6 +128,19 @@ char *xtStringReverse(char *str)
 	return xtStringReverseLen(str, strlen(str));
 }
 
+void xtStringSplit(char *str, const char *delim, char **tokens, unsigned *num)
+{
+#define strtok_s strtok_r
+	char *save_ptr, *token = strtok_r(str, delim, &save_ptr);
+	unsigned i = 0;
+	for (; i < *num && token; ++i) {
+		tokens[i] = token;
+		token = strtok_r(save_ptr, delim, &save_ptr);
+	}
+	*num = i;
+#undef strtok_r
+}
+
 bool xtStringStartsWith(const char *haystack, const char *needle)
 {
 	return memcmp(haystack, needle, strlen(needle)) == 0;
@@ -211,64 +223,10 @@ char *xtStringTrimWords(char *str)
 	return str;
 }
 
-#define skipspace(p) while(isspace(*p)) ++p;
-#define revskipspace(start,p) while(p>start&&isspace(*p)) --p;
-char *xtStringGetWord(const char *str, int wordindex)
-{
-	char *ptr = (char*) str;
-	if (!ptr || !*ptr || !wordindex) return NULL;
-	int index = 0;
-	bool current = false, newstate;
-	if (wordindex < 0) {
-		// check for null string
-		// backwards
-		while (*ptr) ++ptr;
-		// we zijn een te ver
-		--ptr;
-		revskipspace(str, ptr);
-		while (ptr > str) {
-			newstate = isspace(*ptr);
-			if (newstate != current) {
-				// kijk of we een nieuw woord ingaan
-				if (newstate && --index == wordindex) {
-					// gevonden
-					skipspace(ptr);
-					return ptr;
-				}
-				current = newstate;
-			}
-			--ptr;
-		}
-		// randgeval voor de eerste
-		if (ptr == str && --index == wordindex) {
-			return ptr;
-		}
-	} else {
-		skipspace(ptr);
-		if (wordindex == 1)
-			return ptr;
-		while (*ptr) {
-			newstate = isspace(*ptr);
-			if (newstate != current) {
-				// kijk of we een nieuw woord ingaan
-				if (!newstate && ++index == wordindex - 1) {
-					// gevonden
-					return ptr;
-				}
-				current = newstate;
-			}
-			++ptr;
-		}
-	}
-	// niet gevonden
-	return NULL;
-}
-
 #define NUM 16
 #define MASK (NUM-1)
 void fprinthex(const void *buf, FILE *f, char sep, size_t len)
 {
-	// Do not specify the array size already, since Visual Studio is too stupid to compile it then
 	const char *hexbase = "0123456789abcdef";
 	char *ptr = (char*) buf;
 	fputc(hexbase[(*ptr >> 4) & MASK], f);
@@ -283,7 +241,6 @@ void fprinthex(const void *buf, FILE *f, char sep, size_t len)
 
 void printhex(const void *buf, char sep, size_t len)
 {
-	// Do not specify the array size already, since Visual Studio is too stupid to compile it then
 	const char *hexbase = "0123456789abcdef";
 	char *ptr = (char*) buf;
 	putchar(hexbase[(*ptr >> 4) & MASK]);
