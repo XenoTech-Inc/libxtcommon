@@ -35,10 +35,28 @@ extern "C" {
  * @brief Contains the IP + Port number of a device on the grid.
  * 
  * This is a wrapper for struct sockaddr_in, which makes it very easy to use. Using the raw struct sockaddr_in can be a real pain. 
- * This struct is POD.
+ * This struct is POD. It is different across platforms though.
  */
 typedef struct xtSockaddr {
-	char sa[24];
+#if defined(XT_IS_LINUX)
+	short sin_family;
+	unsigned short sin_port;
+	struct {
+		unsigned long s_addr;
+	} sin_addr;
+	char sin_zero[8];
+#elif defined(XT_IS_WINDOWS)
+	short sin_family;
+	unsigned short sin_port;
+	struct {
+		union {
+			struct { unsigned char  s_b1, s_b2, s_b3, s_b4; } S_un_b;
+			struct { unsigned short s_w1, s_w2; } S_un_w;
+			unsigned long S_addr;
+		} S_un;
+	} sin_addr;
+	char sin_zero[8];
+#endif
 } xtSockaddr;
 /**
  * Checks if two addresses are equal.
