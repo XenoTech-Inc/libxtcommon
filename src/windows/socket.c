@@ -268,6 +268,17 @@ int xtSocketGetSoReuseAddress(const xtSocket sock, bool *flag)
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
+int xtSocketGetSoSendBufferSize(xtSocket sock, unsigned *size)
+{
+	int val = 0;
+	socklen_t len = sizeof(val);
+	if (getsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*) &val, &len) == 0) {
+		*size = val;
+		return 0;
+	}
+	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
+}
+
 int xtSocketGetTCPNoDelay(const xtSocket sock, bool *flag)
 {
 	int val;
@@ -343,6 +354,14 @@ int xtSocketSetSoReuseAddress(xtSocket sock, bool flag)
 {
 	int val = flag ? 1 : 0;
 	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*) &val, sizeof(val)) == 0)
+		return 0;
+	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
+}
+
+int xtSocketSetSoSendBufferSize(xtSocket sock, unsigned size)
+{
+	int val = size;
+	if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (const char*) &val, sizeof(val)) == 0)
 		return 0;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }

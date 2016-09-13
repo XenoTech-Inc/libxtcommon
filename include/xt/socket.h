@@ -163,6 +163,10 @@ void xtSocketDestruct(void);
  * @return Zero if the address has been retrieved, otherwise an error code.
  */
 int xtSocketGetLocalSocketAddress(xtSocket sock, xtSockaddr *sa);
+/**
+ * Tells you the port of the interface where \a sock is bound to. 
+ * On error, zero is returned.
+ */
 uint16_t xtSocketGetLocalPort(xtSocket sock);
 /**
  * Returns the protocol that is associated with this socket. If any error occurs, 
@@ -196,6 +200,11 @@ int xtSocketGetSoReceiveBufferSize(xtSocket sock, unsigned *size);
  * @return Zero if the property has been fetched successfully, otherwise an error code.
  */
 int xtSocketGetSoReuseAddress(const xtSocket sock, bool *flag);
+/**
+ * Tells you the current SO_SNDBUF size in bytes for the specified socket.
+ * @return Zero if the property has been fetched successfully, otherwise an error code.
+ */
+int xtSocketGetSoSendBufferSize(xtSocket sock, unsigned *size);
 /**
  * Tells you if the socket has it's TCP_NODELAY option enabled or disabled.
  * @param flag - Will receive the result of the property on success.
@@ -251,8 +260,8 @@ int xtSocketSetSoKeepAlive(xtSocket sock, bool flag);
  */
 int xtSocketSetSoLinger(xtSocket sock, bool on, int linger);
 /**
- * Sets the SO_RCVBUF option to the specified value for this Socket. 
- * The SO_RCVBUF option is used by the platform's networking code as a hint for the size to set the underlying network I/O buffers.
+ * Sets the SO_RCVBUF option to the specified value for this socket. 
+ * The SO_RCVBUF option is used by the platform's networking code as a hint for the size to set the receive buffer of the underlying I/O buffers.
  * Because this is a just a hint to the implementation, you should check the buffers afterwards by calling xtSocketGetSoReceiveBufferSize().
  * @remarks It is best practice to call this function before connecting or binding the socket. This prevents certain problems.
  */
@@ -267,6 +276,13 @@ int xtSocketSetSoReceiveBufferSize(xtSocket sock, unsigned size);
  * @remarks Execute this function PRIOR to binding the socket! Otherwise this function will have no effect.
  */
 int xtSocketSetSoReuseAddress(xtSocket sock, bool flag);
+/**
+ * Sets the SO_SNDBUF option to the specified value for this socket. 
+ * The SO_RCVBUF option is used by the platform's networking code as a hint for the size to set the send buffer of the underlying I/O buffers.
+ * Because this is a just a hint to the implementation, you should check the buffers afterwards by calling xtSocketGetSoReceiveBufferSize().
+ * @remarks It is best practice to call this function before connecting or binding the socket. This prevents certain problems.
+ */
+int xtSocketSetSoSendBufferSize(xtSocket sock, unsigned size);
 /**
  * Enables or disables TCP_NODELAY.\n
  * \a flag = true : Send the data (partial frames) the moment you get them, regardless if you have enough frames for a full network packet.\n
@@ -367,9 +383,6 @@ bool xtSocketPollRemove(xtSocketPoll *p, xtSocket sock);
  * @param socketsReady - Will receive that amount of sockets the status is updated. This is 
  * left untouched on an error.
  * @return Zero is the function has executed successfully, otherwise an error code.
- * @remarks On Windows, when there are no sockets present in the structure, this function will 
- * return immidiately with zero sockets ready, and a return code of zero also. Although it sounds like 
- * it will consume the whole CPU, it won't.
  */
 int xtSocketPollWait(xtSocketPoll *p, int timeout, unsigned *socketsReady);
 

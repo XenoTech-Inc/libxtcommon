@@ -154,13 +154,6 @@ static void socketTest(void)
 	xtSocketGetLocalSocketAddress(serverSock, &sa);
 	printf("Socket bind to %s: %s\n", xtSockaddrToString(&sa, sbuf, sizeof(sbuf)), xtGetErrorStr(ret));
 	
-	unsigned size;
-	xtSocketGetSoReceiveBufferSize(serverSock, &size);
-	printf("Size : %u\n", size);
-	xtSocketSetSoReceiveBufferSize(serverSock, 16384);
-	xtSocketGetSoReceiveBufferSize(serverSock, &size);
-	printf("Size : %u\n", size);
-	
 	ret = xtSocketListen(serverSock, 10);
 	printf("Socket listen: %s\n", xtGetErrorStr(ret));
 	
