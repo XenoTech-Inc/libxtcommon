@@ -1,7 +1,8 @@
 // XT headers
 #include <xt/socket.h>
 #include <xt/endian.h>
-#include <xt/error.h>
+#include <xt/error.h> // htobe16
+#include <xt/time.h> // sleep
 
 // System headers
 #include <ws2tcpip.h> // Necessary for a hell lot of stuff
@@ -558,12 +559,16 @@ int xtSocketPollWait(xtSocketPoll *p, int timeout, unsigned *socketsReady)
 	int eventCount = WSAPoll(p->fds, p->count, timeout);
 	if (eventCount == -1) {
 		int syserr = XT_SOCKET_LAST_ERROR;
+		// Handle this bug in the windows poll. If no sockets are present, it will return immidiately
 		if (syserr == WSAEINVAL && p->count == 0) {
+			// Simulate the timeout
+			if (timeout > 0)
+				xtSleepMS(timeout);
 			if (socketsReady)
 				*socketsReady = 0;
-			return 0;
+			return 0; // All good
 		} else
-			return _xtTranslateSysError(syserr);
+			return _xtTranslateSysError(syserr); // Legit error
 	}
 	p->socketsReady = eventCount;
 	if (socketsReady)

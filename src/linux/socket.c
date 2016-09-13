@@ -1,6 +1,6 @@
 // XT headers
 #include <xt/socket.h>
-#include <xt/endian.h>
+#include <xt/endian.h> // htobe16
 #include <xt/error.h>
 
 // System headers
