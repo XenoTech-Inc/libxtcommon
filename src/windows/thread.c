@@ -8,38 +8,33 @@
 
 int xtMutexCreate(xtMutex *m)
 {
-	// Always succeeds on Windows, since there is no real good way to check it
-	//InitializeCriticalSection(m);
 	extern NTSTATUS WINAPI RtlInitializeCriticalSection(RTL_CRITICAL_SECTION *crit);
-	return RtlInitializeCriticalSection(m) == STATUS_SUCCESS ? 0 : XT_ENOMEM;
+	return RtlInitializeCriticalSection(m) == STATUS_SUCCESS ? 0 : _xtTranslateSysError(GetLastError());
 }
 
-void xtMutexDestroy(xtMutex *m)
+int xtMutexDestroy(xtMutex *m)
 {
-	//DeleteCriticalSection(m);
 	extern NTSTATUS WINAPI RtlDeleteCriticalSection(RTL_CRITICAL_SECTION *crit);
 	RtlDeleteCriticalSection(m);
+	return 0;
 }
 
-bool xtMutexLock(xtMutex *m)
+int xtMutexLock(xtMutex *m)
 {
-	//EnterCriticalSection(m);
 	extern NTSTATUS WINAPI RtlEnterCriticalSection(RTL_CRITICAL_SECTION *crit);
-	return RtlEnterCriticalSection(m) == STATUS_SUCCESS;
+	return RtlEnterCriticalSection(m) == STATUS_SUCCESS ? 0 : _xtTranslateSysError(GetLastError());
 }
 
-bool xtMutexTryLock(xtMutex *m)
+int xtMutexTryLock(xtMutex *m)
 {
-	//return TryEnterCriticalSection(m) == TRUE;
 	extern BOOL WINAPI RtlTryEnterCriticalSection(RTL_CRITICAL_SECTION *crit);
-	return RtlTryEnterCriticalSection(m) == TRUE;
+	return RtlTryEnterCriticalSection(m) == TRUE ? 0 : _xtTranslateSysError(GetLastError());
 }
 
-bool xtMutexUnlock(xtMutex *m)
+int xtMutexUnlock(xtMutex *m)
 {
-	//LeaveCriticalSection(m);
 	extern NTSTATUS WINAPI RtlLeaveCriticalSection(RTL_CRITICAL_SECTION *crit);
-	return RtlLeaveCriticalSection(m) == STATUS_SUCCESS;
+	return RtlLeaveCriticalSection(m) == STATUS_SUCCESS ? 0 : _xtTranslateSysError(GetLastError());
 }
 
 static unsigned __stdcall _xtThreadStart(void *arg)

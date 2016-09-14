@@ -42,6 +42,39 @@ extern "C" {
 	typedef RTL_CRITICAL_SECTION xtMutex;
 #endif
 /**
+ * Creates a new mutex. Attempting to initialize an already initialized mutex results in undefined behavior.
+ * @return Zero if the mutex has been created, otherwise an error code.
+ */
+int xtMutexCreate(xtMutex *m);
+/**
+ * Destroys the mutex, all memory associated with the mutex is released. 
+ * Destroying a mutex which is still locked or is unintialized results in undefined behavior.
+ * @return Zero if the mutex has been destroyed, otherwise an error code.
+ */
+int xtMutexDestroy(xtMutex *m);
+/**
+ * Attempts to lock the mutex. If the mutex is already locked by another thread, 
+ * the thread waits for the mutex to become available. The thread that has locked a mutex becomes its 
+ * current owner and remains the owner until the same thread has unlocked it. 
+ * When the mutex has the attribute of recursive, the use of the lock may be different. 
+ * When this kind of mutex is locked multiple times by the same thread, then a count is incremented and 
+ * no waiting thread is posted. The owning thread must call xtMutexUnlock() the same number of times to decrement the count to zero.
+ * @return Zero if the mutex has been locked, otherwise an error code.
+ */
+int xtMutexLock(xtMutex *m);
+/**
+ * Tries to lock the mutex. Returns instantly whether or not it failed. Use this to retrieve to the lock to a mutex without blocking. 
+ * For recursive mutexes, this function will effectively add to the count of the number of times xtMutexUnlock() must 
+ * be called by the thread to release the mutex. (That is, it has the same behavior as xtMutexLock().)
+ * @return Zero if the mutex has been locked, otherwise an error code.
+ */
+int xtMutexTryLock(xtMutex *m);
+/**
+ * Unlocks the mutex so it is ready for use by other threads.
+ * @return Zero if the mutex has been unlocked, otherwise an error code.
+ */
+int xtMutexUnlock(xtMutex *m);
+/**
  * @brief Cross platform thread.
  * 
  * You should threat this struct as if it were opaque.
@@ -51,46 +84,16 @@ typedef struct xtThread {
 	void *(*func) (struct xtThread *t, void *arg);
 	/** The argument that is passed to the target function. */
 	void *arg;
-	#if defined(XT_IS_LINUX)
-		pthread_t nativeThread;
-		pthread_cond_t suspendCond;
-		int suspendCount;
-		pthread_mutex_t suspendMutex;
-	#elif defined(XT_IS_WINDOWS)
-		HANDLE exitEvent, nativeThread;
-		unsigned tid;
-	#endif
+#if defined(XT_IS_LINUX)
+	pthread_t nativeThread;
+	pthread_cond_t suspendCond;
+	int suspendCount;
+	pthread_mutex_t suspendMutex;
+#elif defined(XT_IS_WINDOWS)
+	HANDLE exitEvent, nativeThread;
+	unsigned tid;
+#endif
 } xtThread;
-/**
- * Creates a new mutex. Attempting to initialize an already initialized mutex is UB.\n
- * Errors:\n
- * XT_ENOMEM if the system is lacking the resources to create this object.
- * @return 0 for success. Otherwise an error code.
- */
-int xtMutexCreate(xtMutex *m);
-/**
- * Destroys the mutex, all memory associated with the mutex is released.
- */
-void xtMutexDestroy(xtMutex *m);
-/**
- * Attempts to loc kthe mutex. If the mutex is already locked by another thread, 
- * the thread waits for the mutex to become available. The thread that has locked a mutex becomes its 
- * current owner and remains the owner until the same thread has unlocked it.\n\n
- * When the mutex has the attribute of recursive, the use of the lock may be different. 
- * When this kind of mutex is locked multiple times by the same thread, then a count is incremented and 
- * no waiting thread is posted. The owning thread must call xtMutexUnlock() the same number of times to decrement the count to zero. 
- */
-bool xtMutexLock(xtMutex *m);
-/**
- * Attempts to lock the mutex. If the mutex is already locked, this function returns false immediately.
- * For recursive mutexes, this function will effectively add to the count of the number of times xtMutexUnlock() must 
- * be called by the thread to release the mutex. (That is, it has the same behavior as a xtMutexLock().)
- */
-bool xtMutexTryLock(xtMutex *m);
-/**
- * Unlocks the mutex so it is ready for use by other threads.
- */
-bool xtMutexUnlock(xtMutex *m);
 /**
  * If the suspend count is zero, the thread is not currently suspended. 
  * Otherwise, the subject thread's suspend count is decremented. 

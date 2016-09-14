@@ -16,30 +16,39 @@
 
 int xtMutexCreate(xtMutex *m)
 {
+	int ret;
 	pthread_mutexattr_t attr;
-	pthread_mutexattr_init(&attr);
+	ret = pthread_mutexattr_init(&attr);
+	if (ret != 0)
+		return _xtTranslateSysError(ret);
 	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-	return pthread_mutex_init(m, &attr) == 0 ? 0 : XT_ENOMEM;
+	ret = pthread_mutex_init(m, &attr);
+	pthread_mutexattr_destroy(&attr);
+	return ret == 0 ? 0 : _xtTranslateSysError(ret);
 }
 
-void xtMutexDestroy(xtMutex *m)
+int xtMutexDestroy(xtMutex *m)
 {
-	pthread_mutex_destroy(m);
+	int ret = pthread_mutex_destroy(m);
+	return ret == 0 ? 0 : _xtTranslateSysError(ret);
 }
 
-bool xtMutexLock(xtMutex *m)
+int xtMutexLock(xtMutex *m)
 {
-	return pthread_mutex_lock(m) == 0;
+	int ret = pthread_mutex_lock(m);
+	return ret == 0 ? 0 : _xtTranslateSysError(ret);
 }
 
-bool xtMutexTryLock(xtMutex *m)
+int xtMutexTryLock(xtMutex *m)
 {
-	return pthread_mutex_trylock(m) == 0;
+	int ret = pthread_mutex_trylock(m);
+	return ret == 0 ? 0 : _xtTranslateSysError(ret);
 }
 
-bool xtMutexUnlock(xtMutex *m)
+int xtMutexUnlock(xtMutex *m)
 {
-	return pthread_mutex_unlock(m) == 0;
+	int ret = pthread_mutex_unlock(m);
+	return ret == 0 ? 0 : _xtTranslateSysError(ret);
 }
 
 static void *_xtThreadStart(void *arg)
