@@ -74,7 +74,7 @@ uint32_t xtSockaddrGetAddressLocalHost(void)
 
 uint16_t xtSockaddrGetPort(const xtSockaddr *sa)
 {
-	return htobe16(((struct sockaddr_in*) sa)->sin_port);
+	return xthtobe16(((struct sockaddr_in*) sa)->sin_port);
 }
 
 void xtSockaddrInit(xtSockaddr *sa)
@@ -90,7 +90,7 @@ void xtSockaddrSetAddress(xtSockaddr *sa, uint32_t addr)
 
 void xtSockaddrSetPort(xtSockaddr *sa, uint16_t port)
 {
-	((struct sockaddr_in*) sa)->sin_port = htobe16(port);
+	((struct sockaddr_in*) sa)->sin_port = xthtobe16(port);
 	_xtSockaddrInit(sa); // Init this to be safe
 }
 

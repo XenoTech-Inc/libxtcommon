@@ -121,12 +121,12 @@ typedef enum xtSockProto {
 #endif
 /**
  * The maximum payload size of an ipv4 TCP packet.\n
- * Keep in mind that using this ridiculously huge size is not a good idea, since the MTU on most systems is just 1500 bytes.
+ * Keep in mind that using this ridiculously huge size is not a good idea since the MTU on most systems is just 1500 bytes.
  */
 #define XT_SOCKET_TCP_MAXIMUM_PAYLOAD_SIZE 65535
 /**
  * The maximum payload size of an ipv4 UDP packet.\n
- * Keep in mind that using this ridiculously huge size is not a good idea, since the MTU on most systems is just 1500 bytes.\n
+ * Keep in mind that using this ridiculously huge size is not a good idea since the MTU on most systems is just 1500 bytes. 
  * This value is the ABSOLUTE limit, given that a standard UDP header is 20 bytes. The UDP header can be extended to 60 bytes, which would make the max payload size 40 bytes smaller than this value.
  * However, no normal packet should have this huge header, or a payload of this size.
  */
