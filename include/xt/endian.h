@@ -1,6 +1,9 @@
 /**
  * @brief Contains portable endian conversion functions.
  * 
+ * This header defines all byte swapping functions as macros (Obviously with side effects). 
+ * All of them are prefixed with "xt", all of the names are lowercased. 
+ * This code will work in C89, but then it will require some work by hand.
  * @file endian.h
  * @author Tom Everaarts
  * @date 2016
@@ -14,86 +17,93 @@
 extern "C" {
 #endif
 
-#if defined(__linux__) || defined(__CYGWIN__)
-	#include <endian.h>
-#elif defined(__APPLE__)
-	#include <libkern/OSByteOrder.h>
-	#define htobe16(x) OSSwapHostToBigInt16(x)
-	#define htole16(x) OSSwapHostToLittleInt16(x)
-	#define be16toh(x) OSSwapBigToHostInt16(x)
-	#define le16toh(x) OSSwapLittleToHostInt16(x)
-	
-	#define htobe32(x) OSSwapHostToBigInt32(x)
-	#define htole32(x) OSSwapHostToLittleInt32(x)
-	#define be32toh(x) OSSwapBigToHostInt32(x)
-	#define le32toh(x) OSSwapLittleToHostInt32(x)
-	
-	#define htobe64(x) OSSwapHostToBigInt64(x)
-	#define htole64(x) OSSwapHostToLittleInt64(x)
-	#define be64toh(x) OSSwapBigToHostInt64(x)
-	#define le64toh(x) OSSwapLittleToHostInt64(x)
-	
-	#define __BYTE_ORDER    BYTE_ORDER
-	#define __BIG_ENDIAN    BIG_ENDIAN
-	#define __LITTLE_ENDIAN LITTLE_ENDIAN
-	#define __PDP_ENDIAN    PDP_ENDIAN
-#elif defined(__OpenBSD__)
-	#include <sys/endian.h>
-#elif defined(__NetBSD__) || defined(__FreeBSD__) || defined(__DragonFly__)
-	#include <sys/endian.h>
-	#define be16toh(x) betoh16(x)
-	#define le16toh(x) letoh16(x)
-	
-	#define be32toh(x) betoh32(x)
-	#define le32toh(x) letoh32(x)
-	
-	#define be64toh(x) betoh64(x)
-	#define le64toh(x) letoh64(x)
-#elif defined(_WIN16) || defined(_WIN32) || defined(_WIN64)
-	#include <winsock2.h>
-	#include <sys/param.h>
-	#if BYTE_ORDER == LITTLE_ENDIAN
-		#define htobe16(x) htons(x)
-		#define htole16(x) (x)
-		#define be16toh(x) ntohs(x)
-		#define le16toh(x) (x)
-		
-		#define htobe32(x) htonl(x)
-		#define htole32(x) (x)
-		#define be32toh(x) ntohl(x)
-		#define le32toh(x) (x)
-		
-		#define htobe64(x) htonll(x)
-		#define htole64(x) (x)
-		#define be64toh(x) ntohll(x)
-		#define le64toh(x) (x)
-	#elif BYTE_ORDER == BIG_ENDIAN
-		/* That would be xbox 360 */
-		#define htobe16(x) (x)
-		#define htole16(x) __builtin_bswap16(x)
-		#define be16toh(x) (x)
-		#define le16toh(x) __builtin_bswap16(x)
-		 
-		#define htobe32(x) (x)
-		#define htole32(x) __builtin_bswap32(x)
-		#define be32toh(x) (x)
-		#define le32toh(x) __builtin_bswap32(x)
-		 
-		#define htobe64(x) (x)
-		#define htole64(x) __builtin_bswap64(x)
-		#define be64toh(x) (x)
-		#define le64toh(x) __builtin_bswap64(x)
-	#else
-		#error Byte order not supported
-	#endif
-	#define __BYTE_ORDER    BYTE_ORDER
-	#define __BIG_ENDIAN    BIG_ENDIAN
-	#define __LITTLE_ENDIAN LITTLE_ENDIAN
-	#define __PDP_ENDIAN    PDP_ENDIAN
+#if !defined(__GNUC__) || defined(__GNUG__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+	#define _XT_BIG_ENDIAN
+#elif defined(__clang__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+	#define _XT_BIG_ENDIAN
 #else
-#error Platform not supported
-
+	/* No C99 available. You must specify the endiannes by hand */
+	/* #define _XT_BIG_ENDIAN */
 #endif
+/* Check if we have C99+ and thus unsigned long long */
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+	#define _XT_HAS_LLU
+#else
+	/* No C99 available. You must specify if you have unsigned long long's by hand */
+	/* #define _XT_HAS_LLU */
+#endif
+
+/* Generics swaps */
+#define _xt_swap16(x)\
+	((((x) & 0x00FF) << 8) | \
+	(((x) & 0xFF00) >> 8))
+#define _xt_swap32(x)\
+	((((x) & 0xFF) << 24) | \
+	(((x) & 0xFF00) << 8) | \
+	(((x) & 0xFF0000) >> 8) | \
+	(((x) & 0xFF000000) >> 24))
+#ifdef _XT_HAS_LLU
+	#define _xt_swap64(x)\
+		((((x) & 0xFFLLU) >> 56) | \
+		(((x) & 0xFF00LLU) >> 40) | \
+		(((x) & 0xFF0000LLU) >> 24) | \
+		(((x) & 0xFF000000LLU) >> 8) | \
+		(((x) & 0xFF00000000LLU) << 8) | \
+		(((x) & 0xFF0000000000LLU) << 24) || \
+		(((x) & 0xFF000000000000LLU) << 40) || \
+		(((x) & 0xFF00000000000000LLU) << 56))
+#endif
+
+/* htons, htonl and htonll */
+#ifdef _XT_BIG_ENDIAN
+	#define xthtons(x) (x)
+	#define xthtonl(x) (x)
+	#ifdef _XT_HAS_LLU
+		#define xthtonll(x) (x)
+	#endif
+#else
+	#define xthtons(x) _xt_swap16(x)
+	#define xthtonl(x) _xt_swap32(x)
+	#ifdef _XT_HAS_LLU
+		#define xthtonll(x) _xt_swap64(x)
+	#endif
+#endif
+
+/* ntohs, ntohl and ntohll */
+#define xtntohs(x) htons(x)
+#define xtntohl(x) htonl(x)
+#ifdef _XT_HAS_LLU
+	#define xtntohll(x) htonll(x)
+#endif
+
+/* htobeXX and beXXtoh family */
+#define xthtobe16(x) htons(x)
+#define xtbe16toh(x) ntohs(x)
+#define xthtobe32(x) htonl(x)
+#define xtbe32toh(x) ntohl(x)
+#ifdef _XT_HAS_LLU
+	#define xthtobe64(x) htonll(x)
+	#define xtbe64toh(x) ntohll(x)
+#endif
+
+/* htoleXX and leXXtoh family */
+#ifdef _XT_BIG_ENDIAN
+	#define xthtole16(x) _xt_swap16(x)
+	#define xthtole32(x) _xt_swap32(x)
+	#ifdef _XT_HAS_LLU
+		#define xthtole64(x) _xt_swap64(x)
+	#endif
+#else
+	#define xthtole16(x) (x)
+	#define xthtole32(x) (x)
+	#ifdef _XT_HAS_LLU
+		#define xthtole64(x) (x)
+	#endif
+#endif
+
+#define xtle16toh(x) htole16(x)
+#define xtle32toh(x) htole32(x)
+#define xtle64toh(x) htole64(x)
 
 #ifdef __cplusplus
 }
