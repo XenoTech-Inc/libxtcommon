@@ -223,6 +223,17 @@ int xtSocketGetRemoteSocketAddress(const xtSocket sock, xtSockaddr *sa)
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
+int xtSocketGetSoError(const xtSocket sock, int *errnum)
+{
+	int val = 0;
+	socklen_t len = sizeof(val);
+	if (getsockopt(sock, SOL_SOCKET, SO_ERROR, (char*) &val, &len) == 0) {
+		*errnum = _xtTranslateSysError(val);
+		return 0;
+	}
+	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
+}
+
 int xtSocketGetSoKeepAlive(const xtSocket sock, bool *flag)
 {
 	int val = 0;

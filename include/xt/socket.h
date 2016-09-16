@@ -197,6 +197,12 @@ xtSocketProto xtSocketGetProtocol(const xtSocket sock);
  */
 int xtSocketGetRemoteSocketAddress(const xtSocket sock, xtSockaddr *sa);
 /**
+ * Tells you if an error has occurred on \a sock. After a successful call to this function, 
+ * the error code is cleared.
+ * @return Zero if the property has been fetched successfully, otherwise an error code.
+ */
+int xtSocketGetSoError(const xtSocket sock, int *errnum);
+/**
  * Tells you if the socket has it's SO_KEEPALIVE option enabled or disabled.
  * @param flag - Will receive the result of the property on success.
  * @return Zero if the property has been fetched successfully, otherwise an error code.
