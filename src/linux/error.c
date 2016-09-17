@@ -113,7 +113,8 @@ int _xtTranslateSysError(int syserrnum)
 	case EEXIST:                         return XT_EEXIST;
 	case EFAULT:                         return XT_EFAULT;
 	case EHOSTUNREACH:                   return XT_EHOSTUNREACH;
-	case ESOCKTNOSUPPORT:                return XT_EINVAL;
+	case ESOCKTNOSUPPORT:                return XT_ESOCKTNOSUPPORT;
+	case EINVAL:                         return XT_EINVAL;
 	case EIO:                            return XT_EIO;
 	case EISCONN:                        return XT_EISCONN;
 	case ELOOP:                          return XT_ELOOP;

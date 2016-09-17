@@ -135,9 +135,8 @@ int _xtTranslateSysError(int syserrnum)
 	case ERROR_INSUFFICIENT_BUFFER:         
 	case ERROR_INVALID_DATA:                
 	case ERROR_INVALID_PARAMETER:           
-	case WSAEINVAL:                         
-	case WSAEPFNOSUPPORT:                   
-	case WSAESOCKTNOSUPPORT:                return XT_EINVAL;
+	case WSAEINVAL:                         return XT_EINVAL;
+	case WSAESOCKTNOSUPPORT:                return XT_ESOCKTNOSUPPORT;
 	case ERROR_BEGINNING_OF_MEDIA:          
 	case ERROR_BUS_RESET:                   
 	case ERROR_CRC:                         
