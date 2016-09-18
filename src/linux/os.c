@@ -150,7 +150,6 @@ bool xtCPUGetInfo(xtCPU *cpuInfo)
 			strncpy(sbuf2, sbuf, 128);
 			numTokens = sizeof(tokens) / sizeof(tokens[0]);
 			xtStringSplit(sbuf, " \t", tokens, &numTokens);
-			printf("Words fetched: %u\n", numTokens);
 			if (xtStringStartsWith(sbuf, "Architecture")) {
 				if (strcmp(tokens[1], "x86_64") == 0)
 					cpuInfo->architecture = XT_CPU_ARCH_X64;
