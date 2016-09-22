@@ -95,7 +95,7 @@ bool xtThreadIsAlive(const xtThread *t)
 bool xtThreadJoin(xtThread *t)
 {
 	// No need to check if the thread is alive. This check should always block until the thread has terminated, 
-	// and otherwise return immidiately
+	// and otherwise return immediately
 	return WaitForSingleObject(t->exitEvent, INFINITE) == WAIT_OBJECT_0;
 }
 

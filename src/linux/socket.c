@@ -656,22 +656,23 @@ xtSocket xtSocketPollGetSocket(const xtSocketPoll *p, unsigned index)
 	return ((struct _xt_poll_data*) p->events[index].data.ptr)->fd;
 }
 
-bool xtSocketPollRemove(xtSocketPoll *p, xtSocket socket)
+int xtSocketPollRemove(xtSocketPoll *p, xtSocket sock)
 {
-	epoll_ctl(p->epollfd, EPOLL_CTL_DEL, socket, NULL);
+	if (epoll_ctl(p->epollfd, EPOLL_CTL_DEL, sock, NULL) != 0)
+		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 	--p->count;
-	return true;
+	return 0;
 }
 
-bool xtSocketPollSetEvent(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent events)
+int xtSocketPollSetEvent(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent events)
 {
 	for (unsigned i = 0; i < p->socketsReady; ++i) {
 		if (((struct _xt_poll_data*) p->events[i].data.ptr)->fd == sock) {
 			p->events[i].events = _xtSocketPollEventFlagsToSys(events);
-			return true;
+			return 0;
 		}
 	}
-	return false;
+	return XT_EINVAL;
 }
 
 int xtSocketPollWait(xtSocketPoll *p, int timeout, unsigned *socketsReady)

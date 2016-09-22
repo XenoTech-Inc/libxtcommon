@@ -214,6 +214,11 @@ int xtSocketGetSoKeepAlive(const xtSocket sock, bool *flag);
  */
 int xtSocketGetSoLinger(const xtSocket sock, bool *on, int *linger);
 /**
+ * Tells you if out-of-band data is currently being received in-line with the normal data.
+ * @return Zero is the option has been changed successfully, otherwise an error code.
+ */
+int xtSocketGetSoOOBInline(xtSocket sock, bool *flag);
+/**
  * Tells you the current SO_RCVBUF size in bytes for the specified socket.
  * @return Zero if the property has been fetched successfully, otherwise an error code.
  */
@@ -265,7 +270,7 @@ int xtSocketListen(xtSocket sock, unsigned backlog);
 /**
  * Sets a socket to blocking mode or non-blocking mode. Sockets are by default always in blocking mode. 
  * This means that when socket functions are called, the calling thread is paused until the kernel has 
- * processed the request. With non-blocking sockets functions can return immidiately without blocking.
+ * processed the request. With non-blocking sockets functions can return immediately without blocking.
  * @param flag - Specify true to go to blocking mode. Specify false to go to non-blocking mode.
  * @return Zero is the option has been changed successfully, otherwise an error code.
  */
@@ -282,13 +287,20 @@ int xtSocketSetSoKeepAlive(xtSocket sock, bool flag);
  * Enables or disables SO_LINGER. 
  * This value decides how the socket behaves after it is closed. When lingering is enabled, the kernel keeps the socket in a TIME_WAIT state, to ensure 
  * that any remaining data will be sent to the remote side, and the close is acknowledged. Normally you should leave this option alone, as you generally want this to be on. 
- * However, when dealing with thousands of sockets, you may want them to dissipate immidiately after closing, so you should disable lingering on those sockets. 
+ * However, when dealing with thousands of sockets, you may want them to dissipate immediately after closing, so you should disable lingering on those sockets. 
  * Remember : Lingering sockets still occupy a port, and eat system resources. Even if your program has already terminated!
  * @param on - If lingering should be enabled or not.
  * @param linger - The timeout value for SO_LINGER in seconds. The maximum timeout value is platform specific.
  * @return Zero is the option has been changed successfully, otherwise an error code.
  */
 int xtSocketSetSoLinger(xtSocket sock, bool on, int linger);
+/**
+ * Indicates that out-of-bound data should be returned in-line with regular data. 
+ * This option is only valid for connection-oriented protocols that support out-of-band data. 
+ * This option is disabled by default.
+ * @return Zero is the option has been changed successfully, otherwise an error code.
+ */
+int xtSocketSetSoOOBInline(xtSocket sock, bool flag);
 /**
  * Sets the SO_RCVBUF option to the specified value for this socket. 
  * The SO_RCVBUF option is used by the platform's networking code as a hint for the size to set the receive buffer of the underlying I/O buffers.
@@ -308,8 +320,8 @@ int xtSocketSetSoReceiveBufferSize(xtSocket sock, unsigned size);
 int xtSocketSetSoReuseAddress(xtSocket sock, bool flag);
 /**
  * Sets the SO_SNDBUF option to the specified value for this socket. 
- * The SO_RCVBUF option is used by the platform's networking code as a hint for the size to set the send buffer of the underlying I/O buffers.
- * Because this is a just a hint to the implementation, you should check the buffers afterwards by calling xtSocketGetSoReceiveBufferSize().
+ * The SO_SNDBUF option is used by the platform's networking code as a hint for the size to set the send buffer of the underlying I/O buffers.
+ * Because this is a just a hint to the implementation, you should check the buffers afterwards by calling xtSocketGetSoSendBufferSize().
  * @remarks It is best practice to call this function before connecting or binding the socket. This prevents certain problems.
  */
 int xtSocketSetSoSendBufferSize(xtSocket sock, unsigned size);
@@ -322,7 +334,7 @@ int xtSocketSetSoSendBufferSize(xtSocket sock, unsigned size);
 int xtSocketSetTCPNoDelay(xtSocket sock, bool flag);
 /**
  * Blocks until an incoming TCP connection is accepted or until the socket is closed, or if the socket is non-blocking, 
- * it will return immidiately.
+ * it will return immediately.
  * @param peerSock - This parameter will be filled with the socket of the peer that has connected.
  * @param peerAddr - This parameter will be filled with the address of the peer socket.
  * @return Zero if a peer has connected successfully, otherwise an error code.
@@ -337,36 +349,59 @@ int xtSocketTCPAccept(xtSocket sock, xtSocket *peerSock, xtSockaddr *peerAddr);
 int xtSocketTCPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRead);
 /**
  * Writes the data in \a buf to the connected remote socket.
- * @param dest - Contains the address of the destination.
  * @param bytesSent - Receives the amount of bytes that have been sent.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
 int xtSocketTCPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *bytesSent);
 /**
+ * Writes one byte of out-of-band data to the connected remote socket.
+ * @returns Zero if the operation has succeeded, otherwise an error code.
+ */
+int xtSocketTCPWriteOOB(xtSocket sock, uint8_t buf);
+/**
  * Blocks until "some" data has been read on the socket. This does not necessarily have to be the size of \a buflen.
- * @param sender - Receives the address of the sender. For UDP connected sockets, you can specify a null pointer.
  * @param bytesRead - Receives the amount of bytes that have been read.
+ * @param sender - Receives the address of the sender.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
 int xtSocketUDPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRead, xtSockaddr *sender);
 /**
  * Writes the data in \a buf to the address of \a dest.
- * @param dest - Contains the address of the destination.
  * @param bytesSent - Receives the amount of bytes that have been sent.
+ * @param dest - Contains the address of the destination. For a connected UDP socket, you can specify a null pointer.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
 int xtSocketUDPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *bytesSent, const xtSockaddr *dest);
 /**
- * Typedef for an opaque pointer.
+ * @brief Typedef for an opaque pointer.
  */
 typedef struct xtSocketPoll xtSocketPoll;
 /**
- * Adds a socket for monitoring. 
- * After a successful call to this function, the socket will be monitored 
- * by the system.
- * @param data - The data to associate with the socket.
+ * @brief All types of events that can occur on a socket.
  */
-int xtSocketPollAdd(xtSocketPoll *p, xtSocket sock, void *data);
+typedef enum xtSocketPollEvent {
+	/** No event has occurred. */
+	XT_POLLNONE = 0x00, 
+	/** Normal data can be read without blocking. */
+	XT_POLLIN = 0x02, 
+	/** Priority (out-of-band) data can be read without blocking. */
+	XT_POLLPRI = 0x04, 
+	/** Normal data can be written without blocking. */
+	XT_POLLOUT = 0x08, 
+	/** An error has occurred. */
+	XT_POLLERR = 0x10, 
+	/** A stream-oriented connection was either disconnected or aborted. */
+	XT_POLLHUP = 0x20
+} xtSocketPollEvent;
+/**
+ * Adds a socket for monitoring. 
+ * After a successful call to this function, the socket will be monitored for the 
+ * specified events by the system. 
+ * XT_POLLERR and XT_POLLHUP are always added implicitly.
+ * @param data - The data to associate with the socket.
+ * @param events - The events which are to be monitored.
+ */
+int xtSocketPollAdd(xtSocketPoll *p, xtSocket sock, void *data, xtSocketPollEvent events);
 /**
  * Initiates the poll structure for socket monitoring.
  * @param size - The amount of sockets that will fit into the structure.
@@ -384,37 +419,49 @@ unsigned xtSocketPollGetCount(const xtSocketPoll *p);
  * @remarks No bounds checking is performed. Specifying a too high index 
  * results in undefined behavior.
  */
-void *xtSocketPollGetData(xtSocketPoll *p, unsigned index);
-unsigned xtSocketPollGetSize(xtSocketPoll *p);
+void *xtSocketPollGetData(const xtSocketPoll *p, unsigned index);
+/**
+ * Returns the current event that is happening on the socket at \a index.
+ * @remarks No bounds checking is performed. Specifying a too high index 
+ * results in undefined behavior.
+ */
+xtSocketPollEvent xtSocketPollGetEvent(const xtSocketPoll *p, unsigned index);
+unsigned xtSocketPollGetSize(const xtSocketPoll *p);
 /**
  * Returns the socket at \a index.
  * @remarks No bounds checking is performed. Specifying a too high index 
  * results in undefined behavior.
  */
-xtSocket xtSocketPollGetSocket(xtSocketPoll *p, unsigned index);
+xtSocket xtSocketPollGetSocket(const xtSocketPoll *p, unsigned index);
 /**
- * Removes the specified socket from monitoring. If the socket is removed after 
- * xtSocketPollWait() has succeeded, the socket will still for that moment be present in the "ready" array until 
- * xtSocketPollWait() is called again. The socket's associated data will be set to null. The socket fd in the "ready" array is invalidated also.
- * @returns True if the socket was found and is removed, false is the socket was not found.
+ * Removes the specified socket from monitoring. The socket is already removed from the array 
+ * of ready sockets. It's file descriptor will be invalidated and it's data set to null.
+ * @returns Zero if the socket was found and is removed, otherwise an error code.
  */
-bool xtSocketPollRemove(xtSocketPoll *p, xtSocket sock);
+int xtSocketPollRemove(xtSocketPoll *p, xtSocket sock);
+/**
+ * Sets the current event(s) for a ready socket.
+ */
+int xtSocketPollSetEvent(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent event);
 /**
  * Determines the status of one or more sockets. 
  * All sockets are automically rearmed for the next call to this function. 
  * This means that if some sockets have data waiting to be read, and you skip reading 
- * it, it is possible that the data will be discarded. This function is only meant to be 
- * used when trying to READ data from sockets. Not for other non-blocking operations!
+ * it, the next call to this function will return immediately with those same sockets. 
  * @param timeout - The time to wait at maximum before returning in milliseconds. 
  * Different values are accepted.
  * -1: Block indefinitely.
  * 0 : Return immediately.
  * >1: Block for that amount of time at maximum.
- * @param socketsReady - Will receive that amount of sockets the status is updated. This is 
- * left untouched on an error.
+ * @param socketsReady - Will receive the amount of sockets which are ready. This is 
+ * left untouched on error.
  * @return Zero is the function has executed successfully, otherwise an error code.
  */
 int xtSocketPollWait(xtSocketPoll *p, int timeout, unsigned *socketsReady);
+/**
+ * 
+ */
+int xtSocketPollMod(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent events);
 
 #ifdef __cplusplus
 }

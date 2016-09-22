@@ -662,13 +662,13 @@ xtSocket xtSocketPollGetSocket(const xtSocketPoll *p, unsigned index)
 	return p->readyData[index].fd;
 }
 
-bool xtSocketPollRemove(xtSocketPoll *p, xtSocket socket)
+bool xtSocketPollRemove(xtSocketPoll *p, xtSocket sock)
 {
 	// Find the socket
 	// Clean up possible sensitive data
 	unsigned index = UINT_MAX;
 	for (unsigned i = 0; i < p->size; ++i) {
-		if (p->fds[i].fd == socket) {
+		if (p->fds[i].fd == sock) {
 			index = i;
 			break;
 		}
@@ -705,7 +705,7 @@ int xtSocketPollWait(xtSocketPoll *p, int timeout, unsigned *socketsReady)
 	int eventCount = WSAPoll(p->fds, p->count, timeout);
 	if (eventCount == -1) {
 		int syserr = XT_SOCKET_LAST_ERROR;
-		// Handle this bug in the windows poll. If no sockets are present, it will return immidiately
+		// Handle this bug in the windows poll. If no sockets are present, it will return immediately
 		if (syserr == WSAEINVAL && p->count == 0) {
 			// Simulate the timeout
 			if (timeout > 0)

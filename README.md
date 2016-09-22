@@ -1,4 +1,4 @@
-# XenoTech Library
+# XenoTech Common Library
 by Tom Everaarts
 
 Link with this library by adding -lxt when building your program!
@@ -12,7 +12,7 @@ Read this correctly! You do not need everything if certain library functions are
 
 The minimum versions listed below ensure that everything should work flawlessly.
 
-Linux kernel 3.20+
+Linux kernel 3.00+
 #################################################################
 Things that you may need to install (or should have) : 
 

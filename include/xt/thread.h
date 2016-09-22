@@ -41,26 +41,6 @@ extern "C" {
 	typedef RTL_CRITICAL_SECTION xtMutex;
 #endif
 /**
- * @brief Cross platform thread.
- * 
- * You should threat this struct as if it were opaque.
- */
-typedef struct xtThread {
-	/** The target function for the thread to execute. */
-	void *(*func) (struct xtThread *t, void *arg);
-	/** The argument that is passed to the target function. */
-	void *arg;
-	#if defined(XT_IS_LINUX)
-		pthread_t nativeThread;
-		pthread_cond_t suspendCond;
-		int suspendCount;
-		pthread_mutex_t suspendMutex;
-	#elif defined(XT_IS_WINDOWS)
-		HANDLE exitEvent, nativeThread;
-		unsigned tid;
-	#endif
-} xtThread;
-/**
  * Creates a new mutex. Attempting to initialize an already initialized mutex results in undefined behavior.
  * @return Zero if the mutex has been created, otherwise an error code.
  */
@@ -91,7 +71,6 @@ int xtMutexTryLock(xtMutex *m);
 /**
  * Unlocks the mutex so it is ready for use by other threads.
  * @return Zero if the mutex has been unlocked, otherwise an error code.
-<<<<<<< HEAD
  */
 int xtMutexUnlock(xtMutex *m);
 /**
@@ -121,30 +100,6 @@ typedef struct xtThread {
  * @return - The previous suspend count for the thread.
  */
 int xtThreadContinue(xtThread *t);
-=======
- */
-int xtMutexUnlock(xtMutex *m);
-/**
- * @brief Cross platform thread.
- * 
- * You should threat this struct as if it were opaque.
- */
-typedef struct xtThread {
-	/** The target function for the thread to execute. */
-	void *(*func) (struct xtThread *t, void *arg);
-	/** The argument that is passed to the target function. */
-	void *arg;
-#if defined(XT_IS_LINUX)
-	pthread_t nativeThread;
-	pthread_cond_t suspendCond;
-	int suspendCount;
-	pthread_mutex_t suspendMutex;
-#elif defined(XT_IS_WINDOWS)
-	HANDLE exitEvent, nativeThread;
-	unsigned tid;
-#endif
-} xtThread;
->>>>>>> e5bc55a... Added some docs for xtSocketIsOpen and IsClosed
 /**
  * If the suspend count is zero, the thread is not currently suspended. 
  * Otherwise, the subject thread's suspend count is decremented. 
@@ -153,7 +108,7 @@ typedef struct xtThread {
  */
 int xtThreadContinue(xtThread *t);
 /**
- * Creates a new thread. If the thread has been created successfully, it will start execution immidiately.\n
+ * Creates a new thread. If the thread has been created successfully, it will start execution immediately.\n
  * Errors:\n
  * XT_ENOMEM - The limit of threads has been reached or if the system is lacking the resources to create a new thread.
  * @param func - A function pointer to the function which the thread shall execute.

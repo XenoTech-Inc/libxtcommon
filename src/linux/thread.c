@@ -132,7 +132,7 @@ bool xtThreadJoin(xtThread *t)
 	pthread_mutex_destroy(&t->suspendMutex);
 	pthread_cond_destroy(&t->suspendCond);
 	// No need to check if the thread is alive. This check should always block until the thread has terminated, 
-	// and otherwise return immidiately
+	// and otherwise return immediately
 	return pthread_join(t->nativeThread, NULL) == 0;
 }
 

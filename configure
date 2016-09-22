@@ -6,20 +6,20 @@ CC="gcc"
 
 # The (Path) name for the .a file
 LIBPATH="lib"
-LIBNAME="libxt.a"
+LIBNAME="libxtcommon.a"
 FINALLIBPATH="$LIBPATH/$LIBNAME"
 
 SYSTEM=`uname -s 2>/dev/null`
 case "$SYSTEM" in
 	Linux*)
 		OS_DIR="src/linux"
-		CFLAGS="-std=gnu99 -O3 -Wall -Wextra -pedantic -g"
+		CFLAGS="-std=gnu99 -Wall -Wextra -pedantic -g"
 		;;
 	CYGWIN*)
 		OS_DIR="src/windows"
 		# 1282 is Win XP with SP2
 		# 1536 is Windows Vista
-		CFLAGS="-std=c99 -O3 -Wall -Wextra -pedantic -g -DWINVER=1536 -D_WIN32_WINNT=1536"
+		CFLAGS="-std=c99 -Wall -Wextra -pedantic -g -DWINVER=1536 -D_WIN32_WINNT=1536"
 		;;
 esac
 

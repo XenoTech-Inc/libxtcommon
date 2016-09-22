@@ -23,7 +23,7 @@ extern "C" {
 typedef enum xtDLFlag {
 	/** The symbol will be loaded when you call that particular symbol. */
 	XT_DL_LAZY, 
-	/** Loads all unresolved symbols immidiately. */
+	/** Loads all unresolved symbols immediately. */
 	XT_DL_NOW
 } xtDLFlag;
 /**
