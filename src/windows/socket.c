@@ -159,6 +159,8 @@ int xtSocketClose(xtSocket *sock)
 {
 	if (xtSocketIsClosed(*sock))
 		return XT_EBADF;
+	if (xtSocketGetProtocol(*sock) == XT_SOCKET_PROTO_TCP)
+		shutdown(*sock, SHUT_RDWR);
 	shutdown(*sock, SHUT_RDWR);
 	close(*sock);
 	// Very important!!! The FD is used for detecting if the socket is valid!
@@ -181,6 +183,28 @@ int xtSocketCreate(xtSocket *sock, xtSocketProto proto)
 	*sock = socket(AF_INET, nativeType, nativeProto);
 	if (*sock == XT_SOCKET_INVALID_FD)
 		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
+	if (proto == XT_SOCKET_PROTO_UDP) {
+		// Taken from: https://stackoverflow.com/questions/10332630/connection-reset-on-receiving-packet-in-udp-server
+		// and: https://support.microsoft.com/en-us/kb/263823
+		// Black magic. This disables the stupid Windows behavior of reporting WSAECONNRESET when the destination is 
+		// actively reporting that it's not listening on the destination port.
+		// 
+		// This macro is defined with a magic value because the original M$ macro is not to be found in 
+		// the headers that we use
+		#define _XT_SIO_UDP_CONNRESET -1744830452
+		DWORD dwBytesReturned = 0;
+		BOOL bNewBehavior = FALSE;
+		int status;
+		// disable new behavior using
+		// IOCTL: SIO_UDP_CONNRESET
+		status = WSAIoctl(*sock, _XT_SIO_UDP_CONNRESET,
+			&bNewBehavior, sizeof(bNewBehavior),
+			NULL, 0, &dwBytesReturned,
+			NULL, NULL);
+		if (status == SOCKET_ERROR)
+			return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
+		#undef _XT_SIO_UDP_CONNRESET
+	}
 	return 0;
 }
 
@@ -252,6 +276,17 @@ int xtSocketGetSoLinger(const xtSocket sock, bool *on, int *linger)
 	if (getsockopt(sock, SOL_SOCKET, SO_LINGER, (char*) &val, &len) == 0) {
 		*on = val.l_onoff == 1 ? true : false;
 		*linger = val.l_linger;
+		return 0;
+	}
+	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
+}
+
+int xtSocketGetSoOOBInline(xtSocket sock, bool *flag)
+{
+	int val = 0;
+	socklen_t len = sizeof(val);
+	if (getsockopt(sock, SOL_SOCKET, SO_OOBINLINE, (char*) &val, &len) == 0) {
+		*flag = val;
 		return 0;
 	}
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
@@ -353,6 +388,14 @@ int xtSocketSetSoLinger(xtSocket sock, bool on, int linger)
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
+int xtSocketSetSoOOBInline(xtSocket sock, bool flag)
+{
+	int val = flag ? 1 : 0;
+	if (setsockopt(sock, SOL_SOCKET, SO_OOBINLINE, (const char*) &val, sizeof(val)) == 0)
+		return 0;
+	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
+}
+
 int xtSocketSetSoReceiveBufferSize(xtSocket sock, unsigned size)
 {
 	int val = size;
@@ -387,7 +430,7 @@ int xtSocketSetTCPNoDelay(xtSocket sock, bool flag)
 
 int xtSocketTCPAccept(xtSocket sock, xtSocket *peerSock, xtSockaddr *peerAddr)
 {
-	socklen_t dummyLen = sizeof(struct sockaddr_in*);
+	socklen_t dummyLen = sizeof(struct sockaddr_in);
 	// Something is happening!
 	*peerSock = accept(sock, (struct sockaddr*) peerAddr, &dummyLen);
 	// Check if this socket suddenly closed, but is now woken up
@@ -424,19 +467,28 @@ int xtSocketTCPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *
 	return 0;
 }
 
+int xtSocketTCPWriteOOB(xtSocket sock, uint8_t buf)
+{
+	ssize_t ret;
+	ret = send(sock, (const char*) &buf, 1, MSG_OOB);
+	if (ret == -1)
+		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
+	return 0;
+}
+
 int xtSocketUDPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRead, xtSockaddr *sender)
 {
 	socklen_t dummyLen = sizeof(struct sockaddr_in);
 	ssize_t ret;
 	ret = recvfrom(sock, buf, buflen, 0, (struct sockaddr*) sender, &dummyLen);
+	// When sending UDP packets on Windows, and they destination reports that it's not 
+	// listening on that port, Windows will report WSAECONNRESET. You should really just ignore it 
+	// because it's bullshit. And ignoring it here is exactly what we're doing. This Windows behavior 
+	// should be disabled when we're creating new sockets, but still I mention the problem here.
 	if (ret == -1) {
 		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-	} else if (ret == 0) { // Gracefull shutdown
-		*bytesRead = 0;
-		return XT_ESHUTDOWN;
-	} else {
-		*bytesRead = ret;
 	}
+	*bytesRead = ret;
 	return 0;
 }
 
@@ -455,6 +507,7 @@ int xtSocketUDPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *
 struct _xt_poll_data {
 	xtSocket fd;
 	void *data;
+	short events;
 };
 
 struct xtSocketPoll {
@@ -464,14 +517,60 @@ struct xtSocketPoll {
 	unsigned size, count, socketsReady;
 };
 
-int xtSocketPollAdd(xtSocketPoll *p, xtSocket sock, void *data)
+/**
+ * Filters out or adds flags. This is to have consistent cross platform behavior.
+ */
+static short _xtSocketPollEventFixSysFlags(short sysevents)
+{
+	// Always remove these flags on Windows! They are not allowed to be passed to WSAPoll
+	sysevents &= ~(POLLERR | POLLHUP | POLLPRI);
+	return sysevents;
+}
+/**
+ * Translates an xtSocketPollEvent to it's native countpart.
+ */
+static short _xtSocketPollEventFlagsToSys(xtSocketPollEvent events)
+{
+	short newEvents = 0;
+	if (events & XT_POLLIN)
+		newEvents |= POLLIN;
+	if (events & XT_POLLPRI)
+		newEvents |= POLLRDBAND;
+	if (events & XT_POLLOUT)
+		newEvents |= POLLOUT;
+	if (events & XT_POLLERR)
+		newEvents |= POLLERR;
+	if (events & XT_POLLHUP)
+		newEvents |= POLLHUP;
+	return newEvents;
+}
+/**
+ * Translates native epoll flags to it's xt counterpart.
+ */
+static xtSocketPollEvent _xtSocketPollEventSysToFlags(short sysevents)
+{
+	xtSocketPollEvent newEvents = 0;
+	if (sysevents & POLLIN)
+		newEvents |= XT_POLLIN;
+	if (sysevents & POLLRDBAND)
+		newEvents |= XT_POLLPRI;
+	if (sysevents & POLLOUT)
+		newEvents |= XT_POLLOUT;
+	if (sysevents & POLLERR || sysevents & POLLNVAL)
+		newEvents |= XT_POLLERR;
+	if (sysevents & POLLHUP)
+		newEvents |= XT_POLLHUP;
+	return newEvents;
+}
+
+int xtSocketPollAdd(xtSocketPoll *p, xtSocket sock, void *data, xtSocketPollEvent events)
 {
 	unsigned index = p->count;
 	if (index == p->size)
 		return XT_ENOBUFS;
 	p->fds[index].fd = sock;
 	// Assign the events we want to be informed of, errors are added automatically
-	p->fds[index].events = POLLRDNORM | POLLRDBAND;
+	p->fds[index].events = _xtSocketPollEventFixSysFlags(_xtSocketPollEventFlagsToSys(events));
 	// Reset it, or else we get unwanted results
 	p->fds[index].revents = 0;
 	p->data[index].fd = sock;
@@ -505,13 +604,14 @@ int xtSocketPollCreate(xtSocketPoll **p, unsigned size)
 	for (unsigned i = 0; i < size; ++i) {
 		_p->fds[i].fd = XT_SOCKET_INVALID_FD;
 		// Assign the events we want to be informed of, errors are added automatically
-		_p->fds[i].events = POLLRDNORM | POLLRDBAND;
+		_p->fds[i].events = 0;
 		// Reset it, or we get unwanted results
 		_p->fds[i].revents = 0;
 		_p->data[i].fd = XT_SOCKET_INVALID_FD;
 		_p->data[i].data = NULL;
 		_p->readyData[i].fd = XT_SOCKET_INVALID_FD;
 		_p->readyData[i].data = NULL;
+		_p->readyData[i].events = 0;
 	}
 	_p->size = size;
 	_p->count = 0;
@@ -541,18 +641,23 @@ unsigned xtSocketPollGetCount(const xtSocketPoll *p)
 	return p->count;
 }
 
-void *xtSocketPollGetData(xtSocketPoll *p, unsigned index)
+void *xtSocketPollGetData(const xtSocketPoll *p, unsigned index)
 {
 	
 	return p->readyData[index].data;
 }
 
-unsigned xtSocketPollGetSize(xtSocketPoll *p)
+xtSocketPollEvent xtSocketPollGetEvent(const xtSocketPoll *p, unsigned index)
+{
+	return p->readyData[index].events;
+}
+
+unsigned xtSocketPollGetSize(const xtSocketPoll *p)
 {
 	return p->size;
 }
 
-xtSocket xtSocketPollGetSocket(xtSocketPoll *p, unsigned index)
+xtSocket xtSocketPollGetSocket(const xtSocketPoll *p, unsigned index)
 {
 	return p->readyData[index].fd;
 }
@@ -584,6 +689,17 @@ bool xtSocketPollRemove(xtSocketPoll *p, xtSocket socket)
 	return true;
 }
 
+bool xtSocketPollSetEvent(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent events)
+{
+	for (unsigned i = 0; i < p->socketsReady; ++i) {
+		if (p->readyData[i].fd == sock) {
+			p->readyData[i].events = _xtSocketPollEventFlagsToSys(events);
+			return true;
+		}
+	}
+	return false;
+}
+
 int xtSocketPollWait(xtSocketPoll *p, int timeout, unsigned *socketsReady)
 {
 	int eventCount = WSAPoll(p->fds, p->count, timeout);
@@ -601,13 +717,12 @@ int xtSocketPollWait(xtSocketPoll *p, int timeout, unsigned *socketsReady)
 			return _xtTranslateSysError(syserr); // Legit error
 	}
 	p->socketsReady = eventCount;
-	if (socketsReady)
-		*socketsReady = eventCount;
+	*socketsReady = eventCount;
 	for (unsigned i = 0, socketsHandled = 0; i < p->size && socketsHandled < (unsigned) eventCount; ++i) {
-		if (p->fds[i].revents & (POLLRDNORM | POLLRDBAND)) {
-			p->fds[i].revents = 0;
+		if (p->fds[i].revents != 0) {
 			p->readyData[socketsHandled].fd = p->fds[i].fd;
 			p->readyData[socketsHandled].data = p->data[i].data;
+			p->readyData[socketsHandled].events = _xtSocketPollEventSysToFlags(p->fds[i].events);
 			++socketsHandled;
 			continue;
 		}

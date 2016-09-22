@@ -408,7 +408,7 @@ bool xtSocketPollRemove(xtSocketPoll *p, xtSocket sock);
  * @param timeout - The time to wait at maximum before returning in milliseconds. 
  * Different values are accepted.
  * -1: Block indefinitely.
- * 0 : Return immidiately.
+ * 0 : Return immediately.
  * >1: Block for that amount of time at maximum.
  * @param socketsReady - Will receive that amount of sockets the status is updated. This is 
  * left untouched on an error.
