@@ -1,0 +1,121 @@
+XT Coding Style
+=================
+
+1. Whitespace
+
+XT indents with tabs. Normally you should indent everything with tabs. 
+There are special occasions however, where this is not the case. e.g if you're typing 
+a very long line of code so you're splitting them in two lines, or if you're making a switch with 
+padding. Then you need to combine tabs with spaces. First put the tabs, then the spaces.
+
+If you are writing function documentation (Doxygen), you should leave a space at 
+the end of the sentence if a new sentence will follow. Otherwise you should never 
+leave whitespace dangling off the ends of lines.
+
+2. Line width
+
+Lines can be longer than 80 characters. However, try to not make them ridiculously long. Try to keep it under 150 characters. 
+That is a very reasonable limit. Screens are big these days. Terminals as well!
+
+3. Naming
+
+Here follows a list of variable naming conventions under different circumstances:
+Normal:   someInteger
+Static:   someInteger
+Global:   someInteger
+Internal: _someInteger (Variables which should not be touched externally)
+
+Enums and structs should always be typedef'd. Never must they end with "_t". 
+If the structure is meant to be internal, it should be prefixed with an underscore. Also if it's 
+internal only, it should be typed with underscores instead of camelcase e.g _xt_hash_data instead of _xtHashData.
+Try to limit the amount of underscores though, as it's pretty annoying to type and read.
+
+4. Block structure
+
+The braces should always be placed on the same line. Never place them on the second line.
+When having an 'if' or statement with only one line, always omit the braces. 
+This applies to 'for', 'do' and 'while' loops also.
+if (something == 1)
+	doThis();
+When having multiple lines (or statements), always (obviously) use the braces.
+if (something == 2) {
+	doThis();
+	doThat();
+}
+Switch statements should have the cases on the same indentation as the switch itself. This is 
+to prevent large indentation which you easily can get with switches. It's also best practice to have 
+a default case in the switch. You should put it at the bottom.
+switch (something) {
+case 1:  doThis();
+case 2:  doThat();
+default: doSomethingElse();
+}
+And if switches have full-through cases, the style is the same. Do note the whitespace after case 1!.
+switch (something) {
+case 1:  
+case 2:  doThat();
+default: doSomethingElse();
+}
+There is a special exception. If there is an 'if, 'for', 'do' or 'while' statement, with as 
+only "line" another one of these statements in it, ALWAYS surround if with braces, even although C does not require it.
+Type it like the following:
+if (something) {
+	for (somethingElse) {
+		doThis();
+		doThat();
+	}
+}
+and NOT like this:
+if (something)
+	for (somethingElse) {
+		doThis();
+		doThat();
+	}
+
+5. Variable types
+
+Use the correct type for the operation that you're going to perform.
+If you know that a number will never be lower than zero, use unsigned!
+If you know that you need very large number for e.g a timestamp, use unsigned long long.
+ONLY use the types from stdint.h when you really need exactly the desired width.
+If you are creating a function which needs flags of some sort, you should put them in an enum.
+This is to prevent human stupidity from specifying the wrong types. In C it's still possible to do by casting, but then you are a moron.
+
+6. Header inclusion and macros
+
+The inclusion order in .h and .c files, must be the following
+[XT headers sorted alphabetically]
+[Other third party headers sorted alphabetically]
+[System headers sorted alphabetically]
+[std headers sorted alphabetically]
+
+Macros should always be completely in uppercase. An exception can be made if the macro is just an alias for 
+another function. Do think wisely about this.
+
+7. Conditional statements
+
+Always type the constant on the right, like the following:
+if (yourVariable == 20)
+	doSomething();
+
+8. Compilation
+
+You should make sure that if you're compiling with maximum warning level, or maximum optimization, 
+NO warnings from the compiler will erupt. We don't want code which creates warnings!
+
+9. Error checking
+
+Functions part of the XT family should have pretty good error checking. malloc (and friends) should always 
+be checked. When a function requires a struct of some kind, you should not check if it's a valid pointer. Only in a destroy 
+function should you do so. The XT family does not think of human stupidity too much. Checking for dangling pointers is useless.
+It is very smart however, to mention it in the function documentation if you're not checking for a certain thing.
+Take a look at xtSocketPollGetSocket() for example, it says this in it's documentation:
+@remarks No bounds checking is performed. Specifying a too high index results in undefined behavior.
+That is an important thing to mention!
+
+10. Documentation
+
+This is a very subjective topic. You should ALWAYS write documention for a function, except if...
+It's really obvious what the function does. For example, xtHashmapGetCount() should not require documentation. Okay captain obvious?
+Variables do not necessarily require documentation. Do what you think is wise.
+Bottom line? Use common-sense.
