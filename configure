@@ -48,7 +48,7 @@ default: $FINALLIBPATH \$(OBJECTS)
 
 install: $FINALLIBPATH
 	sudo cp -R include/* /usr/include
-	sudo cp lib/libxt.a /usr/lib
+	sudo cp lib/$LIBNAME /usr/lib
 
 $FINALLIBPATH: \$(OBJECTS)
 	mkdir -p $LIBPATH
