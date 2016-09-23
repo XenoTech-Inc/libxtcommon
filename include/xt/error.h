@@ -76,7 +76,12 @@ const char *xtGetErrorStr(int errnum);
  */
 void xtPerror(int errnum, const char *msg);
 /**
- * 
+ * Acts like strerror() on posix but you have to provide the buffer.
+ * The provided buffer is also returned.
+ * @param errnum - An XT error code
+ * @param buf - The provided buffer
+ * @param buflen - The provided buffer length including null terminator
+ * @return The provided buffer
  */
 char *xtStrError(int errnum, char *buf, size_t buflen);
 /**
