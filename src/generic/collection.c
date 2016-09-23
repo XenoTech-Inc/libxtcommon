@@ -37,12 +37,9 @@ void xtHashmapDestroy(xtHashmap *map)
 		return;
 	for (size_t i = 0; i < map->size; ++i) {
 		if (map->buckets[i]) {
-			struct xtHashBucket *b = map->buckets[i];
-			while (b) {
-				struct xtHashBucket *next;
+			for (struct xtHashBucket *next, *b = map->buckets[i]; b; b = next) {
 				next = b->next;
 				xtHashmapDeleteBucket(b);
-				b = next;
 			}
 		}
 	}
@@ -157,14 +154,13 @@ bool xtHashmapPut(xtHashmap *map, void *key, void *value)
 	size_t hash = map->keyHash(key);
 	struct xtHashBucket *b = map->buckets[hash % map->size];
 	entry->next = NULL;
-	if (!b) {
+	if (!b)
 		map->buckets[hash % map->size] = entry;
-	} else {
+	else {
 		while (b) {
-			if (hash == map->keyHash(b->key) && map->keyCompare(b->key, key)) {
+			if (hash == map->keyHash(b->key) && map->keyCompare(b->key, key))
 				// oops, already exists
 				return false;
-			}
 			if (b->next)
 				b = b->next;
 			else
@@ -181,17 +177,15 @@ bool xtHashmapRemove(xtHashmap *map, void *key)
 	size_t hash;
 	hash = map->keyHash(key);
 	struct xtHashBucket *b = map->buckets[hash % map->size];
-	if (!b) {
+	if (!b)
 		return false;
-	}
 	struct xtHashBucket *prev = b;
 	do {
 		if (hash == map->keyHash(b->key) && map->keyCompare(b->key, key)) {
-			if (prev != b) {
+			if (prev != b)
 				prev->next = b->next;
-			} else {
+			else
 				map->buckets[hash % map->size] = b->next;
-			}
 			xtHashmapDeleteBucket(b);
 			--map->count;
 			return true;
@@ -211,9 +205,8 @@ static bool _xtListGrow(xtList *list, size_t n)
 	if (!(temp = (void**) realloc(list->data, ((list->capacity) + n) * sizeof(list->data))))
 		return false;
 	list->data = temp;
-	for (size_t i = 1; i < n; ++i) {
+	for (size_t i = 1; i < n; ++i)
 		list->data[list->capacity + i] = NULL;
-	}
 	list->lastFreeIndex = list->capacity;
 	list->capacity += n;
 	return true;
@@ -340,10 +333,9 @@ size_t xtListGetCount(const xtList *list)
 
 void *xtListRemove(xtList *list, void *element)
 {
-	for (size_t i = 0; i < xtListGetCapacity(list); ++i) {
+	for (size_t i = 0; i < xtListGetCapacity(list); ++i)
 		if (xtListGet(list, i) == element)
 			return xtListRemoveAt(list, i);
-	}
 	return NULL;
 }
 
