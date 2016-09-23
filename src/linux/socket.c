@@ -656,10 +656,34 @@ xtSocket xtSocketPollGetSocket(const xtSocketPoll *p, unsigned index)
 	return ((struct _xt_poll_data*) p->events[index].data.ptr)->fd;
 }
 
+int xtSocketPollMod(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent events)
+{
+	struct epoll_event event;
+	memset(&event, 0, sizeof(event)); // Prevent "uninitialised value(s)" warnings in Valgrind
+	event.events = _xtSocketPollEventFixSysFlags(_xtSocketPollEventFlagsToSys(events));
+	for (unsigned i = 0; i < p->size; ++i) {
+		if (p->data[i].fd == sock) {
+			event.data.ptr = &p->data[i];
+			if (epoll_ctl(p->epollfd, EPOLL_CTL_MOD, sock, &event) == 0)
+				return 0;
+			break;
+		}
+	}
+	return XT_EINVAL;
+}
+
 int xtSocketPollRemove(xtSocketPoll *p, xtSocket sock)
 {
 	if (epoll_ctl(p->epollfd, EPOLL_CTL_DEL, sock, NULL) != 0)
 		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
+	// Clean up the data in the data array
+	for (unsigned i = 0; i < p->size; ++i) {
+		if (p->data[i].fd == sock) {
+			p->data[i].fd = XT_SOCKET_INVALID_FD;
+			p->data[i].data = NULL;
+			break;
+		}
+	}
 	--p->count;
 	return 0;
 }

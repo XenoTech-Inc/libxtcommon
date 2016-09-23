@@ -434,6 +434,12 @@ unsigned xtSocketPollGetSize(const xtSocketPoll *p);
  */
 xtSocket xtSocketPollGetSocket(const xtSocketPoll *p, unsigned index);
 /**
+ * Modifies the events for which a socket will be monitored. This will take effect 
+ * on the next call to xtSocketPollWait().
+ * @returns Zero if the socket was found and modified, otherwise an error code.
+ */
+int xtSocketPollMod(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent events);
+/**
  * Removes the specified socket from monitoring. The socket is already removed from the array 
  * of ready sockets. It's file descriptor will be invalidated and it's data set to null.
  * @returns Zero if the socket was found and is removed, otherwise an error code.
@@ -458,10 +464,6 @@ int xtSocketPollSetEvent(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent event
  * @return Zero is the function has executed successfully, otherwise an error code.
  */
 int xtSocketPollWait(xtSocketPoll *p, int timeout, unsigned *socketsReady);
-/**
- * 
- */
-int xtSocketPollMod(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent events);
 
 #ifdef __cplusplus
 }

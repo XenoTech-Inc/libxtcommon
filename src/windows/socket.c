@@ -569,9 +569,8 @@ int xtSocketPollAdd(xtSocketPoll *p, xtSocket sock, void *data, xtSocketPollEven
 	if (index == p->size)
 		return XT_ENOBUFS;
 	p->fds[index].fd = sock;
-	// Assign the events we want to be informed of, errors are added automatically
 	p->fds[index].events = _xtSocketPollEventFixSysFlags(_xtSocketPollEventFlagsToSys(events));
-	// Reset it, or else we get unwanted results
+	// Reset it, or else we get unwanted results. Only do this once here
 	p->fds[index].revents = 0;
 	p->data[index].fd = sock;
 	p->data[index].data = data;
@@ -662,7 +661,18 @@ xtSocket xtSocketPollGetSocket(const xtSocketPoll *p, unsigned index)
 	return p->readyData[index].fd;
 }
 
-bool xtSocketPollRemove(xtSocketPoll *p, xtSocket sock)
+int xtSocketPollMod(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent events)
+{
+	for (unsigned i = 0; i < p->size; ++i) {
+		if (p->fds[i].fd == sock) {
+			p->fds[i].events = _xtSocketPollEventFixSysFlags(_xtSocketPollEventFlagsToSys(events));
+			return 0;
+		}
+	}
+	return XT_EINVAL;
+}
+
+int xtSocketPollRemove(xtSocketPoll *p, xtSocket sock)
 {
 	// Find the socket
 	// Clean up possible sensitive data
@@ -674,7 +684,8 @@ bool xtSocketPollRemove(xtSocketPoll *p, xtSocket sock)
 		}
 	}
 	if (index == UINT_MAX)
-		return false;
+		return XT_EINVAL;
+	// Clean up the data in the data array
 	if (index == p->size) {
 		p->fds[index].fd = XT_SOCKET_INVALID_FD;
 		p->data[index].fd = XT_SOCKET_INVALID_FD;
@@ -686,18 +697,18 @@ bool xtSocketPollRemove(xtSocketPoll *p, xtSocket sock)
 		memmove(&p->data[index], &p->data[index + 1], (p->count - index) * sizeof(struct _xt_poll_data));
 	}
 	--p->count;
-	return true;
+	return 0;
 }
 
-bool xtSocketPollSetEvent(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent events)
+int xtSocketPollSetEvent(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent events)
 {
 	for (unsigned i = 0; i < p->socketsReady; ++i) {
 		if (p->readyData[i].fd == sock) {
 			p->readyData[i].events = _xtSocketPollEventFlagsToSys(events);
-			return true;
+			return 0;
 		}
 	}
-	return false;
+	return XT_EINVAL;
 }
 
 int xtSocketPollWait(xtSocketPoll *p, int timeout, unsigned *socketsReady)
