@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>
+#include <stdbool.h>
 
 typedef enum xtSortType {
 	XT_SORT_BUBBLE,
@@ -26,9 +27,9 @@ typedef enum xtSortType {
 	XT_SORT_SELECT,
 } xtSortType;
 
-int xtSortU(unsigned *list, size_t count, xtSortType type, unsigned flags);
-int xtSortD(int *list, size_t count, xtSortType type, unsigned flags);
-int xtSortP(void *list, size_t elemsize, size_t count, xtSortType type, int (*cmp)(void*, void*), unsigned flags);
+int xtSortU(unsigned *list, size_t count, xtSortType type, bool ascend);
+int xtSortD(int *list, size_t count, xtSortType type, bool ascend);
+int xtSortP(void *list, size_t count, xtSortType type, int (*cmp)(void*, void*), bool ascend, size_t elemSize);
 
 #ifdef __cplusplus
 }
