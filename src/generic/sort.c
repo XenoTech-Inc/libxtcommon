@@ -23,57 +23,69 @@ static inline void _xtSwapP(void *a, void *b, void *tmp, size_t size)
 	memcpy(b  , tmp, size);
 }
 
-static void _xtISortD(int *a, size_t n)
+static void _xtISortD(int *a, size_t n, bool ascend)
 {
 	size_t i, j;
-	for (i = 1; i < n; ++i)
-		for (j = i; j > 0 && a[j - 1] > a[j]; --j)
-			_xtSwapD(&a[j], &a[j - 1]);
+	if (ascend)
+		for (i = 1; i < n; ++i)
+			for (j = i; j > 0 && a[j - 1] > a[j]; --j)
+				_xtSwapD(&a[j], &a[j - 1]);
+	else
+		for (i = 1; i < n; ++i)
+			for (j = i; j > 0 && a[j - 1] < a[j]; --j)
+				_xtSwapD(&a[j], &a[j - 1]);
 }
 
-static void _xtISortU(unsigned *a, size_t n)
+static void _xtISortU(unsigned *a, size_t n, bool ascend)
 {
 	size_t i, j;
-	for (i = 1; i < n; ++i)
-		for (j = i; j > 0 && a[j - 1] > a[j]; --j)
-			_xtSwapU(&a[j], &a[j - 1]);
+	if (ascend)
+		for (i = 1; i < n; ++i)
+			for (j = i; j > 0 && a[j - 1] > a[j]; --j)
+				_xtSwapU(&a[j], &a[j - 1]);
+	else
+		for (i = 1; i < n; ++i)
+			for (j = i; j > 0 && a[j - 1] < a[j]; --j)
+				_xtSwapU(&a[j], &a[j - 1]);
 }
 
-static int _xtISortP(void *list, size_t elemsize, size_t n, int (*cmp)(void*, void*))
+static int _xtISortP(void *list, size_t elemsize, size_t n, int (*cmp)(void*, void*), bool ascend)
 {
 	size_t i, j;
 	char *a = list;
 	void *tmp = malloc(elemsize);
 	if (!tmp)
 		return 1;
-	for (i = 1; i < n; ++i)
-		for (j = i; j > 0 && cmp(&a[(j - 1) * elemsize], &a[j * elemsize]) > 0; --j)
-			_xtSwapP(&a[j * elemsize], &a[(j - 1) * elemsize], tmp, elemsize);
+	if (ascend)
+		for (i = 1; i < n; ++i)
+			for (j = i; j > 0 && cmp(&a[(j - 1) * elemsize], &a[j * elemsize]) > 0; --j)
+				_xtSwapP(&a[j * elemsize], &a[(j - 1) * elemsize], tmp, elemsize);
+	else
+		for (i = 1; i < n; ++i)
+			for (j = i; j > 0 && cmp(&a[(j - 1) * elemsize], &a[j * elemsize]) < 0; --j)
+				_xtSwapP(&a[j * elemsize], &a[(j - 1) * elemsize], tmp, elemsize);
 	free(tmp);
 	return 0;
 }
 
 int xtSortU(unsigned *list, size_t count, xtSortType type, bool ascend)
 {
-	_xtISortU(list, count);
+	_xtISortU(list, count, ascend);
 	(void)type;
-	(void)ascend;
 	return 0;
 }
 
 int xtSortD(int *list, size_t count, xtSortType type, bool ascend)
 {
-	_xtISortD(list, count);
+	_xtISortD(list, count, ascend);
 	(void)type;
-	(void)ascend;
 	return 0;
 }
 
 int xtSortP(void *list, size_t count, xtSortType type, int (*cmp)(void*,void*), bool ascend, size_t elemSize)
 {
 	(void)type;
-	(void)ascend;
 	if (!cmp)
 		return 1;
-	return _xtISortP(list, elemsize, count, cmp);
+	return _xtISortP(list, elemSize, count, cmp, ascend);
 }
