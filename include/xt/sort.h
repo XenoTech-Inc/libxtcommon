@@ -17,13 +17,9 @@ extern "C" {
 
 typedef enum xtSortType {
 	XT_SORT_BUBBLE,
-	XT_SORT_BUCKET,
 	XT_SORT_HEAP,
-	XT_SORT_HYBRID,
 	XT_SORT_INSERT,
-	XT_SORT_MERGE,
 	XT_SORT_QUICK,
-	XT_SORT_RADIX,
 	XT_SORT_SELECT,
 } xtSortType;
 
