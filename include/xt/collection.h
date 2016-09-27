@@ -1,7 +1,7 @@
 /**
  * @brief Contains various utilites like a Hashmap and List.
  * @file collection.h
- * @author Tom Everaarts
+ * @author Folkert van Verseveld and Tom Everaarts
  * @date 2016
  * @copyright XT-License.
  */
