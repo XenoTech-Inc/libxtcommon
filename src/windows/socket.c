@@ -104,7 +104,6 @@ char *xtSockaddrToString(const xtSockaddr *sa, char *buf, size_t buflen)
 }
 
 // Some macros that spare us a lot of typing
-#define XT_SOCKET_INVALID_FD (unsigned int) SOCKET_ERROR
 #define XT_SOCKET_LAST_ERROR WSAGetLastError()
 #define close closesocket
 #define SHUT_RDWR SD_BOTH
@@ -281,17 +280,6 @@ int xtSocketGetSoLinger(const xtSocket sock, bool *on, int *linger)
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
-int xtSocketGetSoOOBInline(xtSocket sock, bool *flag)
-{
-	int val = 0;
-	socklen_t len = sizeof(val);
-	if (getsockopt(sock, SOL_SOCKET, SO_OOBINLINE, (char*) &val, &len) == 0) {
-		*flag = val;
-		return 0;
-	}
-	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-}
-
 int xtSocketGetSoReceiveBufferSize(xtSocket sock, unsigned *size)
 {
 	int val = 0;
@@ -388,14 +376,6 @@ int xtSocketSetSoLinger(xtSocket sock, bool on, int linger)
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
-int xtSocketSetSoOOBInline(xtSocket sock, bool flag)
-{
-	int val = flag ? 1 : 0;
-	if (setsockopt(sock, SOL_SOCKET, SO_OOBINLINE, (const char*) &val, sizeof(val)) == 0)
-		return 0;
-	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-}
-
 int xtSocketSetSoReceiveBufferSize(xtSocket sock, unsigned size)
 {
 	int val = size;
@@ -467,15 +447,6 @@ int xtSocketTCPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *
 	return 0;
 }
 
-int xtSocketTCPWriteOOB(xtSocket sock, uint8_t buf)
-{
-	ssize_t ret;
-	ret = send(sock, (const char*) &buf, 1, MSG_OOB);
-	if (ret == -1)
-		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-	return 0;
-}
-
 int xtSocketUDPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRead, xtSockaddr *sender)
 {
 	socklen_t dummyLen = sizeof(struct sockaddr_in);
@@ -516,14 +487,13 @@ struct xtSocketPoll {
 	struct pollfd *fds;
 	unsigned size, count, socketsReady;
 };
-
 /**
  * Filters out or adds flags. This is to have consistent cross platform behavior.
  */
 static short _xtSocketPollEventFixSysFlags(short sysevents)
 {
 	// Always remove these flags on Windows! They are not allowed to be passed to WSAPoll
-	sysevents &= ~(POLLERR | POLLHUP | POLLPRI);
+	sysevents &= ~(POLLERR | POLLHUP);
 	return sysevents;
 }
 /**
@@ -533,11 +503,9 @@ static short _xtSocketPollEventFlagsToSys(xtSocketPollEvent events)
 {
 	short newEvents = 0;
 	if (events & XT_POLLIN)
-		newEvents |= POLLIN;
-	if (events & XT_POLLPRI)
-		newEvents |= POLLRDBAND;
+		newEvents |= POLLRDNORM;
 	if (events & XT_POLLOUT)
-		newEvents |= POLLOUT;
+		newEvents |= POLLWRNORM;
 	if (events & XT_POLLERR)
 		newEvents |= POLLERR;
 	if (events & XT_POLLHUP)
@@ -552,8 +520,6 @@ static xtSocketPollEvent _xtSocketPollEventSysToFlags(short sysevents)
 	xtSocketPollEvent newEvents = 0;
 	if (sysevents & POLLIN)
 		newEvents |= XT_POLLIN;
-	if (sysevents & POLLRDBAND)
-		newEvents |= XT_POLLPRI;
 	if (sysevents & POLLOUT)
 		newEvents |= XT_POLLOUT;
 	if (sysevents & POLLERR || sysevents & POLLNVAL)
@@ -696,6 +662,13 @@ int xtSocketPollRemove(xtSocketPoll *p, xtSocket sock)
 		memmove(&p->fds[index], &p->fds[index + 1], (p->count - index) * sizeof(struct pollfd));
 		memmove(&p->data[index], &p->data[index + 1], (p->count - index) * sizeof(struct _xt_poll_data));
 	}
+	for (unsigned i = 0; i < p->socketsReady; ++i) {
+		if (p->readyData[i].fd == sock) {
+			p->readyData[i].fd = XT_SOCKET_INVALID_FD;
+			p->readyData[i].data = NULL;
+			break;
+		}
+	}
 	--p->count;
 	return 0;
 }
@@ -733,7 +706,10 @@ int xtSocketPollWait(xtSocketPoll *p, int timeout, unsigned *socketsReady)
 		if (p->fds[i].revents != 0) {
 			p->readyData[socketsHandled].fd = p->fds[i].fd;
 			p->readyData[socketsHandled].data = p->data[i].data;
-			p->readyData[socketsHandled].events = _xtSocketPollEventSysToFlags(p->fds[i].events);
+			p->readyData[socketsHandled].events = _xtSocketPollEventSysToFlags(p->fds[i].revents);
+			// Resetting it is for WSAPoll not necessary, but it is for us so that we 
+			// know if something new really happened
+			p->fds[i].revents = 0;
 			++socketsHandled;
 			continue;
 		}

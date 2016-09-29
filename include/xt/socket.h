@@ -116,8 +116,10 @@ typedef enum xtSockProto {
  */
 #if defined(XT_IS_LINUX)
 	typedef int xtSocket;
+	#define XT_SOCKET_INVALID_FD (-1)
 #elif defined(XT_IS_WINDOWS)
-	typedef unsigned int xtSocket;
+	typedef uintptr_t xtSocket;
+	#define XT_SOCKET_INVALID_FD ((xtSocket) (~0))
 #endif
 /**
  * The maximum payload size of an ipv4 TCP packet.\n
@@ -214,11 +216,6 @@ int xtSocketGetSoKeepAlive(const xtSocket sock, bool *flag);
  */
 int xtSocketGetSoLinger(const xtSocket sock, bool *on, int *linger);
 /**
- * Tells you if out-of-band data is currently being received in-line with the normal data.
- * @return Zero is the option has been changed successfully, otherwise an error code.
- */
-int xtSocketGetSoOOBInline(xtSocket sock, bool *flag);
-/**
  * Tells you the current SO_RCVBUF size in bytes for the specified socket.
  * @return Zero if the property has been fetched successfully, otherwise an error code.
  */
@@ -295,13 +292,6 @@ int xtSocketSetSoKeepAlive(xtSocket sock, bool flag);
  */
 int xtSocketSetSoLinger(xtSocket sock, bool on, int linger);
 /**
- * Indicates that out-of-bound data should be returned in-line with regular data. 
- * This option is only valid for connection-oriented protocols that support out-of-band data. 
- * This option is disabled by default.
- * @return Zero is the option has been changed successfully, otherwise an error code.
- */
-int xtSocketSetSoOOBInline(xtSocket sock, bool flag);
-/**
  * Sets the SO_RCVBUF option to the specified value for this socket. 
  * The SO_RCVBUF option is used by the platform's networking code as a hint for the size to set the receive buffer of the underlying I/O buffers.
  * Because this is a just a hint to the implementation, you should check the buffers afterwards by calling xtSocketGetSoReceiveBufferSize().
@@ -354,11 +344,6 @@ int xtSocketTCPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRe
  */
 int xtSocketTCPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *bytesSent);
 /**
- * Writes one byte of out-of-band data to the connected remote socket.
- * @returns Zero if the operation has succeeded, otherwise an error code.
- */
-int xtSocketTCPWriteOOB(xtSocket sock, uint8_t buf);
-/**
  * Blocks until "some" data has been read on the socket. This does not necessarily have to be the size of \a buflen.
  * @param bytesRead - Receives the amount of bytes that have been read.
  * @param sender - Receives the address of the sender.
@@ -384,14 +369,12 @@ typedef enum xtSocketPollEvent {
 	XT_POLLNONE = 0x00, 
 	/** Normal data can be read without blocking. */
 	XT_POLLIN = 0x02, 
-	/** Priority (out-of-band) data can be read without blocking. */
-	XT_POLLPRI = 0x04, 
 	/** Normal data can be written without blocking. */
-	XT_POLLOUT = 0x08, 
+	XT_POLLOUT = 0x04, 
 	/** An error has occurred. */
-	XT_POLLERR = 0x10, 
+	XT_POLLERR = 0x08, 
 	/** A stream-oriented connection was either disconnected or aborted. */
-	XT_POLLHUP = 0x20
+	XT_POLLHUP = 0x10
 } xtSocketPollEvent;
 /**
  * Adds a socket for monitoring. 
@@ -440,8 +423,9 @@ xtSocket xtSocketPollGetSocket(const xtSocketPoll *p, unsigned index);
  */
 int xtSocketPollMod(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent events);
 /**
- * Removes the specified socket from monitoring. The socket is already removed from the array 
- * of ready sockets. It's file descriptor will be invalidated and it's data set to null.
+ * Removes the specified socket from monitoring. The socket will be invalidated in the ready array. 
+ * It's file descriptor will be set to XT_SOCKET_INVALID_FD and it's data set to null. 
+ * Do note that this means it is still present in the ready array until the next call to xtSocketPollWait().
  * @returns Zero if the socket was found and is removed, otherwise an error code.
  */
 int xtSocketPollRemove(xtSocketPoll *p, xtSocket sock);

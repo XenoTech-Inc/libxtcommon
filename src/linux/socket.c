@@ -123,7 +123,6 @@ char *xtSockaddrToString(const xtSockaddr *sa, char *buf, size_t buflen)
 }
 
 // Some macros that spare us a lot of typing
-#define XT_SOCKET_INVALID_FD -1
 #define XT_SOCKET_LAST_ERROR errno
 /**
  * Converts a native socket protocol to it's xt representation.
@@ -274,17 +273,6 @@ int xtSocketGetSoLinger(const xtSocket sock, bool *on, int *linger)
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
-int xtSocketGetSoOOBInline(xtSocket sock, bool *flag)
-{
-	int val = 0;
-	socklen_t len = sizeof(val);
-	if (getsockopt(sock, SOL_SOCKET, SO_OOBINLINE, (char*) &val, &len) == 0) {
-		*flag = val;
-		return 0;
-	}
-	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-}
-
 int xtSocketGetSoReceiveBufferSize(xtSocket sock, unsigned *size)
 {
 	int val = 0;
@@ -384,14 +372,6 @@ int xtSocketSetSoLinger(xtSocket sock, bool on, int linger)
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
-int xtSocketSetSoOOBInline(xtSocket sock, bool flag)
-{
-	int val = flag ? 1 : 0;
-	if (setsockopt(sock, SOL_SOCKET, SO_OOBINLINE, (const char*) &val, sizeof(val)) == 0)
-		return 0;
-	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-}
-
 int xtSocketSetSoReceiveBufferSize(xtSocket sock, unsigned size)
 {
 	int val = size;
@@ -463,15 +443,6 @@ int xtSocketTCPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *
 	return 0;
 }
 
-int xtSocketTCPWriteOOB(xtSocket sock, uint8_t buf)
-{
-	ssize_t ret;
-	ret = send(sock, (const char*) &buf, 1, MSG_OOB);
-	if (ret == -1)
-		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-	return 0;
-}
-
 int xtSocketUDPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRead, xtSockaddr *sender)
 {
 	socklen_t dummyLen = sizeof(struct sockaddr_in);
@@ -528,8 +499,6 @@ static uint32_t _xtSocketPollEventFlagsToSys(xtSocketPollEvent events)
 	uint32_t newEvents = 0;
 	if (events & XT_POLLIN)
 		newEvents |= EPOLLIN;
-	if (events & XT_POLLPRI)
-		newEvents |= EPOLLPRI;
 	if (events & XT_POLLOUT)
 		newEvents |= EPOLLOUT;
 	if (events & XT_POLLERR)
@@ -546,8 +515,6 @@ static xtSocketPollEvent _xtSocketPollEventSysToFlags(uint32_t sysevents)
 	xtSocketPollEvent newEvents = 0;
 	if (sysevents & EPOLLIN)
 		newEvents |= XT_POLLIN;
-	if (sysevents & EPOLLPRI)
-		newEvents |= XT_POLLPRI;
 	if (sysevents & EPOLLOUT)
 		newEvents |= XT_POLLOUT;
 	if (sysevents & EPOLLERR)
