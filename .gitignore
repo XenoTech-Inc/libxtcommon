@@ -7,5 +7,7 @@ lib
 *.vim
 *.o
 
+src/generic/_buildopts.c
+
 Makefile
 test

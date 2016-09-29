@@ -196,6 +196,17 @@ static void *threadTestSleep(xtThread *t, void *arg)
 }
 int main(int argc, char** argv) {
 	char nbuf[22];
+	puts("--------------------------------------------------------------------------------\n-- CONFIGURE TEST");
+	printf(
+		"configured with: %s\n"
+		"built on %s\n"
+		"%s (%u.%u)\n",
+		XT_BUILD_OPTIONS.configure,
+		XT_BUILD_OPTIONS.date,
+		XT_BUILD_OPTIONS.version,
+		XT_BUILD_OPTIONS.versionMajor,
+		XT_BUILD_OPTIONS.versionMinor
+	);
 	puts("--------------------------------------------------------------------------------\n-- OS TEST");
 	osTest();
 	puts("--------------------------------------------------------------------------------\n-- THREAD TEST");
