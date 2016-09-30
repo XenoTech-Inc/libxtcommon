@@ -22,9 +22,9 @@ That is a very reasonable limit. Screens are big these days. Terminals as well!
 Here follows a list of variable naming conventions under different circumstances:
 Normal:   someInteger
 Static:   someInteger
-Global:   someInteger
+Global:   someInteger (If it is a constant, it MAY be named like a macro)
 Internal: _someInteger (Variables which should not be touched externally)
-
+Macro:    SOME_INTEGER
 Enums and structs should always be typedef'd. Never must they end with "_t". 
 If the structure is meant to be internal, it should be prefixed with an underscore. Also if it's 
 internal only, it should be typed with underscores instead of camelcase e.g _xt_hash_data instead of _xtHashData.
@@ -56,21 +56,6 @@ case 1:
 case 2:  doThat();
 default: doSomethingElse();
 }
-There is a special exception. If there is an 'if, 'for', 'do' or 'while' statement, with as 
-only "line" another one of these statements in it, ALWAYS surround if with braces, even although C does not require it.
-Type it like the following:
-if (something) {
-	for (somethingElse) {
-		doThis();
-		doThat();
-	}
-}
-and NOT like this:
-if (something)
-	for (somethingElse) {
-		doThis();
-		doThat();
-	}
 
 5. Variable types
 
@@ -117,5 +102,6 @@ That is an important thing to mention!
 
 This is a very subjective topic. You should ALWAYS write documention for a function, except if...
 It's really obvious what the function does. For example, xtHashmapGetCount() should not require documentation. Okay captain obvious?
+Functions should especially have documentation if they have some quirks, like xtSocketPollWait().
 Variables do not necessarily require documentation. Do what you think is wise.
 Bottom line? Use common-sense.
