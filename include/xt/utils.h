@@ -13,9 +13,24 @@
 extern "C" {
 #endif
 
+#define XT_VERSION_MAJOR 0
+#define XT_VERSION_MINOR 5
+
 // STD headers
 #include <stdbool.h>
 
+typedef struct xtBuildOptions {
+	/** Contains the CFLAGS options. */
+	const char *configure;
+	const char *date;
+	const char *version;
+	unsigned versionMajor;
+	unsigned versionMinor;
+} xtBuildOptions;
+/**
+ * Contains information regarding how the library was compiled.
+ */
+extern const xtBuildOptions XT_BUILD_OPTIONS;
 /**
  * Prints the specified message to stderr and exits the program with EXIT_FAILURE.
  */
