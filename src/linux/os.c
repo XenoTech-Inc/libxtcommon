@@ -1,8 +1,10 @@
 // XT headers
 #include <xt/os.h>
+#include <xt/error.h>
 #include <xt/string.h>
 
 // System headers
+#include <errno.h>
 #include <fcntl.h> // for open() and O_RDONLY
 #include <sys/ioctl.h> // for ioctl() and TIOCGWINSZ
 #include <sys/stat.h>
@@ -210,17 +212,28 @@ void xtConsoleClear(void)
 	printf("%s", "\033c"); // Really ultra fast
 }
 
+int xtConsoleGetSize(unsigned *cols, unsigned *rows)
+{
+	if (!xtConsoleIsAvailable())
+		return XT_EINVAL;
+	struct winsize ws;
+	// Initialize these values to be safe
+	ws.ws_row = 0;
+	ws.ws_col = 0;
+	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1)
+		return _xtTranslateSysError(errno);
+	if (ws.ws_row == 0 && ws.ws_col == 0)
+		return _xtTranslateSysError(errno);
+	if (cols)
+		*cols = ws.ws_col;
+	if (rows)
+		*rows = ws.ws_row;
+	return 0;
+}
+
 bool xtConsoleIsAvailable(void)
 {
-	struct winsize w;
-	// Initialize these values to be safe
-	w.ws_row = 0;
-	w.ws_col = 0;
-	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1)
-		return false;
-	if (w.ws_row == 0 && w.ws_col == 0)
-		return false;
-	return true;
+	return getenv("TERM"); // Should be NULL when there is no console
 }
 
 bool xtConsoleSetTitle(const char *title)

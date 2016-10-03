@@ -97,7 +97,14 @@ bool xtCPUHasHyperThreading(const xtCPU *cpuInfo);
  */
 void xtConsoleClear(void);
 /**
- * Returns if the program was launched from a console and thus if one is available.
+ * Tells you the available amount of columns and rows in the console. 
+ * Both pointers are optional. They remain untouched on error.
+ * @return Zero if property has been fetched, otherwise an error code.
+ */
+int xtConsoleGetSize(unsigned *cols, unsigned *rows);
+/**
+ * Returns if the program was launched from a console and thus if one is available. 
+ * If the program was launched by double-clicking, false should be returned.
  */
 bool xtConsoleIsAvailable(void);
 /**

@@ -15,10 +15,13 @@ static void osTest(void)
 {
 	char nbuf[22], sbuf[256];
 	xtConsoleSetTitle("New console title!");
-	printf("Is a console available?: %s\n", (xtConsoleIsAvailable() ? "Yes" : "No"));
 	printf("OS name: %s\n", xtGetOSName(sbuf, 256));
 	printf("Uptime in seconds: %u\n", xtGetUptime());
 	printf("RAM total: %llu bytes\nRAM available: %llu bytes\n", xtRAMGetAmountTotal(), xtRAMGetAmountFree());
+	unsigned width, height;
+	int ret = xtConsoleGetSize(&width, &height);
+	printf("Is a console available?: %s\n", (xtConsoleIsAvailable() ? "Yes" : "No"));
+	printf("Console size retval=%d, size: w=%u, h=%u\n", ret, width, height);
 	puts("#####################################\n## CPU info");
 	unsigned long long end, start = xtClockGetMonotimeUS();
 	xtCPU info;

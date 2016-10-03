@@ -1,5 +1,6 @@
 // XT headers
 #include <xt/os.h>
+#include <xt/error.h>
 #include <xt/string.h>
 
 // System headers
@@ -190,6 +191,20 @@ void xtConsoleClear(void)
 	GetConsoleScreenBufferInfo(handle, &csbi); // Get current text attribute
 	FillConsoleOutputAttribute(handle, csbi.wAttributes, dwConSize, coordScreen, &cCharsWritten); // Set the buffer attributes
 	SetConsoleCursorPosition(handle, coordScreen); // Reset the cursor position
+}
+
+int xtConsoleGetSize(unsigned *cols, unsigned *rows)
+{
+	if (!xtConsoleIsAvailable())
+		return XT_EINVAL;
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi) == FALSE)
+		return XT_EINVAL;
+	if (cols)
+		*cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+	if (rows)
+		*rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+	return 0;
 }
 
 bool xtConsoleIsAvailable(void)
