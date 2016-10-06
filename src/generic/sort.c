@@ -522,6 +522,72 @@ static int _xtSelectionSortP(void *list, size_t elemsize, size_t n, int (*cmp)(v
 	return 0;
 }
 
+#define K 10
+
+static int _xtRadixSortD(int *a, size_t n, bool ascend)
+{
+	int m, exp, bb[K], *b;
+	size_t i, j;
+	b = malloc(n * sizeof(int));
+	if (!b)
+		return XT_ENOMEM;
+	for (m = a[0], exp = i = 1; i < n; ++i)
+		if (a[i] > m)
+			m = a[i];
+	while (m / exp > 0) {
+		memset(bb, 0, K * sizeof(int));
+		for (i = 0; i < n; ++i)
+			++bb[(a[i] / exp) % K];
+		for (i = 1; i < K; ++i)
+			bb[i] += bb[i - 1];
+		for (i = n; i > 0;) {
+			--i;
+			b[--bb[(a[i] / exp) % K]] = a[i];
+		}
+		memcpy(a, b, n * sizeof(int));
+		exp *= K;
+	}
+	if (!ascend) {
+	        for (i = 0, j = n - 1; i < n; ++i, --j)
+			b[i] = a[j];
+		memcpy(a, b, n * sizeof(int));
+	}
+	free(b);
+	return 0;
+}
+
+static int _xtRadixSortU(unsigned *a, size_t n, bool ascend)
+{
+	unsigned m, exp, bb[K], *b;
+	size_t i, j;
+	b = malloc(n * sizeof(unsigned));
+	if (!b)
+		return XT_ENOMEM;
+	for (m = a[0], exp = i = 1; i < n; ++i)
+		if (a[i] > m)
+			m = a[i];
+	while (m / exp > 0) {
+		memset(bb, 0, K * sizeof(unsigned));
+		for (i = 0; i < n; ++i)
+			++bb[(a[i] / exp) % K];
+		for (i = 1; i < K; ++i)
+			bb[i] += bb[i - 1];
+		for (i = n; i > 0;) {
+			--i;
+			b[--bb[(a[i] / exp) % K]] = a[i];
+		}
+		memcpy(a, b, n * sizeof(unsigned));
+		exp *= K;
+	}
+	if (!ascend) {
+	        for (i = 0, j = n - 1; i < n; ++i, --j)
+			b[i] = a[j];
+		memcpy(a, b, n * sizeof(unsigned));
+	}
+	free(b);
+	return 0;
+}
+
 int xtSortU(unsigned *list, size_t count, xtSortType type, bool ascend)
 {
 	switch (type) {
@@ -543,6 +609,8 @@ int xtSortU(unsigned *list, size_t count, xtSortType type, bool ascend)
 	case XT_SORT_SELECT:
 		_xtSelectionSortU(list, count, ascend);
 		break;
+	case XT_SORT_RADIX:
+		return _xtRadixSortU(list, count, ascend);
 	default:
 		return XT_EINVAL;
 	}
@@ -570,6 +638,8 @@ int xtSortD(int *list, size_t count, xtSortType type, bool ascend)
 	case XT_SORT_SELECT:
 		_xtSelectionSortD(list, count, ascend);
 		break;
+	case XT_SORT_RADIX:
+		return _xtRadixSortD(list, count, ascend);
 	default:
 		return XT_EINVAL;
 	}

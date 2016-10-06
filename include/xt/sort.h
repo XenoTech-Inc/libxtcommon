@@ -17,10 +17,11 @@ extern "C" {
 
 typedef enum xtSortType {
 	XT_SORT_BUBBLE,
-	XT_SORT_HEAP,
+	XT_SORT_HEAP  ,
 	XT_SORT_INSERT,
-	XT_SORT_QUICK,
+	XT_SORT_QUICK ,
 	XT_SORT_SELECT,
+	XT_SORT_RADIX ,
 } xtSortType;
 
 int xtSortU(unsigned *list, size_t count, xtSortType type, bool ascend);
