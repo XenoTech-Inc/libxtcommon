@@ -1,4 +1,5 @@
 #include <xt/sort.h>
+#include <xt/time.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -96,6 +97,26 @@ static void sortd(void)
 	putchar('\n');
 }
 
+static void huge(void)
+{
+	size_t n = 1 << 16LLU;
+	unsigned *a = malloc(n * sizeof(unsigned));
+	if (!a) abort();
+	unsigned long long then, now;
+	printf("Sort ascending %zu unsigned ints\n", n);
+	for (unsigned i = 0; i < NTYPE; ++i) {
+		arndu(a, n);
+		fprintf(stdout, "%s: ", names[i]);
+		fflush(stdout);
+		then = xtClockGetRealtimeUS();
+		xtSortD(a, n, types[i], 1);
+		now = xtClockGetRealtimeUS();
+		chklistd(a, n, 1);
+		printf("%llu us\n", now - then);
+	}
+	free(a);
+}
+
 int main(void)
 {
 	srand(time(NULL));
@@ -105,6 +126,7 @@ int main(void)
 	putchar('\n');
 	sortu();
 	sortd();
+	huge();
 	puts("done");
 	return 0;
 }
