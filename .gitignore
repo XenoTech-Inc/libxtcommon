@@ -11,3 +11,4 @@ src/generic/_buildopts.c
 
 Makefile
 test
+sort
