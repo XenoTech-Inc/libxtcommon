@@ -109,9 +109,9 @@ static void huge(void)
 		fprintf(stdout, "%s: ", names[i]);
 		fflush(stdout);
 		then = xtClockGetRealtimeUS();
-		xtSortD(a, n, types[i], 1);
+		xtSortU(a, n, types[i], 1);
 		now = xtClockGetRealtimeUS();
-		chklistd(a, n, 1);
+		chklistu(a, n, 1);
 		printf("%llu us\n", now - then);
 	}
 	free(a);
