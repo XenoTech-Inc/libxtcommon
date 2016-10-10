@@ -13,7 +13,7 @@
 
 static void osTest(void)
 {
-	char nbuf[22], sbuf[256];
+	char sbuf[256];
 	xtConsoleSetTitle("New console title!");
 	printf("OS name: %s\n", xtGetOSName(sbuf, 256));
 	printf("Uptime in seconds: %u\n", xtGetUptime());
@@ -32,7 +32,8 @@ static void osTest(void)
 	xtCPUDump(&info, stdout);
 }
 
-static void tMainTask(xtThread *restrict t1, xtThread *restrict t2) {
+static void tMainTask(xtThread *restrict t1, xtThread *restrict t2)
+{
 	char nbuf[32];
 	printf("TMain: Does T1 equal T2?: %s\n", (xtThreadGetID(t1) == xtThreadGetID(t2) ? "Yes" : "No"));
 	printf("TMain: ID of T1: %s\n", xtSizetToStr(xtThreadGetID(t1), nbuf, 32));
@@ -183,8 +184,7 @@ static void socketTest(void)
 
 static void stringTest(void)
 {
-	char nbuf[32], sbuf[256], ssbuf[256];
-	size_t len;
+	char nbuf[32];
 	puts("The following 2 numbers are supposed to be the same and equal 18446744073709551615");
 	printf("Max LLU value raw llu: %llu\n", ULLONG_MAX);
 	printf("Max LLU value uint64 to string : %s\n", xtUint64ToStr(ULLONG_MAX, nbuf, 32));
@@ -192,13 +192,15 @@ static void stringTest(void)
 
 static void *threadTestSleep(xtThread *t, void *arg)
 {
+	(void)arg;
 	puts("Going to suspend soon!");
 	xtThreadSuspend(t);
 	puts("Awoken!");
 	return NULL;
 }
-int main(int argc, char** argv) {
-	char nbuf[22];
+
+int main(void)
+{
 	puts("--------------------------------------------------------------------------------\n-- CONFIGURE TEST");
 	printf(
 		"configured with: %s\n"
