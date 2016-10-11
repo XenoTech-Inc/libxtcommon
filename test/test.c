@@ -45,34 +45,38 @@ static void tMainTask(xtThread *restrict t1, xtThread *restrict t2)
 static void *t1Task(xtThread *t, void *arg)
 {
 	(void) t;
+	int ret;
 	char nbuf[32];
-	xtSleepMS(50);
 	xtMutex *m = arg;
-	bool lockedMutex = xtMutexTryLock(m);
 	printf("T1: My ID is %s\n", xtSizetToStr(xtThreadGetID(NULL), nbuf, 32));
-	if (lockedMutex) {
+	ret = xtMutexTryLock(m);
+	if (ret == 0) {
+		printf("T1: I have obtained the lock to the mutex!\n");
+		xtSleepMS(50); // Sleep intentionally so that the other thread should have 
+		// already tried to lock it, and fail
+	} else
+		printf("T1: The other thread obtained the lock first\n");
+	if (ret == 0)
 		xtMutexUnlock(m);
-		printf("T1: I obtained the lock to the mutex\n");
-	} else {
-		printf("T1: Unable to obtain the lock to the mutex\n");
-	}
 	return NULL;
 }
 
 static void *t2Task(xtThread *t, void *arg)
 {
 	(void) t;
+	int ret;
 	char nbuf[32];
-	xtSleepMS(50);
 	xtMutex *m = arg;
-	bool lockedMutex = xtMutexTryLock(m);
 	printf("T2: My ID is %s\n", xtSizetToStr(xtThreadGetID(NULL), nbuf, 32));
-	if (lockedMutex) {
+	ret = xtMutexTryLock(m);
+	if (ret == 0) {
+		printf("T2: I have obtained the lock to the mutex!\n");
+		xtSleepMS(50); // Sleep intentionally so that the other thread should have 
+		// already tried to lock it, and fail
+	} else
+		printf("T2: The other thread obtained the lock first\n");
+	if (ret == 0)
 		xtMutexUnlock(m);
-		printf("T2: I obtained the lock to the mutex\n");
-	} else {
-		printf("T2: Unable to obtain the lock to the mutex\n");
-	}
 	return NULL;
 }
 

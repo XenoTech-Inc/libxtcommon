@@ -74,20 +74,19 @@ int xtThreadCreate(xtThread *t, void *(*func) (xtThread *t, void *arg), void *ar
 {
 	// Turn it into KB's
 	stackSizeKB *= 1024;
-	// If it's zero, it will be the default size
-	// If it's larger than zero but small than the minimum stack size, make it the minimum size
-	if (stackSizeKB == 0)
-		stackSizeKB = PTHREAD_STACK_MIN;
 	t->func = func;
 	t->arg = arg;
 	pthread_attr_t attr;
 	if (pthread_attr_init(&attr) != 0)
 		goto error;
-	// Can fail if someone specifies a ridiculous size
-	if (pthread_attr_setstacksize(&attr, stackSizeKB) != 0) {
-		pthread_attr_destroy(&attr);
-		goto error;
+	// Set the custom stack size if desired
+	if (stackSizeKB > 0) {
+		if (pthread_attr_setstacksize(&attr, stackSizeKB) != 0) {
+			pthread_attr_destroy(&attr);
+			goto error;
+		}
 	}
+	// Even although the default should be joinable, set it manually to be ultra-safe.
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 	// Disable the stack guard so we won't waste resources
 	pthread_attr_setguardsize(&attr, 0);
@@ -101,7 +100,7 @@ int xtThreadCreate(xtThread *t, void *(*func) (xtThread *t, void *arg), void *ar
 		goto error;
 	}
 	t->suspendCount = 0;
-	if (pthread_create(&t->nativeThread, &attr, _xtThreadStart, t) != 0) {
+	if (pthread_create(&t->nativeThread, NULL, _xtThreadStart, t) != 0) {
 		pthread_mutex_destroy(&t->suspendMutex);
 		pthread_cond_destroy(&t->suspendCond);
 		pthread_attr_destroy(&attr);

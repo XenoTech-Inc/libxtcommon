@@ -97,26 +97,17 @@ typedef struct xtThread {
  * If the suspend count is zero, the thread is not currently suspended. 
  * Otherwise, the subject thread's suspend count is decremented. 
  * If the resulting value is zero, then the execution of the subject thread is resumed.
- * @return - The previous suspend count for the thread.
+ * @return The previous suspend count for the thread.
  */
 int xtThreadContinue(xtThread *t);
 /**
- * If the suspend count is zero, the thread is not currently suspended. 
- * Otherwise, the subject thread's suspend count is decremented. 
- * If the resulting value is zero, then the execution of the subject thread is resumed.
- * @return - The previous suspend count for the thread.
- */
-int xtThreadContinue(xtThread *t);
-/**
- * Creates a new thread. If the thread has been created successfully, it will start execution immediately.\n
- * Errors:\n
- * XT_ENOMEM - The limit of threads has been reached or if the system is lacking the resources to create a new thread.
+ * Creates a new thread. If the thread has been created successfully, it will start execution immediately.
  * @param func - A function pointer to the function which the thread shall execute.
  * @param arg - An optional argument which the function takes.
- * @param stackSizeKB - The stack size in KB for the thread. Specify zero to get the lowest size possible. If this value 
+ * @param stackSizeKB - The stack size in KB for the thread. Specify zero to use the OS default stack size. If this value 
  * is too low for your new thread, the thread may suddenly terminate when starting.
- * @return 0 for success. Otherwise an error code.
- * @remarks You need to call the join function before exiting. Otherwise system resources will leak.
+ * @return Zero if the thread has been created, otherwise an error code.
+ * @remarks You need to call the join function before exiting, otherwise system resources will leak.
  */
 int xtThreadCreate(xtThread *t, void *(*func) (xtThread *t, void *arg), void *arg, unsigned stackSizeKB);
 /**

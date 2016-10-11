@@ -9,7 +9,8 @@
 int xtMutexCreate(xtMutex *m)
 {
 	extern NTSTATUS WINAPI RtlInitializeCriticalSection(RTL_CRITICAL_SECTION *crit);
-	return RtlInitializeCriticalSection(m) == STATUS_SUCCESS ? 0 : _xtTranslateSysError(GetLastError());
+	RtlInitializeCriticalSection(m);
+	return 0;
 }
 
 int xtMutexDestroy(xtMutex *m)
@@ -22,19 +23,21 @@ int xtMutexDestroy(xtMutex *m)
 int xtMutexLock(xtMutex *m)
 {
 	extern NTSTATUS WINAPI RtlEnterCriticalSection(RTL_CRITICAL_SECTION *crit);
-	return RtlEnterCriticalSection(m) == STATUS_SUCCESS ? 0 : _xtTranslateSysError(GetLastError());
+	RtlEnterCriticalSection(m);
+	return 0;
 }
 
 int xtMutexTryLock(xtMutex *m)
 {
 	extern BOOL WINAPI RtlTryEnterCriticalSection(RTL_CRITICAL_SECTION *crit);
-	return RtlTryEnterCriticalSection(m) == TRUE ? 0 : _xtTranslateSysError(GetLastError());
+	return RtlTryEnterCriticalSection(m) == TRUE ? 0 : XT_EBUSY;
 }
 
 int xtMutexUnlock(xtMutex *m)
 {
 	extern NTSTATUS WINAPI RtlLeaveCriticalSection(RTL_CRITICAL_SECTION *crit);
-	return RtlLeaveCriticalSection(m) == STATUS_SUCCESS ? 0 : _xtTranslateSysError(GetLastError());
+	RtlLeaveCriticalSection(m);
+	return 0;
 }
 
 static unsigned __stdcall _xtThreadStart(void *arg)
@@ -50,17 +53,14 @@ static unsigned __stdcall _xtThreadStart(void *arg)
 
 int xtThreadContinue(xtThread *t)
 {
-	return ResumeThread(t->nativeThread);
+	int ret = ResumeThread(t->nativeThread);
+	return (DWORD) ret != (DWORD) -1 ? ret : 0; // Just return zero on failure
 }
 
 int xtThreadCreate(xtThread *t, void *(*func) (xtThread *t, void *arg), void *arg, unsigned stackSizeKB)
 {
 	// Turn it into KB's
 	stackSizeKB *= 1024;
-	// If it's zero, it will be the default size
-	// If it's larger than zero but small than the minimum stack size, make it the minimum size
-	if (stackSizeKB < 65535)
-		stackSizeKB = 65535;
 	t->func = func;
 	t->arg = arg;
 	t->exitEvent = NULL;
@@ -68,6 +68,7 @@ int xtThreadCreate(xtThread *t, void *(*func) (xtThread *t, void *arg), void *ar
 	t->exitEvent = CreateEvent(NULL, true, false, NULL); // Set the object to non-signaled
 	if (t->exitEvent == NULL)
 		goto error;
+	// Specifying zero as stack size to _beginthreadex makes it use the OS default already
 	t->nativeThread = (HANDLE) _beginthreadex(NULL, stackSizeKB, _xtThreadStart, t, 0, &t->tid);
 	if (t->nativeThread == 0)
 		goto error;
@@ -75,7 +76,7 @@ int xtThreadCreate(xtThread *t, void *(*func) (xtThread *t, void *arg), void *ar
 error:
 	CloseHandle(t->exitEvent);
 	CloseHandle(t->nativeThread);
-	return XT_ENOMEM;
+	return _xtTranslateSysError(errno); // Yes, this time it's errno on Windows instead of GetLastError()
 }
 
 size_t xtThreadGetID(const xtThread *t)
