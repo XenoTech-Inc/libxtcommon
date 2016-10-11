@@ -100,7 +100,7 @@ int xtThreadCreate(xtThread *t, void *(*func) (xtThread *t, void *arg), void *ar
 		goto error;
 	}
 	t->suspendCount = 0;
-	if (pthread_create(&t->nativeThread, NULL, _xtThreadStart, t) != 0) {
+	if (pthread_create(&t->nativeThread, &attr, _xtThreadStart, t) != 0) {
 		pthread_mutex_destroy(&t->suspendMutex);
 		pthread_cond_destroy(&t->suspendCond);
 		pthread_attr_destroy(&attr);
