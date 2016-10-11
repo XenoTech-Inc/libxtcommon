@@ -1,8 +1,7 @@
 #!/bin/bash -e
 # Simple script that creates a Makefile for all c files that contain a main function
-CC=gcc
-cstd='-std=gnu99'
-CFLAGS="-D_LARGEFILE64_SOURCE -Wall -Wextra -pedantic -pthread $cstd $*"
+CC="gcc"
+CFLAGS="-Wall -Wextra -pedantic $cstd $*"
 INCS="-I../include"
 LIBPATH=../lib/libxtcommon.a
 cat <<END >.gitignore
@@ -18,19 +17,23 @@ Makefile
 END
 SYSTEM=`uname -s 2>/dev/null`
 case "$SYSTEM" in
+	Linux*)
+		CFLAGS=" -std=gnu99"
+		LDLIBS=" -lpthread"
+		;;
 	CYGWIN*)
 		# 1282 is Win XP with SP2
 		# 1536 is Windows Vista
-		CFLAGS="$CFLAGS -DWINVER=1536 -D_WIN32_WINNT=1536"
+		CFLAGS=" -std=c99 -DWINVER=1536 -D_WIN32_WINNT=1536"
+		LDLIBS=" -lntdll -lws2_32"
 		;;
 esac
 CFLAGS="$CFLAGS $INCS"
-LDLIBS="-lpthread"
 # Write phony target and overwrite some builtin variables
 cat <<END >Makefile
 .PHONY: default clean
 
-CC?=$CC
+CC=$CC
 CFLAGS=$CFLAGS
 LDLIBS=$LDLIBS
 
