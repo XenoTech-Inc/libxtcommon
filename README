@@ -1,7 +1,7 @@
 # XenoTech Common Library
 by Tom Everaarts and Folkert van Verseveld
 
-Link with this library by adding -lxtcommon when building your program!
+Link with this library by adding -lxtcommon (or libxtcommon.a) when building your program!
 
 This library is cross platform, however there are some problems.
 All functions which exhibit problems on certain platforms have this noted in their documentation.
@@ -36,8 +36,8 @@ Linkage dependencies
 socket.h: -lws2_32
 thread.h: -lntdll
 
-Building the library: Just type (without quotes) "./configure && make" and everything should be done!
+Building:
+Just type (without quotes) "./configure && make" and everything should be done!
+If you want to install the library on your system for easy use in other programs, type (without quotes) "make install".
 
-To compile and run the test, just run this command
-Linux: 		gcc -g -std=c99 -L"lib" -I"include" test.c -o test -lxtcommon -lpthread && ./test
-Windows: 	gcc -g -std=c99 -L"lib" -I"include" test.c -o test.exe -lxtcommon -lntdll -lws2_32 && ./test.exe
+Several demo programs reside in the "demos" folder. The procedure for compiling these is the same as for the main library.
