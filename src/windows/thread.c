@@ -6,36 +6,37 @@
 #include <ntstatus.h> // NTSTATUS and STATUS_XXX
 #include <process.h> // beginthreadex
 
+extern NTSTATUS WINAPI RtlInitializeCriticalSection(RTL_CRITICAL_SECTION *crit);
+extern NTSTATUS WINAPI RtlDeleteCriticalSection(RTL_CRITICAL_SECTION *crit);
+extern NTSTATUS WINAPI RtlEnterCriticalSection(RTL_CRITICAL_SECTION *crit);
+extern BOOL WINAPI RtlTryEnterCriticalSection(RTL_CRITICAL_SECTION *crit);
+extern NTSTATUS WINAPI RtlLeaveCriticalSection(RTL_CRITICAL_SECTION *crit);
+
 int xtMutexCreate(xtMutex *m)
 {
-	extern NTSTATUS WINAPI RtlInitializeCriticalSection(RTL_CRITICAL_SECTION *crit);
 	RtlInitializeCriticalSection(m);
 	return 0;
 }
 
 int xtMutexDestroy(xtMutex *m)
 {
-	extern NTSTATUS WINAPI RtlDeleteCriticalSection(RTL_CRITICAL_SECTION *crit);
 	RtlDeleteCriticalSection(m);
 	return 0;
 }
 
 int xtMutexLock(xtMutex *m)
 {
-	extern NTSTATUS WINAPI RtlEnterCriticalSection(RTL_CRITICAL_SECTION *crit);
 	RtlEnterCriticalSection(m);
 	return 0;
 }
 
 int xtMutexTryLock(xtMutex *m)
 {
-	extern BOOL WINAPI RtlTryEnterCriticalSection(RTL_CRITICAL_SECTION *crit);
 	return RtlTryEnterCriticalSection(m) == TRUE ? 0 : XT_EBUSY;
 }
 
 int xtMutexUnlock(xtMutex *m)
 {
-	extern NTSTATUS WINAPI RtlLeaveCriticalSection(RTL_CRITICAL_SECTION *crit);
 	RtlLeaveCriticalSection(m);
 	return 0;
 }
@@ -53,8 +54,14 @@ static unsigned __stdcall _xtThreadStart(void *arg)
 
 int xtThreadContinue(xtThread *t)
 {
-	int ret = ResumeThread(t->nativeThread);
-	return (DWORD) ret != (DWORD) -1 ? ret : 0; // Just return zero on failure
+	if (xtThreadGetID(t) == xtThreadGetID(NULL))
+		return XT_EINVAL; // Do not allow the same caller
+	xtMutexLock(&t->suspendMutex);
+	int suspendCount = --t->suspendCount;
+	xtMutexUnlock(&t->suspendMutex);
+	if (suspendCount <= 0)
+		ResumeThread(t->nativeThread);
+	return 0;
 }
 
 int xtThreadCreate(xtThread *t, void *(*func) (xtThread *t, void *arg), void *arg, unsigned stackSizeKB)
@@ -68,6 +75,7 @@ int xtThreadCreate(xtThread *t, void *(*func) (xtThread *t, void *arg), void *ar
 	t->exitEvent = CreateEvent(NULL, true, false, NULL); // Set the object to non-signaled
 	if (t->exitEvent == NULL)
 		goto error;
+	t->suspendCount = 0;
 	// Specifying zero as stack size to _beginthreadex makes it use the OS default already
 	t->nativeThread = (HANDLE) _beginthreadex(NULL, stackSizeKB, _xtThreadStart, t, 0, &t->tid);
 	if (t->nativeThread == 0)
@@ -87,6 +95,11 @@ size_t xtThreadGetID(const xtThread *t)
 		return GetCurrentThreadId();
 }
 
+inline int xtThreadGetSuspendCount(const xtThread *t)
+{
+	return t->suspendCount;
+}
+
 bool xtThreadIsAlive(const xtThread *t)
 {
 	// Check if the event is signaled. As long as it ain't, the thread is still alive
@@ -103,8 +116,13 @@ bool xtThreadJoin(xtThread *t)
 int xtThreadSuspend(xtThread *t)
 {
 	if (xtThreadGetID(t) != xtThreadGetID(NULL))
-		return 0;
-	return SuspendThread(t->nativeThread);
+		return XT_EINVAL; // Only allow the same caller
+	xtMutexLock(&t->suspendMutex);
+	int suspendCount = ++t->suspendCount;
+	xtMutexUnlock(&t->suspendMutex);
+	if (suspendCount > 0)
+		SuspendThread(t->nativeThread);
+	return 0;
 }
 
 void xtThreadYield(void)

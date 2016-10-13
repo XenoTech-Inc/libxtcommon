@@ -83,21 +83,23 @@ typedef struct xtThread {
 	void *(*func) (struct xtThread *t, void *arg);
 	/** The argument that is passed to the target function. */
 	void *arg;
+	int suspendCount;
 #if defined(XT_IS_LINUX)
 	pthread_t nativeThread;
 	pthread_cond_t suspendCond;
-	int suspendCount;
 	pthread_mutex_t suspendMutex;
 #elif defined(XT_IS_WINDOWS)
 	HANDLE exitEvent, nativeThread;
+	xtMutex suspendMutex;
 	unsigned tid;
 #endif
 } xtThread;
 /**
- * If the suspend count is zero, the thread is not currently suspended. 
- * Otherwise, the subject thread's suspend count is decremented. 
+ * This function decreases the thread's suspend count by one.
+ * If the suspend count is zero or lower, the thread shall be woken up when asleep.
  * If the resulting value is zero, then the execution of the subject thread is resumed.
- * @return The previous suspend count for the thread.
+ * @param t - The thread of which to decrease the suspend count. This must NOT be the caller thread.
+ * @return Zero on success, otherwise an error code.
  */
 int xtThreadContinue(xtThread *t);
 /**
@@ -107,13 +109,17 @@ int xtThreadContinue(xtThread *t);
  * @param stackSizeKB - The stack size in KB for the thread. Specify zero to use the OS default stack size. If this value 
  * is too low for your new thread, the thread may suddenly terminate when starting.
  * @return Zero if the thread has been created, otherwise an error code.
- * @remarks You need to call the join function before exiting, otherwise system resources will leak.
+ * @remarks You need to call xtThreadJoin() to clean up the new thread properly, otherwise system resources will leak.
  */
 int xtThreadCreate(xtThread *t, void *(*func) (xtThread *t, void *arg), void *arg, unsigned stackSizeKB);
 /**
  * Returns the unique identifier of the specified thread. Pass a null to get the ID of the caller thread.
  */
 size_t xtThreadGetID(const xtThread *t);
+/**
+ * Returns the current suspend count for the specified thread.
+ */
+int xtThreadGetSuspendCount(const xtThread *t);
 /**
  * Returns if the specified thread is still executing their task and has not terminated yet. 
  */
@@ -122,15 +128,14 @@ bool xtThreadIsAlive(const xtThread *t);
  * Joins the specified thread. This operation blocks until the specified thread has terminated. 
  * All of the thread's resources will then be cleaned up. A call to this function should ONLY be made once.
  * Once this function has executed, the specified thread becomes invalid and should NOT be used again for any purpose.
- * @returns If the join operation was successful.
- * @remarks This function call MUST be made to a thread! If this is not done, resources will leak.
+ * @returns True the join operation was successful, false otherwise.
  */
 bool xtThreadJoin(xtThread *t);
 /**
- * Each thread has a suspend count, and if the suspend count is greater than zero, the thread is suspended; otherwise, the thread is not suspended 
- * and is eligible for execution. Calling xtThreadSuspend() causes the target thread's suspend count to be incremented.
+ * Increases the suspend count by one. If the suspend count is higher than zero, the thread will be suspended 
+ * on a call to this function. The thread will not be suspended when the suspend count is zero or lower.
  * @param t - The thread to put to sleep. This must ALWAYS be the caller thread.
- * @return - The previous suspend count for the thread.
+ * @return - Zero on success, otherwise an error code.
  */
 int xtThreadSuspend(xtThread *t);
 /**

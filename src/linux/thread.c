@@ -63,11 +63,14 @@ static void *_xtThreadStart(void *arg)
 
 int xtThreadContinue(xtThread *t)
 {
+	if (xtThreadGetID(t) == xtThreadGetID(NULL))
+		return XT_EINVAL; // Do not allow the same caller
 	pthread_mutex_lock(&t->suspendMutex);
-	--t->suspendCount;
-	pthread_cond_signal(&t->suspendCond);
+	int suspendCount = --t->suspendCount;
 	pthread_mutex_unlock(&t->suspendMutex);
-	return t->suspendCount;
+	if (suspendCount <= 0)
+		pthread_cond_signal(&t->suspendCond);
+	return 0;
 }
 
 int xtThreadCreate(xtThread *t, void *(*func) (xtThread *t, void *arg), void *arg, unsigned stackSizeKB)
@@ -120,6 +123,11 @@ size_t xtThreadGetID(const xtThread *t)
 		return pthread_self();
 }
 
+inline int xtThreadGetSuspendCount(const xtThread *t)
+{
+	return t->suspendCount;
+}
+
 bool xtThreadIsAlive(const xtThread *t)
 {
 	// If ESRCH is returned it means that no such thread was found, thus the thread is dead in our words
@@ -138,14 +146,13 @@ bool xtThreadJoin(xtThread *t)
 int xtThreadSuspend(xtThread *t)
 {
 	if (xtThreadGetID(t) != xtThreadGetID(NULL))
-		return 0;
+		return XT_EINVAL; // Only allow the same caller
 	pthread_mutex_lock(&t->suspendMutex);
 	++t->suspendCount;
-	while (t->suspendCount > 0) {
+	while (t->suspendCount > 0)
 		pthread_cond_wait(&t->suspendCond, &t->suspendMutex);
-	}
 	pthread_mutex_unlock(&t->suspendMutex);
-	return t->suspendCount;
+	return 0;
 }
 
 void xtThreadYield(void)
