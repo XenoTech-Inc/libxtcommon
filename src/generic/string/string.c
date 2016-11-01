@@ -83,17 +83,6 @@ bool xtStringEndsWith(const char *haystack, const char *needle)
 
 char *xtStringReadLine(char *restrict str, size_t num, size_t *restrict bytesRead, FILE *restrict f)
 {
-#if 0
-	if (!fgets(buf, num, f))
-		return NULL;
-	size_t len = strlen(buf);
-	if (bytesRead)
-		*bytesRead = len;
-	// Remove the stupid \n
-	if (len > 0)
-		buf[len - 1] = '\0';
-	return buf;
-#else
 	register int c = '\0';
 	register char *cs = str;
 	while (--num > 0 && (c = getc(f)) != EOF) {
@@ -109,7 +98,6 @@ char *xtStringReadLine(char *restrict str, size_t num, size_t *restrict bytesRea
 		*bytesRead = cs - str;
 	*cs = '\0';
 	return (c == EOF && cs == str) ? NULL : str;
-#endif
 }
 
 char *xtStringReverseLen(char *str, size_t len)
