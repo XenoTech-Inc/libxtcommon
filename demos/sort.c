@@ -5,6 +5,29 @@
 #include <stdlib.h>
 #include <time.h>
 
+static unsigned strtodt(char *str, size_t n, size_t num, unsigned fnum)
+{
+	static const char *sibase[] = {
+		"us", "ms", "sec", NULL
+	};
+	const char **si = sibase;
+	size_t d = num;
+	unsigned rem = 0;
+	while (*si && d >= 1000) {
+		rem = d % 1000;
+		d /= 1000;
+		++si;
+	}
+	if (!fnum || si == sibase)
+		snprintf(str, n, "%u%s", (unsigned)d, *si);
+	else {
+		char sbuf[32];
+		snprintf(sbuf, sizeof sbuf, "%%u.%%0%du%%s", fnum);
+		snprintf(str, n, sbuf, (unsigned)d, (unsigned)(rem / 1.0f), *si);
+	}
+	return (unsigned)(si - sibase);
+}
+
 static void chklistu(unsigned *a, size_t n, int ascend)
 {
 	if (ascend)
@@ -103,6 +126,7 @@ static void huge(void)
 	unsigned *a = malloc(n * sizeof(unsigned));
 	if (!a) abort();
 	unsigned long long then, now;
+	char buf[32];
 	printf("Sort ascending %zu unsigned ints\n", n);
 	for (unsigned i = 0; i < NTYPE; ++i) {
 		arndu(a, n);
@@ -112,7 +136,8 @@ static void huge(void)
 		xtSortU(a, n, types[i], 1);
 		now = xtClockGetRealtimeUS();
 		chklistu(a, n, 1);
-		printf("%llu us\n", now - then);
+		strtodt(buf, sizeof buf, now - then, 3);
+		printf("%s (%lluus)\n", buf, now - then);
 	}
 	free(a);
 }
