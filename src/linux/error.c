@@ -53,6 +53,7 @@ static const xtErrorMap errorMap[] = {
 	{ "No such file or directory", XT_ENOENT },
 	{ "Directory not empty", XT_ENOTEMPTY },
 	{ "Arg list too long", XT_E2BIG },
+	{ "Not a directory", XT_ENOTDIR },
 	{ "Is a directory", XT_EISDIR },
 	{ "File name too long", XT_ENAMETOOLONG },
 	{ "Address family not supported by protocol", XT_EAFNOSUPPORT },
@@ -139,6 +140,7 @@ int _xtTranslateSysError(int syserrnum)
 	case ETIME:                          
 	case ETIMEDOUT:                      return XT_ETIMEDOUT;
 	case EXDEV:                          return XT_EXDEV;
+	case ENOTDIR:                        return XT_ENOTDIR;
 	case EISDIR:                         return XT_EISDIR;
 	case E2BIG:                          return XT_E2BIG;
 	case EINPROGRESS:                    return XT_EINPROGRESS;

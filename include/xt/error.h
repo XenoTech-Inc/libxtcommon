@@ -56,15 +56,16 @@ extern "C" {
 #define XT_ENOENT          36  /* No such file or directory */
 #define XT_ENOTEMPTY       37  /* Directory not empty */
 #define XT_E2BIG           38  /* Arg list too long */
-#define XT_EISDIR          39  /* Is a directory */
-#define XT_ENAMETOOLONG    40  /* File name too long */
-#define XT_EAFNOSUPPORT    41  /* Address family not supported by protocol */
-#define XT_EPROTONOSUPPORT 42  /* Protocol not supported */
-#define XT_ELOOP           43  /* Too many symbolic links encountered */
-#define XT_ENOSPC          44  /* No space left on device */
-#define XT_ENOTSOCK        45  /* Socket operation on non-socket */
-#define XT_EXDEV           46  /* Cross-device link */
-#define XT_EUNKNOWN        47  /* Unknown error */
+#define XT_ENOTDIR         39  /* Not a directory */
+#define XT_EISDIR          40  /* Is a directory */
+#define XT_ENAMETOOLONG    41  /* File name too long */
+#define XT_EAFNOSUPPORT    42  /* Address family not supported by protocol */
+#define XT_EPROTONOSUPPORT 43  /* Protocol not supported */
+#define XT_ELOOP           44  /* Too many symbolic links encountered */
+#define XT_ENOSPC          45  /* No space left on device */
+#define XT_ENOTSOCK        46  /* Socket operation on non-socket */
+#define XT_EXDEV           47  /* Cross-device link */
+#define XT_EUNKNOWN        48  /* Unknown error */
 #define XT_EMAXRANGE       XT_EUNKNOWN
 
 const char *xtGetErrorStr(int errnum);
