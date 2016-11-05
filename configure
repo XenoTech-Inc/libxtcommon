@@ -14,6 +14,11 @@ case "$SYSTEM" in
 	Linux*)
 		OS_DIR="src/linux"
 		CFLAGS="-std=gnu99 -Wall -Wextra -pedantic"
+		MACHINE_ARCH=`uname -m`
+		if [ "$MACHINE_ARCH" != "x86_64" ]; then
+			# Enable large file support if we're not on 64 bit
+			CFLAGS="$CFLAGS -D_FILE_OFFSET_BITS=64"
+		fi
 		;;
 	CYGWIN*)
 		OS_DIR="src/windows"
