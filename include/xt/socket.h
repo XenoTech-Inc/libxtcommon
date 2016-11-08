@@ -261,7 +261,7 @@ bool xtSocketIsOpen(const xtSocket sock);
  * @param backlog - The maximum length to which the queue of pending connections for \a sock may grow. 
  * If a connection request arrives when the queue is full, the client may receive an error with 
  * an indication of connection refused. Leave this parameter zero to default to a recommended value.
- * @return Zero is the socket has been put into listen mode, otherwise an error code.
+ * @return Zero if the socket has been put into listen mode, otherwise an error code.
  */
 int xtSocketListen(xtSocket sock, unsigned backlog);
 /**
@@ -269,7 +269,7 @@ int xtSocketListen(xtSocket sock, unsigned backlog);
  * This means that when socket functions are called, the calling thread is paused until the kernel has 
  * processed the request. With non-blocking sockets functions can return immediately without blocking.
  * @param flag - Specify true to go to blocking mode. Specify false to go to non-blocking mode.
- * @return Zero is the option has been changed successfully, otherwise an error code.
+ * @return Zero if the option has been changed successfully, otherwise an error code.
  */
 int xtSocketSetBlocking(xtSocket sock, bool flag);
 /**
@@ -277,7 +277,7 @@ int xtSocketSetBlocking(xtSocket sock, bool flag);
  * When this socket option is enabled, the TCP stack sends keep-alive packets when no data or acknowledgement packets have been 
  * received for the connection within an interval to detect if the link between two sockets is broken.
  * This option is off by default.
- * @return Zero is the option has been changed successfully, otherwise an error code.
+ * @return Zero if the option has been changed successfully, otherwise an error code.
  */
 int xtSocketSetSoKeepAlive(xtSocket sock, bool flag);
 /**
@@ -288,7 +288,7 @@ int xtSocketSetSoKeepAlive(xtSocket sock, bool flag);
  * Remember : Lingering sockets still occupy a port, and eat system resources. Even if your program has already terminated!
  * @param on - If lingering should be enabled or not.
  * @param linger - The timeout value for SO_LINGER in seconds. The maximum timeout value is platform specific.
- * @return Zero is the option has been changed successfully, otherwise an error code.
+ * @return Zero if the option has been changed successfully, otherwise an error code.
  */
 int xtSocketSetSoLinger(xtSocket sock, bool on, int linger);
 /**
@@ -304,7 +304,7 @@ int xtSocketSetSoReceiveBufferSize(xtSocket sock, unsigned size);
  * For applications using a well known socket address or port it may not be possible to bind a socket to that interface if there is a connection in the timeout state involving the socket address or port. 
  * Enabling SO_REUSEADDR prior to binding the socket allows the socket to be bound even though a previous connection is in a timeout state.\n
  * When a socket is created, this option is off by default.
- * @return Zero is the option has been changed successfully, otherwise an error code.
+ * @return Zero if the option has been changed successfully, otherwise an error code.
  * @remarks Execute this function PRIOR to binding the socket! Otherwise this function will have no effect.
  */
 int xtSocketSetSoReuseAddress(xtSocket sock, bool flag);
@@ -312,6 +312,7 @@ int xtSocketSetSoReuseAddress(xtSocket sock, bool flag);
  * Sets the SO_SNDBUF option to the specified value for this socket. 
  * The SO_SNDBUF option is used by the platform's networking code as a hint for the size to set the send buffer of the underlying I/O buffers.
  * Because this is a just a hint to the implementation, you should check the buffers afterwards by calling xtSocketGetSoSendBufferSize().
+ * @return Zero if the option has been changed successfully, otherwise an error code.
  * @remarks It is best practice to call this function before connecting or binding the socket. This prevents certain problems.
  */
 int xtSocketSetSoSendBufferSize(xtSocket sock, unsigned size);
@@ -319,7 +320,7 @@ int xtSocketSetSoSendBufferSize(xtSocket sock, unsigned size);
  * Enables or disables TCP_NODELAY.\n
  * \a flag = true : Send the data (partial frames) the moment you get them, regardless if you have enough frames for a full network packet.\n
  * \a flag = false : Enable Nagle's algorithm  which means send the data when it is bigger than the MSS or waiting for the receiving acknowledgement before sending data which is smaller.\n
- * @return Zero is the option has been changed successfully, otherwise an error code.
+ * @return Zero if the option has been changed successfully, otherwise an error code.
  */
 int xtSocketSetTCPNoDelay(xtSocket sock, bool flag);
 /**
