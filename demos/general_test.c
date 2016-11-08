@@ -1,15 +1,63 @@
+#include <xt/error.h>
+#include <xt/file.h>
+#include <xt/os.h>
+#include <xt/socket.h>
+#include <xt/string.h>
 #include <xt/thread.h>
 #include <xt/time.h>
 #include <xt/utils.h>
-#include <xt/string.h>
-#include <xt/os.h>
-#include <xt/error.h>
-#include <xt/socket.h>
 
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
 #include <string.h>
+
+static void fileTest(void)
+{
+	char sbuf[256], sbuf2[256];
+	if (xtFileGetExecutablePath(sbuf, sizeof(sbuf) / sizeof(sbuf[0])) != 0) {
+		fprintf(stderr, "Failed to retrieve the path of myself\n");
+		snprintf(sbuf, sizeof(sbuf) / sizeof(sbuf[0]), "test_file");
+	}
+	bool result;
+	int ret;
+	unsigned long long size;
+	result = false;
+	ret = xtFileExists(sbuf, &result);
+	printf("File exists: %d - %s\n", ret, (result ? "Yes" : "No"));
+	FILE *f = fopen(sbuf, "r");
+	size = 0;
+	ret = xtFileGetSizeByHandle(f, &size);
+	printf("File size by handle: %d - %llu\n", ret, size);
+	if (f)
+		fclose(f);
+	size = 0;
+	ret = xtFileGetSizeByName(sbuf, &size);
+	printf("File size by path: %d - %llu\n", ret, size);
+	result = false;
+	ret = xtFileGetRealPath(sbuf, sbuf2, 256);
+	printf("Absolute path of file: %d - %s\n", ret, sbuf2);
+	printf("Base name of file: %s\n", xtFileGetBaseName(sbuf2));
+	printf("File extension: %s\n", xtFileGetExtension(sbuf2));
+	result = false;
+	ret = xtFileIsDir(sbuf, &result);
+	printf("Is file a directory?: %d - %s\n", ret, (result ? "Yes" : "No"));
+	
+	printf("Home dir: %s\n", xtFileGetHomeDir(sbuf2, sizeof(sbuf2) / sizeof(sbuf2[0])));
+	
+	ret = xtFileGetTempDir(sbuf2, sizeof(sbuf2) / sizeof(sbuf2[0]));
+	printf("System temp dir: %d - %s\n", ret, sbuf2);
+	
+	ret = xtFileGetCWD(sbuf2, sizeof(sbuf2) / sizeof(sbuf2[0]));
+	printf("CWD before: %d - %s\n", ret, sbuf2);
+	ret = xtFileSetCWD(sbuf2);
+	printf("CWD change: %d\n", ret);
+	ret = xtFileGetCWD(sbuf2, sizeof(sbuf2) / sizeof(sbuf2[0]));
+	printf("CWD after : %d - %s\n", ret, sbuf2);
+	
+	printf("Creation of dir: %d\n", xtFileCreateDir("test_dir"));
+	printf("Removal of dir: %d\n", xtFileRemoveDir("test_dir"));
+}
 
 static void osTest(void)
 {
@@ -216,6 +264,8 @@ int main(void)
 		XT_BUILD_OPTIONS.versionMajor,
 		XT_BUILD_OPTIONS.versionMinor
 	);
+	puts("--------------------------------------------------------------------------------\n-- FILE TEST");
+	fileTest();
 	puts("--------------------------------------------------------------------------------\n-- OS TEST");
 	osTest();
 	puts("--------------------------------------------------------------------------------\n-- THREAD TEST");
