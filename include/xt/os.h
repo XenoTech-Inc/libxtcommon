@@ -123,6 +123,10 @@ unsigned long long xtRAMGetAmountFree(void);
  */
 unsigned long long xtRAMGetAmountTotal(void);
 /**
+ * Returns the PID for the current process. This function will always succeed.
+ */
+unsigned xtGetCurrentPID(void);
+/**
  * Returns the hostname of this computer. On error a null pointer is returned.
  */
 char *xtGetHostname(char *buf, size_t buflen);
@@ -131,6 +135,10 @@ char *xtGetHostname(char *buf, size_t buflen);
  * @remarks For Linux, this only works on LSB compliant distros.
  */
 char *xtGetOSName(char *buf, size_t buflen);
+/**
+ * Returns the amount of processes that are active on the system. Zero is returned on error.
+ */
+unsigned xtGetProcessCount(void);
 /**
  * Returns the name of the user who is logged in on this session. On error a null pointer is returned.
  */

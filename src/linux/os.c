@@ -287,7 +287,12 @@ unsigned long long xtRAMGetAmountTotal(void)
 	return 0;
 }
 
-char *xtGetHostnamoe(char *buf, size_t buflen)
+unsigned xtGetCurrentPID(void)
+{
+	return getpid();
+}
+
+char *xtGetHostname(char *buf, size_t buflen)
 {
 	// For in the future maybe, HOST_NAME_MAX is the maximum length of the hostname in limits.h
 	if (gethostname(buf, buflen) != 0)
@@ -304,6 +309,16 @@ char *xtGetOSName(char *buf, size_t  buflen)
 	}
 	fclose(fp);
 	return buf;
+}
+
+unsigned xtGetProcessCount(void)
+{
+	char line[31];
+	FILE *fp = popen("ps -fe | wc -l", "r");
+	if (!fp || !fgets(line, 31, fp))
+		return 0;
+	pclose(fp);
+	return atoi(line);
 }
 
 char *xtGetUsername(char *buf, size_t buflen)
