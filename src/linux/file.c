@@ -5,6 +5,7 @@
 
 // System headers
 #include <errno.h>
+#include <fcntl.h> // for open() flags
 #include <sys/stat.h> // for the "stat" call, to obtain a file's size
 #include <unistd.h> // necessary for the stat struct
 
@@ -12,6 +13,44 @@
 #include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
+
+int xtFileCopy(const char *src, const char *dst)
+{
+	if (!src || !dst)
+		return XT_EINVAL;
+	FILE *fsrc = fopen(src, "rb");
+	if (!fsrc)
+		return _xtTranslateSysError(errno);
+	FILE *fdst = fopen(dst, "w+");
+	if (!fdst) {
+		fclose(fsrc);
+		return _xtTranslateSysError(errno);
+	}
+	int ret = xtFileCopyByHandle(fsrc, fdst);
+	fclose(fsrc);
+	fclose(fdst);
+	return ret;
+}
+
+int xtFileCopyByHandle(FILE *src, FILE *dst)
+{
+	if (!src || !dst)
+		return XT_EINVAL;
+	if (fseek(src, 0, SEEK_SET) != 0 || fseek(dst, 0, SEEK_SET) != 0)
+		return _xtTranslateSysError(errno);
+	char buf[8192];
+	size_t len;
+	while (true) {
+		len = fread(buf, 1, sizeof(buf) / sizeof(buf[0]), src);
+		if (len == 0)
+			break;
+		if (fwrite(buf, len, 1, dst) != 1)
+			return _xtTranslateSysError(errno);
+	}
+	fseek(dst, 0, SEEK_SET);
+	fseek(src, 0, SEEK_SET);
+	return 0;
+}
 
 int xtFileCreateDir(const char *path)
 {
@@ -91,6 +130,22 @@ char *xtFileGetHomeDir(char *buf, size_t buflen)
 	return buf;
 }
 
+#if 0
+int xtFileGetPathFromFilePointer(char *buf, size_t buflen, FILE *f)
+{
+	if (!f)
+		return XT_EINVAL;
+	char cmd[256];
+	int fd = fileno(f);
+	sprintf(cmd, "/proc/self/fd/%d", fd);
+	ssize_t len = readlink(cmd, buf, buflen);
+	if (len == -1)
+		return _xtTranslateSysError(errno);
+	buf[len] = '\0';
+	return 0;
+}
+#endif
+
 int xtFileGetRealPath(const char *path, char *buf, size_t buflen)
 {
 	(void) buflen; // Future use hopefully
@@ -138,6 +193,16 @@ int xtFileIsDir(const char *path, bool *isDirectory)
 	return 0;
 }
 
+int xtFileMove(const char *src, const char *dst)
+{
+	return rename(src, dst) == 0 ? 0 : _xtTranslateSysError(errno);
+}
+
+int xtFileRemove(const char *path)
+{
+	return remove(path) == 0 ? 0 : _xtTranslateSysError(errno);
+}
+
 int xtFileRemoveDir(const char *path)
 {
 	return rmdir(path) == 0 ? 0 : _xtTranslateSysError(errno);
@@ -146,4 +211,22 @@ int xtFileRemoveDir(const char *path)
 int xtFileSetCWD(const char *path)
 {
 	return chdir(path) == 0 ? 0 : _xtTranslateSysError(errno);
+}
+
+int xtFileTempFile(FILE **f, char *buf, size_t buflen)
+{
+	char path[32];
+	snprintf(path, sizeof(path) / sizeof(path[0]), "/tmp/tmpfile.XXXXXX");
+	int fd = mkstemp(path);
+	if (fd == -1)
+		return _xtTranslateSysError(errno);
+	*f = fdopen(fd, "wb+");
+	if (!*f) {
+		close(fd);
+		unlink(path);
+		return _xtTranslateSysError(errno);
+	}
+	if (buf)
+		snprintf(buf, buflen, "%s", path);
+	return 0;
 }

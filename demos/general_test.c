@@ -19,6 +19,7 @@ static void fileTest(void)
 		fprintf(stderr, "Failed to retrieve the path of myself\n");
 		snprintf(sbuf, sizeof(sbuf) / sizeof(sbuf[0]), "test_file");
 	}
+	printf("Executable path: %s\n", sbuf);
 	bool result;
 	int ret;
 	unsigned long long size;
@@ -57,6 +58,21 @@ static void fileTest(void)
 	
 	printf("Creation of dir: %d\n", xtFileCreateDir("test_dir"));
 	printf("Removal of dir: %d\n", xtFileRemoveDir("test_dir"));
+	
+	FILE *tmpFile;
+	char tmpFilePath[1024];
+	printf("Creation of tmpfile: %d\n", xtFileTempFile(&tmpFile, tmpFilePath, sizeof(tmpFilePath) / sizeof(tmpFilePath[0])));
+	if (tmpFile) {
+		printf("Path of tmpfile: %s\n", tmpFilePath);
+		fputs("HEY!", tmpFile);
+		fflush(tmpFile);
+		fclose(tmpFile);
+		char newPath[256];
+		snprintf(newPath, sizeof(newPath) / sizeof(newPath[0]), "%s/tmp_file.txt", sbuf2);
+		printf("Copy tmp file: %d\n", xtFileCopy(tmpFilePath, newPath));
+		printf("Remove tmp file: %d\n", xtFileRemove(tmpFilePath));
+		printf("Remove tmp copy file: %d\n", xtFileRemove(newPath));
+	}
 }
 
 static void osTest(void)

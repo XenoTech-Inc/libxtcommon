@@ -1,6 +1,7 @@
 /**
  * @brief Various functions to handle files with ease.
  * 
+ * On error, the specified buffer's content for all functions is undefined, unless otherwise noted.
  * @file file.h
  * @author Tom Everaarts
  * @date 2016
@@ -14,12 +15,27 @@
 extern "C" {
 #endif
 
+// XT headers
+#include <xt/os_macros.h>
+
 // STD headers
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 
+/**
+ * Copies the file from \a src to \dst.
+ * @return Zero if the file has been copied, otherwise an error code.
+ */
+int xtFileCopy(const char *src, const char *dst);
+/**
+ * Copies the file from \a src to \dst by their handle.
+ * @return Zero if the file has been copied, otherwise an error code.
+ * @remarks On success the stream position indicator is set to the beginning of both files. 
+ * On error, the position of the indicator is undefined for both files.
+ */
+int xtFileCopyByHandle(FILE *src, FILE *dst);
 /**
  * Creates a new directory.
  * @return Zero if the directory has been created, otherwise an error code.
@@ -83,11 +99,21 @@ int xtFileGetSizeByName(const char *path, unsigned long long *size);
  */
 int xtFileGetTempDir(char *buf, size_t buflen);
 /**
- * Returns whether the specified path is a directory or not. False is always returned on error.
+ * Returns whether the specified path is a directory or not.
  */
 int xtFileIsDir(const char *path, bool *isDirectory);
 /**
- * Removes directory. Do note that the directory should be empty.
+ * Moves \a src to \a dst.
+ * @return Zero if the file has been moved, otherwise an error code.
+ */
+int xtFileMove(const char *src, const char *dst);
+/**
+ * Removes a file.
+ * @return Zero if the file has been deleted, otherwise an error code.
+ */
+int xtFileRemove(const char *path);
+/**
+ * Removes a directory. It must be empty in order for this to work!
  * @return Zero if the folder has been deleted, otherwise an error code.
  */
 int xtFileRemoveDir(const char *path);
@@ -97,6 +123,20 @@ int xtFileRemoveDir(const char *path);
  * @return Zero if the working directory has changed successfully, otherwise an error code.
  */
 int xtFileSetCWD(const char *path);
+/**
+ * Creates a temporary binary file that is automatically removed when it is 
+ * closed or at program termination. The file is opened as in fopen() for update, in 
+ * binary mode (that is, "wb+").
+ * @param f - A pointer to a file pointer. It shall receive a valid file pointer on success. 
+ * On failure it shall be set to NULL.
+ * @param buf - Receives the path of the new temp file on success. Set this to a null pointer 
+ * and it shall not be filled.
+ * @return Zero if the temporary file has been created, otherwise an error code.
+ * @remarks Depending on the platform, you might only be able to copy this file, not moving it. 
+ * This file is NOT deleted automatically! You must do this manually.
+ */
+int xtFileTempFile(FILE **f, char *buf, size_t buflen);
+
 
 #ifdef __cplusplus
 }
