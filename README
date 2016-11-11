@@ -5,6 +5,8 @@ Link with this library by adding -lxtcommon (or libxtcommon.a) when building you
 
 This library is cross platform, however there are some problems.
 All functions which exhibit problems on certain platforms have this noted in their documentation.
+On Windows all snprintf calls currently have a bug: If the buffer is too small, no null-terminator will be appended.
+This is because of Windows's major suckage. They do not honor the C standard. The function is broken.
 
 Dependencies:
 When using this library, you need to link with other libraries as well... This is explained below.
