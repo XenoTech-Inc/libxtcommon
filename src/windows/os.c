@@ -47,7 +47,7 @@ int xtBatteryGetPowerLevel(void)
 	return status.BatteryLifePercent;
 }
 
-void xtCPUDump(const xtCPU *cpuInfo, FILE *f)
+void xtCPUDump(const xtCPUInfo *cpuInfo, FILE *f)
 {
 	fprintf(f, "CPU name: %s\n", cpuInfo->name);
 	char cpuArch[16];
@@ -66,7 +66,7 @@ void xtCPUDump(const xtCPU *cpuInfo, FILE *f)
 	fprintf(f, "L3 cache: %uKB\n", cpuInfo->L3Cache);
 }
 
-bool xtCPUGetInfo(xtCPU *cpuInfo)
+bool xtCPUGetInfo(xtCPUInfo *cpuInfo)
 {
 	// If larger than zero, errors have occurred
 	int errorCount = 0;
@@ -171,7 +171,7 @@ bool xtCPUGetInfo(xtCPU *cpuInfo)
 	return errorCount == 0;
 }
 
-bool xtCPUHasHyperThreading(const xtCPU *cpuInfo)
+bool xtCPUHasHyperThreading(const xtCPUInfo *cpuInfo)
 {
 	return cpuInfo->logicalCores > cpuInfo->physicalCores;
 }
@@ -251,7 +251,6 @@ char *xtGetHostname(char *buf, size_t buflen)
 	snprintf(buf, buflen, "%s", val);
 	return buf;
 }
-
 /**
  * Special function. Since Windows 8.1 GetVersion is kind of broken and won't work correctly.
  * To avoid that, Microsoft recommends changing stuff in the resource file or including some header which nobody understands how to even do.
@@ -260,14 +259,14 @@ char *xtGetHostname(char *buf, size_t buflen)
  */
 static bool _xtGetWindowsVersion(DWORD *major, DWORD *minor)
 {
-	#ifndef RTL_OSVERSIONINFOEXW
-		typedef struct RTL_OSVERSIONINFOEXW {
-			DWORD dwOSVersionInfoSize, dwMajorVersion, dwMinorVersion,
-			dwBuildNumber, dwPlatformId;
-			char szCSDVersion[128];
-			WORD wServicePackMajor,wServicePackMinor, wSuiteMask, wProductType, wReserved;
-		} RTL_OSVERSIONINFOEXW;
-	#endif
+#if !defined(RTL_OSVERSIONINFOEXW)
+	typedef struct RTL_OSVERSIONINFOEXW {
+		DWORD dwOSVersionInfoSize, dwMajorVersion, dwMinorVersion,
+		dwBuildNumber, dwPlatformId;
+		char szCSDVersion[128];
+		WORD wServicePackMajor,wServicePackMinor, wSuiteMask, wProductType, wReserved;
+	} RTL_OSVERSIONINFOEXW;
+#endif
 	typedef LONG (WINAPI* tRtlGetVersion)(RTL_OSVERSIONINFOEXW*);
 	RTL_OSVERSIONINFOEXW pk_OsVer;
 	memset(&pk_OsVer, 0, sizeof(RTL_OSVERSIONINFOEXW));

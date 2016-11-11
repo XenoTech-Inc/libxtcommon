@@ -54,7 +54,7 @@ int xtBatteryGetPowerLevel(void)
 	return -1;
 }
 
-void xtCPUDump(const xtCPU *cpuInfo, FILE *f)
+void xtCPUDump(const xtCPUInfo *cpuInfo, FILE *f)
 {
 	fprintf(f, "CPU name: %s\n", cpuInfo->name);
 	char cpuArch[16];
@@ -73,7 +73,7 @@ void xtCPUDump(const xtCPU *cpuInfo, FILE *f)
 	fprintf(f, "L3 cache: %uKB\n", cpuInfo->L3Cache);
 }
 
-bool xtCPUGetInfo(xtCPU *cpuInfo)
+bool xtCPUGetInfo(xtCPUInfo *cpuInfo)
 {
 	// If larger than zero, errors have occurred
 	int errorCount = 0;
@@ -200,7 +200,7 @@ bool xtCPUGetInfo(xtCPU *cpuInfo)
 	return errorCount == 0;
 }
 
-bool xtCPUHasHyperThreading(const xtCPU *cpuInfo)
+bool xtCPUHasHyperThreading(const xtCPUInfo *cpuInfo)
 {
 	return cpuInfo->logicalCores > cpuInfo->physicalCores;
 }

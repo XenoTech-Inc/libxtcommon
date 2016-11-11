@@ -88,7 +88,7 @@ static void osTest(void)
 	printf("Console size retval=%d, size: w=%u, h=%u\n", ret, width, height);
 	puts("#####################################\n## CPU info");
 	unsigned long long end, start = xtClockGetMonotimeUS();
-	xtCPU info;
+	xtCPUInfo info;
 	bool retval = xtCPUGetInfo(&info);
 	end = xtClockGetMonotimeUS();
 	printf("All CPU info retrieved?: %s\n", (retval ? "Yes" : "No"));

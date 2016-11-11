@@ -53,7 +53,7 @@ typedef enum xtCPUArch {
 /**
  * Contains a lot of information about the CPU.
  */
-typedef struct xtCPU {
+typedef struct xtCPUInfo {
 	/**
 	 * The name of the processor. This is likely to also contain the manufacterer name 
 	 * and clock frequency.
@@ -71,11 +71,11 @@ typedef struct xtCPU {
 	 * Processor cache sizes in bytes.
 	 */
 	unsigned L1Cache, L2Cache, L3Cache;
-} xtCPU;
+} xtCPUInfo;
 /**
  * Dumps the processor information to the specified stream.
  */
-void xtCPUDump(const xtCPU *cpuInfo, FILE *f);
+void xtCPUDump(const xtCPUInfo *cpuInfo, FILE *f);
 /**
  * Retrieves information about the processor. All fields will ALWAYS be filled with default values, 
  * even although an error may occur while retrieving some info. This means that it is possible that not all 
@@ -87,11 +87,11 @@ void xtCPUDump(const xtCPU *cpuInfo, FILE *f);
  * Problems when compiling for Windows 32 bit: The info will always be retrieved partially. The amount of 
  * physical cores will always be same as the amount of logical cores.
  */
-bool xtCPUGetInfo(xtCPU *cpuInfo);
+bool xtCPUGetInfo(xtCPUInfo *cpuInfo);
 /**
  * Returns if this processor has some sort of HyperThreading enabled. (Multiple threads per core)
  */
-bool xtCPUHasHyperThreading(const xtCPU *cpuInfo);
+bool xtCPUHasHyperThreading(const xtCPUInfo *cpuInfo);
 /**
  * Clears the console screen.
  */
