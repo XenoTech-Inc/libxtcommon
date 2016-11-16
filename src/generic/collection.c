@@ -1,5 +1,6 @@
 // XT headers
 #include <xt/collection.h>
+#include <xt/error.h>
 #include <xt/math.h>
 
 // STD headers
@@ -195,105 +196,66 @@ bool xtHashmapRemove(xtHashmap *map, void *key)
 	} while (b);
 	return false;
 }
-/**
- * Grows the list by the specified amount. 
- * If this operation succeeds, all new elements are set to null.
- */
-static bool _xtListGrow(xtList *list, size_t n)
-{
-	void **temp;
-	if (!(temp = (void**) realloc(list->data, ((list->capacity) + n) * sizeof(list->data))))
-		return false;
-	list->data = temp;
-	for (size_t i = 1; i < n; ++i)
-		list->data[list->capacity + i] = NULL;
-	list->lastFreeIndex = list->capacity;
-	list->capacity += n;
-	return true;
-}
 
-static bool _xtListFindFreeSpot(xtList *list)
-{
-	if (list->count == list->capacity)
-		return false;
-	// First try to look from the last free spot, it is possible that the list is empty so don't do +1 on the index
-	for (size_t i = list->lastFreeIndex; i < list->capacity; i++) {
-		if (list->data[i])
-			continue;
-		list->lastFreeIndex = i;
-		return true;
-	}
-	// Nothing found? then try to search from the beginning
-	for (size_t i = 0; i < list->capacity; i++) {
-		if (list->data[i])
-			continue;
-		list->lastFreeIndex = i;
-		return true;
-	}
-	return false;
-}
-/*
- * Shifts all elements past the index to the index. No index checking or anything is performed.
- */
-static void _xtListShift(xtList *list, size_t index)
-{
-	memmove(&list->data[index], &list->data[index + 1], (list->capacity - index - 1) * sizeof(void*));
-}
-
-bool xtListAdd(xtList *list, void *v)
+int xtListAdd(xtList *list, void *data)
 {
 	if (list->count == list->capacity) {
 		if (!list->canGrow)
-			return false; // Can't grow? Return false
-		// If it's a number of two already, add one
-		if (!_xtListGrow(list, xtMathNextPow2((xtMathIsPow2(list->capacity) ? list->capacity + 1 : list->capacity))))
-			return false; // Unable to grow
+			return XT_ENOBUFS;
+		// Try to grow
+		int ret = xtListSetCapacity(list, xtListGetCapacity(list));
+		if (ret != 0)
+			return ret;
+		// Success!
 	}
+	list->data[list->count] = data;
 	++list->count;
-	list->data[list->lastFreeIndex] = v;
-	_xtListFindFreeSpot(list);
-	return true;
+	return 0;
 }
 
-bool xtListAddAt(xtList *list, void *v, size_t index)
+int xtListAddAt(xtList *list, void *data, size_t index)
 {
-	if (index > list->capacity)
-		return false;
-	list->data[index] = v;
-	return true;
+	if (index >= list->count)
+		return XT_EINVAL; // Can only replace elements
+	else if (list->count == list->capacity)
+		return XT_ENOBUFS;
+	if (list->destroyElementFunc)
+		list->destroyElementFunc(list, list->data[index]);
+	list->data[index] = data;
+	// Do not increase count! An element has been replaced
+	return 0;
 }
 
 void xtListClear(xtList *list)
 {
-	// Clear the whole list. It might be fragmented, we cannot know.
-	for (size_t i = 0; i < xtListGetCapacity(list); ++i)
-		list->data[i] = NULL;
-	// Set this manually
-	list->count = 0;
-	list->lastFreeIndex = 0;
+	// Remove elements at the end, this is faster
+	while (list->count > 0)
+		xtListRemoveAt(list, list->count - 1);
 }
 
-bool xtListCreate(xtList *list, size_t capacity)
+int xtListCreate(xtList *list, size_t capacity)
 {
-	if (capacity < XT_LIST_CAPACITY_MIN)
-		capacity = XT_LIST_CAPACITY_MIN;
-	list->data = (void**) malloc(capacity * sizeof(list->data));
-	if (!list->data)
-		return false;
-	list->canGrow = false;
+	if (capacity == 0)
+		capacity = 1024;
+	void **data = (void**) malloc(capacity * sizeof(capacity));
+	if (!data)
+		return XT_ENOMEM;
+	for (size_t i = 0; i < capacity; ++i)
+		data[i] = NULL;
+	list->data = data;
 	list->capacity = capacity;
 	list->count = 0;
-	list->lastFreeIndex = 0;
-	list->shiftMemory = true;
-	for (size_t i = 0; i < capacity; ++i)
-		list->data[i] = NULL;
-	return true;
+	list->canGrow = true;
+	list->destroyElementFunc = NULL;
+	list->destroyListFunc = NULL;
+	return 0;
 }
 
 void xtListDestroy(xtList *list)
 {
-	if (!list)
-		return;
+	xtListClear(list);
+	if (list->destroyListFunc)
+		list->destroyListFunc(list);
 	free(list->data);
 }
 
@@ -302,23 +264,19 @@ void xtListEnableGrowth(xtList *list, bool flag)
 	list->canGrow = flag;
 }
 
-void xtListEnableShifting(xtList *list, bool flag)
+int xtListEnsureCapacity(xtList *list, size_t minCapacity)
 {
-	list->shiftMemory = flag;
+	if (list->capacity >= minCapacity)
+		return 0;
+	return xtListSetCapacity(list, xtListGetCapacity(list) - minCapacity);
 }
 
-bool xtListEnsureCapacity(xtList *list, size_t minCapacity)
+int xtListGet(const xtList *list, size_t index, void **data)
 {
-	if (minCapacity >= xtListGetCapacity(list))
-		return true; // The list already has enough space, no need to grow
-	return _xtListGrow(list, xtListGetCapacity(list) - minCapacity);
-}
-
-void *xtListGet(const xtList *list, size_t index)
-{
-	if (index > list->capacity)
-		return NULL;
-	return list->data[index];
+	if (index >= list->count)
+		return XT_EINVAL;
+	*data = list->data[index];
+	return 0;
 }
 
 size_t xtListGetCapacity(const xtList *list)
@@ -331,30 +289,52 @@ size_t xtListGetCount(const xtList *list)
 	return list->count;
 }
 
-void *xtListRemove(xtList *list, void *element)
+int xtListRemove(xtList *list, void *data)
 {
-	for (size_t i = 0; i < xtListGetCapacity(list); ++i)
-		if (xtListGet(list, i) == element)
-			return xtListRemoveAt(list, i);
-	return NULL;
+	for (size_t i = 0; i < list->count; ++i) {
+		if (list->data[i] == data) {
+			xtListRemoveAt(list, i);
+			return 0;
+		}
+	}
+	return XT_ENOENT;
 }
 
-void *xtListRemoveAt(xtList *list, size_t index)
+int xtListRemoveAt(xtList *list, size_t index)
 {
-	if (index > list->capacity)
-		return NULL;
-	// Check if there is something in there
-	if (!list->data[index])
-		return false;
-	void *element = list->data[index];
-	list->data[index] = NULL;
+	if (index >= list->count)
+		return XT_EINVAL;
+	if (list->destroyElementFunc)
+		list->destroyElementFunc(list, list->data[index]);
+	// If this is the last element, then there is no need to shift.
+	// This trick greatly improves performance when destroying the list from the end!
+	if (index == list->count - 1)
+		list->data[index] = NULL;
+	else
+		memmove(&list->data[index], &list->data[index + 1], (list->capacity - index - 1) * sizeof(void*));
 	--list->count;
-	list->lastFreeIndex = index;
-	if (list->shiftMemory) {
-		// Now shift!
-		_xtListShift(list, index);
-		// If we shift, find a new free spot
-		_xtListFindFreeSpot(list);
-	}
-	return element;
+	return 0;
+}
+
+int xtListSetCapacity(xtList *list, size_t n)
+{
+	void **temp;
+	if (!(temp = (void**) realloc(list->data, ((list->capacity) + n) * sizeof(list->data))))
+		return XT_ENOMEM;
+	list->data = temp;
+	// Clear all new memory
+	for (size_t i = 1; i < n; ++i)
+		list->data[list->capacity + i] = NULL;
+	list->capacity += n;
+	return 0;
+}
+
+void xtListSetElementDestroyFunc(xtList *list, void (*destroyElementFunc) (xtList *list, void *data))
+{
+	list->destroyElementFunc = destroyElementFunc;
+}
+
+void xtListSetListDestroyFunc(xtList *list, void (*destroyListFunc) (xtList *list))
+{
+	list->destroyListFunc = destroyListFunc;
 }
