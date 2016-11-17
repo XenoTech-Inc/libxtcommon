@@ -217,8 +217,6 @@ int xtListAddAt(xtList *list, void *data, size_t index)
 {
 	if (index >= list->count)
 		return XT_EINVAL; // Can only replace elements
-	else if (list->count == list->capacity)
-		return XT_ENOBUFS;
 	if (list->destroyElementFunc)
 		list->destroyElementFunc(list, list->data[index]);
 	list->data[index] = data;
@@ -237,7 +235,7 @@ int xtListCreate(xtList *list, size_t capacity)
 {
 	if (capacity == 0)
 		capacity = 1024;
-	void **data = (void**) malloc(capacity * sizeof(capacity));
+	void **data = malloc(capacity * sizeof(void*));
 	if (!data)
 		return XT_ENOMEM;
 	for (size_t i = 0; i < capacity; ++i)
@@ -311,7 +309,7 @@ int xtListRemoveAt(xtList *list, size_t index)
 	if (index == list->count - 1)
 		list->data[index] = NULL;
 	else
-		memmove(&list->data[index], &list->data[index + 1], (list->capacity - index - 1) * sizeof(void*));
+		memmove(&list->data[index], &list->data[index + 1], (list->count - index - 1) * sizeof(void*));
 	--list->count;
 	return 0;
 }
@@ -319,12 +317,9 @@ int xtListRemoveAt(xtList *list, size_t index)
 int xtListSetCapacity(xtList *list, size_t n)
 {
 	void **temp;
-	if (!(temp = (void**) realloc(list->data, ((list->capacity) + n) * sizeof(list->data))))
+	if (!(temp = realloc(list->data, (list->capacity + n) * sizeof(list->data))))
 		return XT_ENOMEM;
 	list->data = temp;
-	// Clear all new memory
-	for (size_t i = 1; i < n; ++i)
-		list->data[list->capacity + i] = NULL;
 	list->capacity += n;
 	return 0;
 }
