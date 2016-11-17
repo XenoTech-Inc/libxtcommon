@@ -406,9 +406,9 @@ static int _xtQuickSortP_A(void *list, size_t elemsize, ssize_t low, ssize_t hig
 		if (i <= j)
 			_xtSwapP(&a[i++ * elemsize], &a[j-- * elemsize], tmp, elemsize);
 	}
-	if (low < j && (ret = _xtQuickSortP_A(list, elemsize, low, j, cmp)) != 0)
+	if (low < j && (ret = _xtQuickSortP_A(list, elemsize, low, j, cmp)))
 		goto fail;
-	if (i < high && (ret = _xtQuickSortP_A(list, elemsize, i, high, cmp)) != 0)
+	if (i < high && (ret = _xtQuickSortP_A(list, elemsize, i, high, cmp)))
 		goto fail;
 	ret = 0;
 fail:
@@ -436,9 +436,9 @@ static int _xtQuickSortP_D(void *list, size_t elemsize, ssize_t low, ssize_t hig
 		if (i <= j)
 			_xtSwapP(&a[i++ * elemsize], &a[j-- * elemsize], tmp, elemsize);
 	}
-	if (low < j && (ret = _xtQuickSortP_A(list, elemsize, low, j, cmp)) != 0)
+	if (low < j && (ret = _xtQuickSortP_D(list, elemsize, low, j, cmp)))
 		goto fail;
-	if (i < high && (ret = _xtQuickSortP_A(list, elemsize, i, high, cmp)) != 0)
+	if (i < high && (ret = _xtQuickSortP_D(list, elemsize, i, high, cmp)))
 		goto fail;
 	ret = 0;
 fail:
@@ -663,4 +663,14 @@ int xtSortP(void *list, size_t count, xtSortType type, int (*cmp)(void*,void*), 
 	default:
 		return XT_EINVAL;
 	}
+}
+
+static int _xtSortStrcmp(void *a, void *b)
+{
+	return strcmp(*(char**)a, *(char**)b);
+}
+
+int xtSortStr(char **list, size_t count, xtSortType type, bool ascend)
+{
+	return xtSortP(list, count, type, _xtSortStrcmp, ascend, sizeof(char*));
 }
