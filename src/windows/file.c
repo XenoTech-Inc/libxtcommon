@@ -4,10 +4,10 @@
 #include <xt/string.h>
 
 // System headers
+#include <dirent.h>
 #include <windows.h>
 
 // STD headers
-#include <dirent.h>
 #include <string.h>
 
 int xtFileCopy(const char *src, const char *dst)
@@ -103,6 +103,65 @@ const char *xtFileGetExtension(const char *path)
 		return NULL;
 	++dotPlus;
 	return dotPlus != '\0' ? dotPlus : NULL;
+}
+/**
+ * This function belongs to xtFileGetFiles().
+ */
+static void _xtFileGetFilesElementDestroy(xtList *list, void *data)
+{
+	(void) list;
+	struct xtFile *file = data;
+	free(file->path);
+	free(file);
+}
+
+int xtFileGetFiles(const char *path, xtList *files)
+{
+	int ret;
+	WIN32_FIND_DATA fdFile;
+	HANDLE handle;
+	char sbuf[4096];
+	xtListSetElementDestroyFunc(files, _xtFileGetFilesElementDestroy);
+	snprintf(sbuf, sizeof(sbuf) / sizeof(sbuf[0]), "%s\\*.*", path);
+	if ((handle = FindFirstFile(sbuf, &fdFile)) == INVALID_HANDLE_VALUE)
+		return _xtTranslateSysError(GetLastError());
+	size_t fileNameLen;
+	unsigned cnt = 0;
+	for (; FindNextFile(handle, &fdFile); ++cnt) {
+		// Length of the file name including the null terminator
+		fileNameLen = strlen(fdFile.cFileName) + 1;
+		struct xtFile *file = malloc(sizeof(struct xtFile));
+		if (!file) {
+			ret = XT_ENOMEM;
+			goto error;
+		}
+		file->path = malloc(fileNameLen);
+		if (!file->path) {
+			free(file);
+			ret = XT_ENOMEM;
+			goto error;
+		}
+		memcpy(file->path, fdFile.cFileName, fileNameLen);
+		// DO NOT change the order of these statements! Files can have multiple types.
+		// A link can have link as attribute and directory for example
+		if (fdFile.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
+			file->type = XT_FILE_LNK;
+		else if (fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			file->type = XT_FILE_DIR;
+		else if (fdFile.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE)
+			file->type = XT_FILE_REG;
+		else
+			file->type = XT_FILE_UNKNOWN;
+		if ((ret = xtListAdd(files, file)) != 0)
+			goto error;
+	}
+	FindClose(handle);
+	return 0;
+error:
+	FindClose(handle);
+	// Just empty the whole list
+	xtListClear(files);
+	return ret;
 }
 
 char *xtFileGetHomeDir(char *buf, size_t buflen)

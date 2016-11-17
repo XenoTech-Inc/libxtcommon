@@ -1,16 +1,19 @@
 // XT headers
 #include <xt/file.h>
 #include <xt/error.h>
+#include <xt/sort.h>
 #include <xt/string.h>
 
 // System headers
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h> // for open() flags
+#include <strings.h>
+#include <sys/dir.h> // scandir
 #include <sys/stat.h> // for the "stat" call, to obtain a file's size
 #include <unistd.h> // necessary for the stat struct
 
 // STD headers
-#include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -119,6 +122,69 @@ const char *xtFileGetExtension(const char *path)
 		return NULL;
 	++dotPlus;
 	return dotPlus != '\0' ? dotPlus : NULL;
+}
+/**
+ * This function belongs to xtFileGetFiles().
+ */
+static void _xtFileGetFilesElementDestroy(xtList *list, void *data)
+{
+	(void) list;
+	struct xtFile *file = data;
+	free(file->path);
+	free(file);
+}
+/**
+ * This function belongs to xtFileGetFiles().
+ */
+static int caseCompare(const struct dirent **a, const struct dirent **b)
+{
+	return strcasecmp((*a)->d_name, (*b)->d_name);
+}
+
+int xtFileGetFiles(const char *path, xtList *files)
+{
+	int ret;
+	xtListSetElementDestroyFunc(files, _xtFileGetFilesElementDestroy);
+	struct dirent **namelist;
+	size_t fileNameLen;
+	int cnt = scandir(path, &namelist, NULL, caseCompare);
+	if (cnt < 0)
+		return _xtTranslateSysError(errno);
+	for (int i = 0; i < cnt; ++i) {
+		// Length of the file name including the null terminator
+		fileNameLen = strlen(namelist[i]->d_name) + 1;
+		struct xtFile *file = malloc(sizeof(struct xtFile));
+		if (!file) {
+			ret = XT_ENOMEM;
+			goto error;
+		}
+		file->path = malloc(fileNameLen);
+		if (!file->path) {
+			free(file);
+			ret = XT_ENOMEM;
+			goto error;
+		}
+		memcpy(file->path, namelist[i]->d_name, fileNameLen);
+		switch (namelist[i]->d_type) {
+		case DT_REG: file->type = XT_FILE_REG; break;
+		case DT_DIR: file->type = XT_FILE_DIR; break;
+		case DT_LNK: file->type = XT_FILE_LNK; break;
+		default: file->type = XT_FILE_UNKNOWN; break;
+		}
+		if ((ret = xtListAdd(files, file)) != 0)
+			goto error;
+	}
+	for (int i = 0; i < cnt; ++i)
+		free(namelist[i]);
+	free(namelist);
+	return 0;
+error:
+	for (int i = 0; i < cnt; ++i)
+		free(namelist[i]);
+	free(namelist);
+	// Just empty the whole list
+	xtListClear(files);
+	return ret;
 }
 
 char *xtFileGetHomeDir(char *buf, size_t buflen)

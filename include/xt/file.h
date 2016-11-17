@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 // XT headers
-#include <xt/os_macros.h>
+#include <xt/collection.h>
 
 // STD headers
 #include <stdbool.h>
@@ -25,7 +25,27 @@ extern "C" {
 #include <stdio.h>
 
 /**
- * Copies the file from \a src to \dst.
+ * @brief All supported file types for this API.
+ */
+enum xtFileType {
+	/** Unknown or unsupported file type. */
+	XT_FILE_UNKNOWN, 
+	/** Regular file. */
+	XT_FILE_REG, 
+	/** Directory. */
+	XT_FILE_DIR, 
+	/** Symbolic link or Hard link. */
+	XT_FILE_LNK
+};
+/**
+ * @brief Holds you some information about a certain file.
+ */
+struct xtFile {
+	char *path;
+	enum xtFileType type;
+};
+/**
+ * Copies the file from \a src to \a dst.
  * @return Zero if the file has been copied, otherwise an error code.
  */
 int xtFileCopy(const char *src, const char *dst);
@@ -73,6 +93,14 @@ int xtFileGetExecutablePath(char *buf, size_t buflen);
  * @remark This pointer will point to the extension in the \a path string, meaning that NO bytes are copied over.
  */
 const char *xtFileGetExtension(const char *path);
+/**
+ * Tells you what files reside under \a path.
+ * @param files - An initialized xtList, it should be empty. The destructor of the elements will 
+ * be set (even on failure) always. The list will be filled with xtFile's. They are always sorted alphabetically.
+ * @return Zero if the file list has been retrieved, otherwise an error code.
+ * @remarks You must clear the array to have the destructor called for each element.
+ */
+int xtFileGetFiles(const char *path, xtList *files);
 /**
  * Tells you the home directory for the user that is currently running the program. 
  * @return A pointer to \a buf on success, otherwise NULL.
@@ -136,7 +164,6 @@ int xtFileSetCWD(const char *path);
  * This file is NOT deleted automatically! You must do this manually.
  */
 int xtFileTempFile(FILE **f, char *buf, size_t buflen);
-
 
 #ifdef __cplusplus
 }
