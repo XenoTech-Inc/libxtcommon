@@ -184,6 +184,11 @@ size_t xtListGetCapacity(const xtList *list);
  */
 size_t xtListGetCount(const xtList *list);
 /**
+ * Increases the current capacity by \a n elements.
+ * @return Zero if the capacity growth has succeeded, otherwise an error code.
+ */
+int xtListGrow(xtList *list, size_t n);
+/**
  * Attempts to locate the element in the list, and then remove it.
  * @return Zero if the data has been found and removed, otherwise an error code.
  */
@@ -193,11 +198,6 @@ int xtListRemove(xtList *list, void *data);
  * @return Zero if the the data has been removed, otherwise an error code.
  */
 int xtListRemoveAt(xtList *list, size_t index);
-/**
- * Increases the current capacity by \a n elements.
- * @return Zero if the capacity growth has succeeded, otherwise an error code.
- */
-int xtListSetCapacity(xtList *list, size_t n);
 /**
  * Sets the function that is to be called when an element is removed or replaced. 
  * Specify a null pointer to remove the function.

@@ -203,7 +203,7 @@ int xtListAdd(xtList *list, void *data)
 		if (!list->canGrow)
 			return XT_ENOBUFS;
 		// Try to grow
-		int ret = xtListSetCapacity(list, xtListGetCapacity(list));
+		int ret = xtListGrow(list, xtListGetCapacity(list));
 		if (ret != 0)
 			return ret;
 		// Success!
@@ -266,7 +266,7 @@ int xtListEnsureCapacity(xtList *list, size_t minCapacity)
 {
 	if (list->capacity >= minCapacity)
 		return 0;
-	return xtListSetCapacity(list, xtListGetCapacity(list) - minCapacity);
+	return xtListGrow(list, minCapacity - xtListGetCapacity(list));
 }
 
 int xtListGet(const xtList *list, size_t index, void **data)
@@ -285,6 +285,16 @@ size_t xtListGetCapacity(const xtList *list)
 size_t xtListGetCount(const xtList *list)
 {
 	return list->count;
+}
+
+int xtListGrow(xtList *list, size_t n)
+{
+	void **temp;
+	if (!(temp = realloc(list->data, (list->capacity + n) * sizeof(list->data))))
+		return XT_ENOMEM;
+	list->data = temp;
+	list->capacity += n;
+	return 0;
 }
 
 int xtListRemove(xtList *list, void *data)
@@ -311,16 +321,6 @@ int xtListRemoveAt(xtList *list, size_t index)
 	else
 		memmove(&list->data[index], &list->data[index + 1], (list->count - index - 1) * sizeof(void*));
 	--list->count;
-	return 0;
-}
-
-int xtListSetCapacity(xtList *list, size_t n)
-{
-	void **temp;
-	if (!(temp = realloc(list->data, (list->capacity + n) * sizeof(list->data))))
-		return XT_ENOMEM;
-	list->data = temp;
-	list->capacity += n;
 	return 0;
 }
 
