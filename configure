@@ -26,6 +26,10 @@ case "$SYSTEM" in
 		# 1536 is Windows Vista
 		CFLAGS="-std=c99 -Wall -Wextra -pedantic -DWINVER=1536 -D_WIN32_WINNT=1536"
 		;;
+	*)
+		echo 'Unsupported system' 1>&2
+		exit 1
+		;;
 esac
 
 CFLAGS="$CFLAGS $*"

@@ -1,7 +1,7 @@
 #!/bin/bash -e
 # Simple script that creates a Makefile for all c files that contain a main function
 CC="gcc"
-CFLAGS="-Wall -Wextra -pedantic $cstd $*"
+CFLAGS="-Wall -Wextra -pedantic -std=c99 $*"
 INCS="-I../include"
 LIBPATH=../lib/libxtcommon.a
 cat <<END >.gitignore
@@ -18,14 +18,19 @@ END
 SYSTEM=`uname -s 2>/dev/null`
 case "$SYSTEM" in
 	Linux*)
-		CFLAGS=" -std=gnu99"
 		LDLIBS=" -lpthread"
+		MACHINE_ARCH=`uname -m`
+		if [ "$MACHINE_ARCH" != "x86_64" ]; then
+			# Enable large file support if we're not on 64 bit
+			CFLAGS="$CFLAGS -D_FILE_OFFSET_BITS=64"
+		fi
 		;;
 	CYGWIN*)
-		# 1282 is Win XP with SP2
-		# 1536 is Windows Vista
-		CFLAGS=" -std=c99 -DWINVER=1536 -D_WIN32_WINNT=1536"
 		LDLIBS=" -lntdll -lws2_32"
+		;;
+	*)
+		echo 'Unsupported system' 1>&2
+		exit 1
 		;;
 esac
 CFLAGS="$CFLAGS $INCS"
