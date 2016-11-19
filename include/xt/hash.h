@@ -1,6 +1,6 @@
 /**
  * @brief Contains functions to hash data with various algorithms.
- * 
+ *
  * It should be noted that these functions are only supported on Little-endian platforms.
  * @file hash.h
  * @author Tom Everaarts
@@ -57,14 +57,14 @@ typedef struct _xtSHA512Context {
  */
 typedef enum xtHashAlgorithm {
 	/** MD5 digester */
-	XT_HASH_MD5, 
+	XT_HASH_MD5,
 	/** SHA256 digester */
-	XT_HASH_SHA256, 
+	XT_HASH_SHA256,
 	/** SHA512 digester */
 	XT_HASH_SHA512
 } xtHashAlgorithm;
 /**
- * Contains all functionality for various hashing algorithms. 
+ * Contains all functionality for various hashing algorithms.
  * You are free to read all data from this struct, however: Do not modify anything.
  */
 typedef struct xtHash {
@@ -78,13 +78,13 @@ typedef struct xtHash {
 	 */
 	xtHashAlgorithm algorithm;
 	/**
-	 * The hash as ASCII hex string, in lowercase. 
-	 * This value is updated after each digest call. 
+	 * The hash as ASCII hex string, in lowercase.
+	 * This value is updated after each digest call.
 	 * It shall always be null-terminated.
 	 */
 	char ascii[XT_HASH_LARGEST_HASH_SIZE * 2 + 1];
 	/**
-	 * The raw hash bytes. 
+	 * The raw hash bytes.
 	 * This value is updated after each digest call.
 	 */
 	uint8_t bytes[XT_HASH_LARGEST_HASH_SIZE];

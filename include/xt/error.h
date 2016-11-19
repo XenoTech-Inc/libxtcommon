@@ -1,6 +1,6 @@
 /**
  * @brief Used for error handling.
- * 
+ *
  * @file error.h
  * @author Tom Everaarts
  * @date 2016
@@ -27,7 +27,7 @@ extern "C" {
 #define XT_EBADF           8   /* Bad file descriptor */
 #define XT_EMFILE          9   /* Too many open files */
 #define XT_ETIMEDOUT       10  /* Timeout expired */
-#define XT_EOVERFLOW       11  /* Value too large for defined data type */ 
+#define XT_EOVERFLOW       11  /* Value too large for defined data type */
 
 #define XT_EDESTADDRREQ    12  /* Destination address required */
 #define XT_EMSGSIZE        13  /* Message too long */
@@ -70,7 +70,7 @@ extern "C" {
 
 const char *xtGetErrorStr(int errnum);
 /**
- * Acts exactly the same as perror() on Linux. 
+ * Acts exactly the same as perror() on Linux.
  * The error is printed to stderr, along with an optional error message.
  * @param errnum - An XT error code.
  * @param msg - Optional message to be printed. This may be a null pointer.

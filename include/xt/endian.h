@@ -1,8 +1,8 @@
 /**
  * @brief Contains portable endian conversion functions.
- * 
- * This header defines all byte swapping functions as macros (Obviously with side effects). 
- * All of them are prefixed with "xt", all of the names are lowercased. 
+ *
+ * This header defines all byte swapping functions as macros (Obviously with side effects).
+ * All of them are prefixed with "xt", all of the names are lowercased.
  * This code will work in C89, but then it will require some work by hand.
  * @file endian.h
  * @author Tom Everaarts

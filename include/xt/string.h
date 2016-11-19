@@ -25,12 +25,12 @@ int xtCharToDigit(char c);
  */
 char *xtInt64ToStr(int64_t value, char *buf, size_t buflen);
 /**
- * Formats every thousand in the number with the specified seperator. 
+ * Formats every thousand in the number with the specified seperator.
  * \a buf will receive the final string. No bounds checking is performed.
  */
 char *xtFormatCommasLL(long long v, char *buf, int sep);
 /**
- * Formats every thousand in the number with the specified seperator. 
+ * Formats every thousand in the number with the specified seperator.
  * \a buf will receive the final string. No bounds checking is performed.
  */
 char *xtFormatCommasLLU(unsigned long long v, char *buf, int sep);
@@ -41,7 +41,7 @@ char *xtUint64ToStr(uint64_t value, char *buf, size_t buflen);
 char *xtSizetToStr(size_t value, char *buf, size_t buflen);
 /**
  * Reads a single character from the console without the need to press the ENTER key.
- * @remarks This function is kind of expensive since it needs to change the terminal settings on each call on Linux. 
+ * @remarks This function is kind of expensive since it needs to change the terminal settings on each call on Linux.
  * On Windows, do NOT call this function in Cygwin! The program will then block permanently unless CTRL+C is pressed.
  */
 int xtGetch(void);
@@ -50,7 +50,7 @@ int xtGetch(void);
  */
 void xtRot13(void *buf, size_t buflen);
 /**
- * Checks if the haystack contains the needle somewhere in it. 
+ * Checks if the haystack contains the needle somewhere in it.
  * @param needle - A pointer to a null terminated string that serves as needle.
  */
 bool xtStringContainsLen(const char *restrict haystack, const char *restrict needle, size_t haystackLen);

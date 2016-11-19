@@ -1,8 +1,8 @@
 /**
  * @brief Provides very accurate timestamps and other time related functions.
- * 
- * All functions in here should provide true microsecond precision, they 
- * are also thread safe. On 32 bit systems (systems with 32 bit timers), 
+ *
+ * All functions in here should provide true microsecond precision, they
+ * are also thread safe. On 32 bit systems (systems with 32 bit timers),
  * some functions will no longer work correctly after the year 2037.
  * @file time.h
  * @author Tom Everaarts
@@ -22,18 +22,18 @@ extern "C" {
 #include <stddef.h>
 
 /**
- * Tells you the GMT offset in minutes. e.g If you get 60, this means 
- * you are GMT +1. (60 mins in 1 hour). Do note that on Linux & Windows 
- * it grabs the timezone information. If you have changed the time 
- * "by hand", the wrong information will be returned. e.g If you set the 
- * timezone to Amsterdam (GMT +1), and then advance the time by 10 
- * minutes by hand, you will still get 60 minutes ahead of UTC instead 
+ * Tells you the GMT offset in minutes. e.g If you get 60, this means
+ * you are GMT +1. (60 mins in 1 hour). Do note that on Linux & Windows
+ * it grabs the timezone information. If you have changed the time
+ * "by hand", the wrong information will be returned. e.g If you set the
+ * timezone to Amsterdam (GMT +1), and then advance the time by 10
+ * minutes by hand, you will still get 60 minutes ahead of UTC instead
  * of 70. This should be a very rare occurrence nonetheless.\n
- * Daylight Saving Time is ignored. It will not be taken into account 
+ * Daylight Saving Time is ignored. It will not be taken into account
  * by this function.\n
  * Errors:\n
  * XT_EOVERFLOW - The result cannot be represented.
- * @param offset - Receives the GMT offset in minutes. 
+ * @param offset - Receives the GMT offset in minutes.
  * This can be a negative value!
  * @return 0 for success. Otherwise an error code.
  */
@@ -46,30 +46,30 @@ int xtCalendarGetGMTOffset(int *offset);
  */
 int xtCalendarIsDST(bool *isDST);
 /**
- * Fills the buffer with the current time in the following format: 
- * YYYY-mm-dd HH:MM:SS. The clock uses the 24 hour format. 
- * This function MAY fail if the timestamp exceeds 
+ * Fills the buffer with the current time in the following format:
+ * YYYY-mm-dd HH:MM:SS. The clock uses the 24 hour format.
+ * This function MAY fail if the timestamp exceeds
  * the OS timer limits.
  * @param secs - Your timestamp in seconds.
  * @returns A pointer to the buffer. Null is returned on failure.
  */
 char *xtClockFormatTime(unsigned timestamp_secs, char *buf, size_t buflen);
 /**
- * Returns the true time that your device is reporting right now in 
+ * Returns the true time that your device is reporting right now in
  * microseconds since UNIX time. This value is DST and GMT adjusted.
- * @return The time that your device is reporting, GMT and DST corrected. 
+ * @return The time that your device is reporting, GMT and DST corrected.
  * Zero is returned on failure.
  */
 unsigned long long xtClockGetCurrentTimeUS(void);
 /**
- * The time points of this clock cannot decrease as physical time moves forward. 
- * This clock is not related to wall clock time (for example, it can be time 
+ * The time points of this clock cannot decrease as physical time moves forward.
+ * This clock is not related to wall clock time (for example, it can be time
  * since last reboot), and is most suitable for measuring intervals.
  * @return The monotonic time in microseconds. Zero is returned on failure.
  */
 unsigned long long xtClockGetMonotimeUS(void);
 /**
- * Tells you the current time in microseconds, AKA the UNIX timestamp. 
+ * Tells you the current time in microseconds, AKA the UNIX timestamp.
  * That is, the time elapsed since January 1, 1970 at 00:00:00 UTC.
  * @return The realtime in microseconds. Zero is returned on failure.
  */
@@ -79,10 +79,10 @@ unsigned long long xtClockGetRealtimeUS(void);
  */
 unsigned xtGetUptime(void);
 /**
- * Suspends the calling thread for approximately the specified amount 
- * of \a msecs milliseconds. The accuracy heavily depends on the OS 
- * thread scheduler. The smaller the amount, the more it can differ 
- * from the specified amount of time. On e.g. Windows, this can differ 
+ * Suspends the calling thread for approximately the specified amount
+ * of \a msecs milliseconds. The accuracy heavily depends on the OS
+ * thread scheduler. The smaller the amount, the more it can differ
+ * from the specified amount of time. On e.g. Windows, this can differ
  * up to 17 milliseconds.
  */
 void xtSleepMS(unsigned msecs);

@@ -1,6 +1,6 @@
 /**
  * @brief Contains some macros to detect what OS we're compiling on.
- * 
+ *
  * @file os_macros.h
  * @author Tom Everaarts
  * @date 2016
@@ -20,7 +20,7 @@ extern "C" {
 	#define XT_IS_WINDOWS 1
 	#define XT_IS_WINDOWS_X86 1
 #elif defined(_WIN32) && defined(_WIN64)
-	#define XT_IS_WINDOWS 1 
+	#define XT_IS_WINDOWS 1
 	#define XT_IS_WINDOWS_X64 1
 #endif
 

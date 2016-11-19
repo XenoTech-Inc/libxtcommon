@@ -1,6 +1,6 @@
 /**
  * @brief Various functions to handle files with ease.
- * 
+ *
  * On error, the specified buffer's content for all functions is undefined, unless otherwise noted.
  * @file file.h
  * @author Tom Everaarts
@@ -29,11 +29,11 @@ extern "C" {
  */
 enum xtFileType {
 	/** Unknown or unsupported file type. */
-	XT_FILE_UNKNOWN, 
+	XT_FILE_UNKNOWN,
 	/** Regular file. */
-	XT_FILE_REG, 
+	XT_FILE_REG,
 	/** Directory. */
-	XT_FILE_DIR, 
+	XT_FILE_DIR,
 	/** Symbolic link or Hard link. */
 	XT_FILE_LNK
 };
@@ -52,7 +52,7 @@ int xtFileCopy(const char *src, const char *dst);
 /**
  * Copies the file from \a src to \dst by their handle.
  * @return Zero if the file has been copied, otherwise an error code.
- * @remarks On success the stream position indicator is set to the beginning of both files. 
+ * @remarks On success the stream position indicator is set to the beginning of both files.
  * On error, the position of the indicator is undefined for both files.
  */
 int xtFileCopyByHandle(FILE *src, FILE *dst);
@@ -62,9 +62,9 @@ int xtFileCopyByHandle(FILE *src, FILE *dst);
  */
 int xtFileCreateDir(const char *path);
 /**
- * Tells you whether the specified file or directory exists. 
- * It should be noted that it is possible that because of permissions 
- * the function cannot check the path. This means that you should check the 
+ * Tells you whether the specified file or directory exists.
+ * It should be noted that it is possible that because of permissions
+ * the function cannot check the path. This means that you should check the
  * return value of this function to be safe.
  * @return Zero if there was a successful check for the file, otherwise an error code.
  */
@@ -73,7 +73,7 @@ int xtFileExists(const char *path, bool *exists);
  * Returns the filename from the complete path, including the extension.
  * @param path - A buffer which contains the complete path
  * @return NULL if \a path is an invalid path, otherwise a pointer to a substring of \a path.
- * @remark The file does not have to exist in order for this to work. This function 
+ * @remark The file does not have to exist in order for this to work. This function
  * basically just strips the preceding files / folders in the path.
  */
 const char *xtFileGetBaseName(const char *path);
@@ -95,14 +95,14 @@ int xtFileGetExecutablePath(char *buf, size_t buflen);
 const char *xtFileGetExtension(const char *path);
 /**
  * Tells you what files reside under \a path.
- * @param files - An initialized xtList, it should be empty. The destructor of the elements will 
+ * @param files - An initialized xtList, it should be empty. The destructor of the elements will
  * be set (even on failure) always. The list will be filled with xtFile's. They are always sorted alphabetically.
  * @return Zero if the file list has been retrieved, otherwise an error code.
  * @remarks You must clear the array to have the destructor called for each element.
  */
 int xtFileGetFiles(const char *path, xtList *files);
 /**
- * Tells you the home directory for the user that is currently running the program. 
+ * Tells you the home directory for the user that is currently running the program.
  * @return A pointer to \a buf on success, otherwise NULL.
  */
 char *xtFileGetHomeDir(char *buf, size_t buflen);
@@ -152,15 +152,15 @@ int xtFileRemoveDir(const char *path);
  */
 int xtFileSetCWD(const char *path);
 /**
- * Creates a temporary binary file that is automatically removed when it is 
- * closed or at program termination. The file is opened as in fopen() for update, in 
+ * Creates a temporary binary file that is automatically removed when it is
+ * closed or at program termination. The file is opened as in fopen() for update, in
  * binary mode (that is, "wb+").
- * @param f - A pointer to a file pointer. It shall receive a valid file pointer on success. 
+ * @param f - A pointer to a file pointer. It shall receive a valid file pointer on success.
  * On failure it shall be set to NULL.
- * @param buf - Receives the path of the new temp file on success. Set this to a null pointer 
+ * @param buf - Receives the path of the new temp file on success. Set this to a null pointer
  * and it shall not be filled.
  * @return Zero if the temporary file has been created, otherwise an error code.
- * @remarks Depending on the platform, you might only be able to copy this file, not moving it. 
+ * @remarks Depending on the platform, you might only be able to copy this file, not moving it.
  * This file is NOT deleted automatically! You must do this manually.
  */
 int xtFileTempFile(FILE **f, char *buf, size_t buflen);

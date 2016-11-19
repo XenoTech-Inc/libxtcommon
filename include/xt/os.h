@@ -1,6 +1,6 @@
 /**
  * @brief Used to retrieve deep system information.
- * 
+ *
  * All functions in here are used to retrieve information about the system's hardware.
  * @file os.h
  * @author Tom Everaarts
@@ -40,13 +40,13 @@ int xtBatteryGetPowerLevel(void);
  */
 typedef enum xtCPUArch {
 	/* Unknown CPU architecture */
-	XT_CPU_ARCH_UNKNOWN, 
+	XT_CPU_ARCH_UNKNOWN,
 	/** x64 from AMD or Intel */
-	XT_CPU_ARCH_X64, 
+	XT_CPU_ARCH_X64,
 	/** x86, which includes i386, i586 and i686 */
-	XT_CPU_ARCH_X86, 
+	XT_CPU_ARCH_X86,
 	/** Any of the ARM architecture versions */
-	XT_CPU_ARCH_ARM, 
+	XT_CPU_ARCH_ARM,
 	/** IA-64, the Intel Itanium architecture */
 	XT_CPU_ARCH_IA64
 } xtCPUArch;
@@ -55,7 +55,7 @@ typedef enum xtCPUArch {
  */
 typedef struct xtCPUInfo {
 	/**
-	 * The name of the processor. This is likely to also contain the manufacterer name 
+	 * The name of the processor. This is likely to also contain the manufacterer name
 	 * and clock frequency.
 	 */
 	char name[64];
@@ -77,14 +77,14 @@ typedef struct xtCPUInfo {
  */
 void xtCPUDump(const xtCPUInfo *cpuInfo, FILE *f);
 /**
- * Retrieves information about the processor. All fields will ALWAYS be filled with default values, 
- * even although an error may occur while retrieving some info. This means that it is possible that not all 
+ * Retrieves information about the processor. All fields will ALWAYS be filled with default values,
+ * even although an error may occur while retrieving some info. This means that it is possible that not all
  * information will be retrieved.
- * @return True if all information has successfully been retrieved. False is returned 
+ * @return True if all information has successfully been retrieved. False is returned
  * if the information has been retrieved only partially.
- * @remarks Not reliable when having multiple sockets installed with running processors or when ran in a VM. 
+ * @remarks Not reliable when having multiple sockets installed with running processors or when ran in a VM.
  * The results will probably be inaccurate.\n
- * Problems when compiling for Windows 32 bit: The info will always be retrieved partially. The amount of 
+ * Problems when compiling for Windows 32 bit: The info will always be retrieved partially. The amount of
  * physical cores will always be same as the amount of logical cores.
  */
 bool xtCPUGetInfo(xtCPUInfo *cpuInfo);
@@ -97,13 +97,13 @@ bool xtCPUHasHyperThreading(const xtCPUInfo *cpuInfo);
  */
 void xtConsoleClear(void);
 /**
- * Tells you the available amount of columns and rows in the console. 
+ * Tells you the available amount of columns and rows in the console.
  * Both pointers are optional. They remain untouched on error.
  * @return Zero if property has been fetched, otherwise an error code.
  */
 int xtConsoleGetSize(unsigned *cols, unsigned *rows);
 /**
- * Returns if the program was launched from a console and thus if one is available. 
+ * Returns if the program was launched from a console and thus if one is available.
  * If the program was launched by double-clicking, false should be returned.
  */
 bool xtConsoleIsAvailable(void);
@@ -112,12 +112,12 @@ bool xtConsoleIsAvailable(void);
  */
 bool xtConsoleSetTitle(const char *title);
 /**
- * Returns the total amount of physical RAM available for use in bytes. 
+ * Returns the total amount of physical RAM available for use in bytes.
  * Zero is returned on failure.
  */
 unsigned long long xtRAMGetAmountFree(void);
 /**
- * Returns the total amount of physical RAM available to the system in bytes. 
+ * Returns the total amount of physical RAM available to the system in bytes.
  * Zero is returned on failure.
  * @remarks This value will differ across operating systems. This function will never display the "true" installed RAM value.
  */

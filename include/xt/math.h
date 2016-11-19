@@ -1,6 +1,6 @@
 /**
  * @brief Contains handy math functions.
- * 
+ *
  * None of these functions actually require the C standard header math.h
  * @file math.h
  * @author Tom Everaarts
@@ -51,7 +51,7 @@ void xtMathMemSplit(unsigned long long len, unsigned chunkSize, unsigned *chunks
  */
 bool xtMathIsPow2(uint64_t v);
 /**
- * Returns the nearest power of 2 for the specified number. 
+ * Returns the nearest power of 2 for the specified number.
  * If the number is already a power of 2, then the same number will be returned.
  * @remarks If zero is specified, one is returned.
  */

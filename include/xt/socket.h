@@ -1,14 +1,14 @@
 /**
  * @brief Cross platform sockets.
- * 
+ *
  * My beloved socket library, born in 2014. It is only intended for IPv4.
  * It works on Linux and Windows, not on Mac! Haha.
- * This library makes working with sockets a lot easier, since under the hood 
- * a lot of work is done for you, but still its a thousand times faster than Java. 
+ * This library makes working with sockets a lot easier, since under the hood
+ * a lot of work is done for you, but still its a thousand times faster than Java.
  * No strange things are done like Java does. These sockets are made for speed!
- * 
+ *
  * All functions are NOT thread safe. Unless otherwise noted.
- * You should treat all structures that are part of the sockets as if they were opaque. 
+ * You should treat all structures that are part of the sockets as if they were opaque.
  * Unless otherwise noted.
  * @file socket.h
  * @author Tom Everaarts
@@ -33,8 +33,8 @@ extern "C" {
 
 /**
  * @brief Contains the IP + Port number of a device on the grid.
- * 
- * This is a wrapper for struct sockaddr_in, which makes it very easy to use. Using the raw struct sockaddr_in can be a real pain. 
+ *
+ * This is a wrapper for struct sockaddr_in, which makes it very easy to use. Using the raw struct sockaddr_in can be a real pain.
  * This struct is POD. It is different across platforms though.
  */
 typedef struct xtSockaddr {
@@ -63,7 +63,7 @@ typedef struct xtSockaddr {
  */
 bool xtSockaddrEquals(const xtSockaddr *sa1, const xtSockaddr *sa2);
 /**
- * A constructor which translates the IP address from the provided string. 
+ * A constructor which translates the IP address from the provided string.
  * The string MAY contain the port to set. If the string contains the port, then that port value is used. If the string does not contain a port, the value of \a port is used.
  * If the translation fails for whatever reason, then the address is left untouched.
  * String IP format : [IP address] OR [IP address]:[Port]
@@ -78,27 +78,27 @@ bool xtSockaddrFromAddr(xtSockaddr *sa, uint32_t addr, uint16_t port);
  */
 uint32_t xtSockaddrGetAddress(const xtSockaddr *sa);
 /**
- * This address is used when you don't need to bind a socket to a specific IP. 
+ * This address is used when you don't need to bind a socket to a specific IP.
  * When you use this value as the address when binding a socket, the socket accepts connections to all the IPs of the machine.
  */
 uint32_t xtSockaddrGetAddressAny(void);
 /**
  * The localhost address as we know it: 127.0.0.1. This address is already prepared for direct use by sockets (Correct endianness).
- * @remarks When wanting to bind to all interfaces, this is NOT the address to use. 
+ * @remarks When wanting to bind to all interfaces, this is NOT the address to use.
  * Instead use xtSockaddrGetAddressAny() for that!
  */
 uint32_t xtSockaddrGetAddressLocalHost(void);
 uint16_t xtSockaddrGetPort(const xtSockaddr *sa);
 /**
- * Initializes a sockaddr. This MUST be done before it can be used by any sockets. 
- * All xtSockaddr functions which SET a value in the sockaddr do this automatically to be safe. By calling this function, 
+ * Initializes a sockaddr. This MUST be done before it can be used by any sockets.
+ * All xtSockaddr functions which SET a value in the sockaddr do this automatically to be safe. By calling this function,
  * you can do it manually incase that is desired.
  */
 void xtSockaddrInit(xtSockaddr *sa);
 void xtSockaddrSetAddress(xtSockaddr *sa, uint32_t addr);
 void xtSockaddrSetPort(xtSockaddr *sa, uint16_t port);
 /**
- * Returns this address as a string formatted as : [IP]:[PORT]. 
+ * Returns this address as a string formatted as : [IP]:[PORT].
  * A null pointer is returned on failure to translate the address.
  */
 char *xtSockaddrToString(const xtSockaddr *sa, char *buf, size_t buflen);
@@ -110,8 +110,8 @@ typedef enum xtSockProto {
 } xtSocketProto;
 /**
  * @brief Super speedy sockets.
- * 
- * The sockets contains a nice amount of easy to use functions and are optimized for speed. 
+ *
+ * The sockets contains a nice amount of easy to use functions and are optimized for speed.
  * Non-blocking operations are supported!
  */
 #if defined(XT_IS_LINUX)
@@ -128,7 +128,7 @@ typedef enum xtSockProto {
 #define XT_SOCKET_TCP_MAXIMUM_PAYLOAD_SIZE 65535
 /**
  * The maximum payload size of an ipv4 UDP packet.\n
- * Keep in mind that using this ridiculously huge size is not a good idea since the MTU on most systems is just 1500 bytes. 
+ * Keep in mind that using this ridiculously huge size is not a good idea since the MTU on most systems is just 1500 bytes.
  * This value is the ABSOLUTE limit, given that a standard UDP header is 20 bytes. The UDP header can be extended to 60 bytes, which would make the max payload size 40 bytes smaller than this value.
  * However, no normal packet should have this huge header, or a payload of this size.
  */
@@ -148,7 +148,7 @@ int xtSocketBindTo(xtSocket sock, const xtSockaddr *sa);
  */
 int xtSocketBindToAny(xtSocket sock, uint16_t port);
 /**
- * Closes the socket and releases all system resources associated with it. the socket is unuseable after calling this function. 
+ * Closes the socket and releases all system resources associated with it. the socket is unuseable after calling this function.
  * Any threads waiting on the socket for a blocking operation should wake up.
  * @return Zero if the socket has been closed, otherwise an error code.
  */
@@ -156,13 +156,13 @@ int xtSocketClose(xtSocket *sock);
 /**
  * This function has multiple usages. They differ both for TCP & UDP.\n
  * TCP : Simply connects the socket to \a dest. This will fail if the remote device is offline.\n
- * UDP : After a successful call to this function, the UDP socket will ONLY accept data that came from \a dest. 
+ * UDP : After a successful call to this function, the UDP socket will ONLY accept data that came from \a dest.
  * Data that came from other devices is now simply discarded, as if it never existed. The kernel takes care of this for us.
  * @return Zero if the socket has connected successfully, otherwise an error code.
  */
 int xtSocketConnect(xtSocket sock, const xtSockaddr *dest);
 /**
- * Creates a new socket which is directly available for use. 
+ * Creates a new socket which is directly available for use.
  * This socket must always be closed by xtSocketClose().
  * @param sock - A pointer to the socket which is to be initialized.
  * @param proto - The protocol that the socket should be using.
@@ -170,26 +170,26 @@ int xtSocketConnect(xtSocket sock, const xtSockaddr *dest);
  */
 int xtSocketCreate(xtSocket *sock, xtSocketProto proto);
 /**
- * Cleans up any resources that were necessary for the sockets to function. 
- * Failure to call this function may lead to the leakage of system resources. 
- * After calling this function, you must initialize the socket system again before attempting 
+ * Cleans up any resources that were necessary for the sockets to function.
+ * Failure to call this function may lead to the leakage of system resources.
+ * After calling this function, you must initialize the socket system again before attempting
  * to use any socket functionality.
  */
 void xtSocketDestruct(void);
 /**
- * Tells you the address of the interface where \a sock is bound to. 
+ * Tells you the address of the interface where \a sock is bound to.
  * Even if the socket is not bound yet, this function will succeed.
  * @param sa - A pointer to the structure which will receive the address of the interface.
  * @return Zero if the address has been retrieved, otherwise an error code.
  */
 int xtSocketGetLocalSocketAddress(xtSocket sock, xtSockaddr *sa);
 /**
- * Tells you the port of the interface where \a sock is bound to. 
+ * Tells you the port of the interface where \a sock is bound to.
  * On error, zero is returned.
  */
 uint16_t xtSocketGetLocalPort(xtSocket sock);
 /**
- * Returns the protocol that is associated with this socket. If any error occurs, 
+ * Returns the protocol that is associated with this socket. If any error occurs,
  * XT_SOCKET_PROTO_UNKNOWN is returned.
  */
 xtSocketProto xtSocketGetProtocol(const xtSocket sock);
@@ -199,7 +199,7 @@ xtSocketProto xtSocketGetProtocol(const xtSocket sock);
  */
 int xtSocketGetRemoteSocketAddress(const xtSocket sock, xtSockaddr *sa);
 /**
- * Tells you if an error has occurred on \a sock. After a successful call to this function, 
+ * Tells you if an error has occurred on \a sock. After a successful call to this function,
  * the error code is cleared.
  * @return Zero if the property has been fetched successfully, otherwise an error code.
  */
@@ -238,9 +238,9 @@ int xtSocketGetSoSendBufferSize(xtSocket sock, unsigned *size);
  */
 int xtSocketGetTCPNoDelay(const xtSocket sock, bool *flag);
 /**
- * Initializes the socket system to enable socket functionality useage. You should call 
+ * Initializes the socket system to enable socket functionality useage. You should call
  * xtSocketDestruct() after socket functionality is no longer needed.
- * @return True if the socket system has been initialized or is already initialized, false otherwise. 
+ * @return True if the socket system has been initialized or is already initialized, false otherwise.
  * The reason for failure can vary across systems, so there is no error code for this.
  */
 bool xtSocketInit(void);
@@ -253,38 +253,38 @@ bool xtSocketIsClosed(const xtSocket sock);
  */
 bool xtSocketIsOpen(const xtSocket sock);
 /**
- * Marks the specified socket as a passive socket willing to accept connections to it. 
- * If this function succeeds, you will not be able to use the socket for any other purpose 
+ * Marks the specified socket as a passive socket willing to accept connections to it.
+ * If this function succeeds, you will not be able to use the socket for any other purpose
  * then accepting connections.
- * @param sock - A pointer to the socket to use. It must be a TCP socket. Also the should already be bound 
+ * @param sock - A pointer to the socket to use. It must be a TCP socket. Also the should already be bound
  * prior to calling this function . Otherwise you will get problems later on.
- * @param backlog - The maximum length to which the queue of pending connections for \a sock may grow. 
- * If a connection request arrives when the queue is full, the client may receive an error with 
+ * @param backlog - The maximum length to which the queue of pending connections for \a sock may grow.
+ * If a connection request arrives when the queue is full, the client may receive an error with
  * an indication of connection refused. Leave this parameter zero to default to a recommended value.
  * @return Zero if the socket has been put into listen mode, otherwise an error code.
  */
 int xtSocketListen(xtSocket sock, unsigned backlog);
 /**
- * Sets a socket to blocking mode or non-blocking mode. Sockets are by default always in blocking mode. 
- * This means that when socket functions are called, the calling thread is paused until the kernel has 
+ * Sets a socket to blocking mode or non-blocking mode. Sockets are by default always in blocking mode.
+ * This means that when socket functions are called, the calling thread is paused until the kernel has
  * processed the request. With non-blocking sockets functions can return immediately without blocking.
  * @param flag - Specify true to go to blocking mode. Specify false to go to non-blocking mode.
  * @return Zero if the option has been changed successfully, otherwise an error code.
  */
 int xtSocketSetBlocking(xtSocket sock, bool flag);
 /**
- * Enables or disables SO_KEEPALIVE. 
- * When this socket option is enabled, the TCP stack sends keep-alive packets when no data or acknowledgement packets have been 
+ * Enables or disables SO_KEEPALIVE.
+ * When this socket option is enabled, the TCP stack sends keep-alive packets when no data or acknowledgement packets have been
  * received for the connection within an interval to detect if the link between two sockets is broken.
  * This option is off by default.
  * @return Zero if the option has been changed successfully, otherwise an error code.
  */
 int xtSocketSetSoKeepAlive(xtSocket sock, bool flag);
 /**
- * Enables or disables SO_LINGER. 
- * This value decides how the socket behaves after it is closed. When lingering is enabled, the kernel keeps the socket in a TIME_WAIT state, to ensure 
- * that any remaining data will be sent to the remote side, and the close is acknowledged. Normally you should leave this option alone, as you generally want this to be on. 
- * However, when dealing with thousands of sockets, you may want them to dissipate immediately after closing, so you should disable lingering on those sockets. 
+ * Enables or disables SO_LINGER.
+ * This value decides how the socket behaves after it is closed. When lingering is enabled, the kernel keeps the socket in a TIME_WAIT state, to ensure
+ * that any remaining data will be sent to the remote side, and the close is acknowledged. Normally you should leave this option alone, as you generally want this to be on.
+ * However, when dealing with thousands of sockets, you may want them to dissipate immediately after closing, so you should disable lingering on those sockets.
  * Remember : Lingering sockets still occupy a port, and eat system resources. Even if your program has already terminated!
  * @param on - If lingering should be enabled or not.
  * @param linger - The timeout value for SO_LINGER in seconds. The maximum timeout value is platform specific.
@@ -292,16 +292,16 @@ int xtSocketSetSoKeepAlive(xtSocket sock, bool flag);
  */
 int xtSocketSetSoLinger(xtSocket sock, bool on, int linger);
 /**
- * Sets the SO_RCVBUF option to the specified value for this socket. 
+ * Sets the SO_RCVBUF option to the specified value for this socket.
  * The SO_RCVBUF option is used by the platform's networking code as a hint for the size to set the receive buffer of the underlying I/O buffers.
  * Because this is a just a hint to the implementation, you should check the buffers afterwards by calling xtSocketGetSoReceiveBufferSize().
  * @remarks It is best practice to call this function before connecting or binding the socket. This prevents certain problems.
  */
 int xtSocketSetSoReceiveBufferSize(xtSocket sock, unsigned size);
 /**
- * Enables or disables SO_REUSEADDR. 
- * When a socket is closed the connection may remain in a timeout state for a period of time after the connection is closed. 
- * For applications using a well known socket address or port it may not be possible to bind a socket to that interface if there is a connection in the timeout state involving the socket address or port. 
+ * Enables or disables SO_REUSEADDR.
+ * When a socket is closed the connection may remain in a timeout state for a period of time after the connection is closed.
+ * For applications using a well known socket address or port it may not be possible to bind a socket to that interface if there is a connection in the timeout state involving the socket address or port.
  * Enabling SO_REUSEADDR prior to binding the socket allows the socket to be bound even though a previous connection is in a timeout state.\n
  * When a socket is created, this option is off by default.
  * @return Zero if the option has been changed successfully, otherwise an error code.
@@ -309,7 +309,7 @@ int xtSocketSetSoReceiveBufferSize(xtSocket sock, unsigned size);
  */
 int xtSocketSetSoReuseAddress(xtSocket sock, bool flag);
 /**
- * Sets the SO_SNDBUF option to the specified value for this socket. 
+ * Sets the SO_SNDBUF option to the specified value for this socket.
  * The SO_SNDBUF option is used by the platform's networking code as a hint for the size to set the send buffer of the underlying I/O buffers.
  * Because this is a just a hint to the implementation, you should check the buffers afterwards by calling xtSocketGetSoSendBufferSize().
  * @return Zero if the option has been changed successfully, otherwise an error code.
@@ -324,7 +324,7 @@ int xtSocketSetSoSendBufferSize(xtSocket sock, unsigned size);
  */
 int xtSocketSetTCPNoDelay(xtSocket sock, bool flag);
 /**
- * Blocks until an incoming TCP connection is accepted or until the socket is closed, or if the socket is non-blocking, 
+ * Blocks until an incoming TCP connection is accepted or until the socket is closed, or if the socket is non-blocking,
  * it will return immediately.
  * @param peerSock - This parameter will be filled with the socket of the peer that has connected.
  * @param peerAddr - This parameter will be filled with the address of the peer socket.
@@ -367,20 +367,20 @@ typedef struct xtSocketPoll xtSocketPoll;
  */
 typedef enum xtSocketPollEvent {
 	/** No event has occurred. */
-	XT_POLLNONE = 0x00, 
+	XT_POLLNONE = 0x00,
 	/** Normal data can be read without blocking. */
-	XT_POLLIN = 0x02, 
+	XT_POLLIN = 0x02,
 	/** Normal data can be written without blocking. */
-	XT_POLLOUT = 0x04, 
+	XT_POLLOUT = 0x04,
 	/** An error has occurred. */
-	XT_POLLERR = 0x08, 
+	XT_POLLERR = 0x08,
 	/** A stream-oriented connection was either disconnected or aborted. */
 	XT_POLLHUP = 0x10
 } xtSocketPollEvent;
 /**
- * Adds a socket for monitoring. 
- * After a successful call to this function, the socket will be monitored for the 
- * specified events by the system. 
+ * Adds a socket for monitoring.
+ * After a successful call to this function, the socket will be monitored for the
+ * specified events by the system.
  * XT_POLLERR and XT_POLLHUP are always added implicitly.
  * @param data - The data to associate with the socket.
  * @param events - The events which are to be monitored.
@@ -392,40 +392,40 @@ int xtSocketPollAdd(xtSocketPoll *p, xtSocket sock, void *data, xtSocketPollEven
  */
 int xtSocketPollCreate(xtSocketPoll **p, unsigned size);
 /**
- * Destroys the structure and cleans up all resources. 
- * The structure is rendered unuseable after calling this function. 
+ * Destroys the structure and cleans up all resources.
+ * The structure is rendered unuseable after calling this function.
  * The sockets remain unaffected.
  */
 void xtSocketPollDestroy(xtSocketPoll *p);
 unsigned xtSocketPollGetCount(const xtSocketPoll *p);
 /**
  * Returns the data that is associated with the socket at \a index.
- * @remarks No bounds checking is performed. Specifying a too high index 
+ * @remarks No bounds checking is performed. Specifying a too high index
  * results in undefined behavior.
  */
 void *xtSocketPollGetData(const xtSocketPoll *p, unsigned index);
 /**
  * Returns the current event that is happening on the socket at \a index.
- * @remarks No bounds checking is performed. Specifying a too high index 
+ * @remarks No bounds checking is performed. Specifying a too high index
  * results in undefined behavior.
  */
 xtSocketPollEvent xtSocketPollGetEvent(const xtSocketPoll *p, unsigned index);
 unsigned xtSocketPollGetSize(const xtSocketPoll *p);
 /**
  * Returns the socket at \a index.
- * @remarks No bounds checking is performed. Specifying a too high index 
+ * @remarks No bounds checking is performed. Specifying a too high index
  * results in undefined behavior.
  */
 xtSocket xtSocketPollGetSocket(const xtSocketPoll *p, unsigned index);
 /**
- * Modifies the events for which a socket will be monitored. This will take effect 
+ * Modifies the events for which a socket will be monitored. This will take effect
  * on the next call to xtSocketPollWait().
  * @returns Zero if the socket was found and modified, otherwise an error code.
  */
 int xtSocketPollMod(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent events);
 /**
- * Removes the specified socket from monitoring. The socket will be invalidated in the ready array. 
- * It's file descriptor will be set to XT_SOCKET_INVALID_FD and it's data set to null. 
+ * Removes the specified socket from monitoring. The socket will be invalidated in the ready array.
+ * It's file descriptor will be set to XT_SOCKET_INVALID_FD and it's data set to null.
  * Do note that this means it is still present in the ready array until the next call to xtSocketPollWait().
  * @returns Zero if the socket was found and is removed, otherwise an error code.
  */
@@ -435,16 +435,16 @@ int xtSocketPollRemove(xtSocketPoll *p, xtSocket sock);
  */
 int xtSocketPollSetEvent(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent event);
 /**
- * Determines the status of one or more sockets. 
- * All sockets are automically rearmed for the next call to this function. 
- * This means that if some sockets have data waiting to be read, and you skip reading 
- * it, the next call to this function will return immediately with those same sockets. 
- * @param timeout - The time to wait at maximum before returning in milliseconds. 
+ * Determines the status of one or more sockets.
+ * All sockets are automically rearmed for the next call to this function.
+ * This means that if some sockets have data waiting to be read, and you skip reading
+ * it, the next call to this function will return immediately with those same sockets.
+ * @param timeout - The time to wait at maximum before returning in milliseconds.
  * Different values are accepted.
  * -1: Block indefinitely.
  * 0 : Return immediately.
  * >1: Block for that amount of time at maximum.
- * @param socketsReady - Will receive the amount of sockets which are ready. This is 
+ * @param socketsReady - Will receive the amount of sockets which are ready. This is
  * left untouched on error.
  * @return Zero is the function has executed successfully, otherwise an error code.
  */
