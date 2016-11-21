@@ -17,6 +17,11 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 
+#define XT_LIST_CAPACITY_DEFAULT 1024
+#define XT_STACK_CAPACITY_DEFAULT 256
+
+/* HASHMAP */
+
 /**
  * @brief An entry in the hashmap.
  *
@@ -118,6 +123,8 @@ bool xtHashmapPut(xtHashmap *map, void *key, void *value);
  */
 bool xtHashmapRemove(xtHashmap *map, void *key);
 
+/* LIST */
+
 /**
  * @brief A very easy to use (array) list.
  *
@@ -216,8 +223,6 @@ void xtListSetListDestroyFunc(xtList *list, void (*destroyListFunc) (xtList *lis
  * NOTE: all stack operations are only documented for xtStackD,
  * since all other types (xtStackU, etc.) are exactly the same.
  */
-
-#define XT_STACK_CAPACITY_DEFAULT 256
 
 struct xtStackHD {
 	short *data;
@@ -335,14 +340,14 @@ size_t xtStackLUDrop(struct xtStackLU *stack);
 size_t xtStackZUDrop(struct xtStackZU *stack);
 
 size_t xtStackHDGetSize(struct xtStackHD *stack);
-size_t xtStackDGetSize (struct xtStackD *stack);
-size_t xtStackUGetSize (struct xtStackU *stack);
+size_t xtStackDGetSize (struct xtStackD  *stack);
+size_t xtStackUGetSize (struct xtStackU  *stack);
 size_t xtStackLUGetSize(struct xtStackLU *stack);
 size_t xtStackZUGetSize(struct xtStackZU *stack);
 
 size_t xtStackHDGetCapacity(struct xtStackHD *stack);
-size_t xtStackDGetCapacity (struct xtStackD *stack);
-size_t xtStackUGetCapacity (struct xtStackU *stack);
+size_t xtStackDGetCapacity (struct xtStackD  *stack);
+size_t xtStackUGetCapacity (struct xtStackU  *stack);
 size_t xtStackLUGetCapacity(struct xtStackLU *stack);
 size_t xtStackZUGetCapacity(struct xtStackZU *stack);
 
