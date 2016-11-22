@@ -9,9 +9,7 @@ typing a very long line of code so you're splitting them in two lines, or if
 you're making a switch with padding. Then you need to combine tabs with spaces.
 First put the tabs, then the spaces.
 
-If you are writing function documentation (Doxygen), you should leave a space 
-at the end of the sentence if a new sentence will follow. Otherwise you should
-never leave whitespace dangling off the ends of lines.
+Never leave dangling whitespace after lines!
 
 2. Line width
 
@@ -19,19 +17,21 @@ Lines can be longer than 80 characters. However, try to not make them
 ridiculously long. Try to keep it under 150 characters. That is a very
 reasonable limit. Screens are big these days. Terminals as well!
 
-Commit messages shall not exceed 72 characters. The log history always indents
-the messages when viewing with git log which makes them 72 + 8 = 80 characters.
-
 3. Naming
 
-Here follows a list of variable naming conventions under different 
-circumstances:
+Here follows a list of naming conventions under different circumstances:
 Normal:   someInteger
 Static:   someInteger
 Global:   someInteger (If it is a constant, it MAY be named like a macro)
 Internal: _someInteger (Variables which should not be touched externally)
 Macro:    SOME_INTEGER
-Enums and structs should always be typedef'd. Never must they end with "_t". 
+
+Functions:        xtSomeInteger()
+Static functions: _xtSomeInteger()
+
+Enums, structs and unions should never be typedef'd.
+Typedefs are an exception for primitive types, because you have no choice there.
+Look at xtSocket type for example. Never must any typedefs end with "_t".
 If the structure is meant to be internal, it should be prefixed with an 
 underscore. Also if it's internal only, it should be typed with underscores
 instead of camelcase e.g.  _xt_hash_data instead of _xtHashData.
@@ -53,13 +53,14 @@ if (something == 2) {
 Switch statements should have the cases on the same indentation as the switch 
 itself. This is to prevent large indentation which you easily can get with
 switches. It's also best practice to have a default case in the switch. You
-should put it at the bottom.
+should put it at the bottom. Alo you should indent the statement(s) after the case
+at exactly the same indentation, unless this makes it real awkward to work with.
 switch (something) {
 case 1:  doThis();
 case 2:  doThat();
 default: doSomethingElse();
 }
-And if switches have full-through cases, the style is the same. Do note the 
+And if switches have fall-through cases, the style is the same. Do note the 
 whitespace after case 1!.
 switch (something) {
 case 1:  
@@ -91,26 +92,44 @@ Macros should always be completely in uppercase. An exception can be made if
 the macro is just an alias for 
 another function. Do think wisely about this.
 
-7. Conditional statements
+7. Header include guards and C extern
+
+ALWAYS use both of them in all headers!
+The include guards should look like this:
+#ifndef _XT_[Your header name]_H
+#define _XT_[Your header name]_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// Your code here
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+8. Conditional statements
 
 Always type the constant on the right, like the following:
 if (yourVariable == 20)
 	doSomething();
 
-8. Compilation
+9. Compilation
 
 You should make sure that if you're compiling with maximum warning level, or 
-maximum optimization, 
-NO warnings from the compiler will erupt. We don't want code which creates 
-warnings!
+maximum optimization, that NO warnings from the compiler will erupt. 
+We don't want code which creates warnings!
 
-9. Error checking
+10. Error checking
 
 Functions part of the XT family should have pretty good error checking. malloc 
 (and friends) should always be checked. When a function requires a struct of
-some kind, you should not check if it's a valid pointer. Only in a destroy 
-function should you do so. The XT family does not think of human stupidity too 
-much. Checking for dangling pointers is useless.
+some kind, you should NOT check whether it's a valid pointer or not. Only in a destroy 
+function should you perhaps choose to do so. The XT family does not think of 
+human stupidity too much. Checking for dangling pointers is useless in C anyways.
 
 It is very smart however, to mention it in the function documentation if you're 
 not checking for a certain thing. Take a look at xtSocketPollGetSocket() for
@@ -119,7 +138,7 @@ example, it says this in it's documentation:
 in undefined behavior.
 That is an important thing to mention!
 
-10. Documentation
+11. Documentation
 
 This is a very subjective topic. You should ALWAYS write documention for a 
 function, except if...
@@ -130,14 +149,13 @@ xtSocketPollWait().
 Variables do not necessarily require documentation. Do what you think is wise.
 Bottom line? Use common-sense.
 
-11. Git
+12. Git
 
 We use the git version control system to keep track of everything easily. In
 order to make fully advantage of version control, you must obey these rules:
 * Commit messages shall not exceed 72 characters
 * Never rebase on the master branch
-* Push your commits to another branch if you are not sure whether the commit is
-  worthy to be merged with the master branch.
+* Push your commits to another branch if the code is incomplete or untested
 
 Commit messages shall not exceed 72 characters. The log history always indents
 the messages when viewing with git log which makes them 72 + 8 = 80 characters.
@@ -147,6 +165,11 @@ the only contributor. The git server does not accept fast-forward pushes. This
 does not prevent you from deleting and recreating a branch though. Just use your
 common sense.
 
+It is best practice to create a new branch for code that is incomplete, or has
+not been completely tested yet. Do not merge ANYTHING with the master branch
+before other key contributors were notified and have agreed to do so.
+After merging with the master, the branch should be deleted
+in order for everything to stay tidy.
 If you have committed a couple of changes and are unsure whether it should be
 merged with master, always push your commits to another branch. Tom Everaarts
 gets the final vote whether it should be included. If he rejects your code he
