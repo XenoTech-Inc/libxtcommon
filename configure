@@ -45,7 +45,7 @@ cat <<EOF >src/generic/_buildopts.c
 #define expr(x) #x
 #define str(x) expr(x)
 
-const xtBuildOptions XT_BUILD_OPTIONS = {
+const struct xtBuildOptions XT_BUILD_OPTIONS = {
 	"$CFLAGS",
 	"`date +'%Y-%m-%d'`",
 	"v" str(XT_VERSION_MAJOR) "." str(XT_VERSION_MINOR),

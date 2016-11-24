@@ -100,7 +100,7 @@ const char *xtFileGetExtension(const char *path);
  * @return Zero if the file list has been retrieved, otherwise an error code.
  * @remarks You must clear the array to have the destructor called for each element.
  */
-int xtFileGetFiles(const char *path, xtList *files);
+int xtFileGetFiles(const char *path, struct xtList *files);
 /**
  * Tells you the home directory for the user that is currently running the program.
  * @return A pointer to \a buf on success, otherwise NULL.

@@ -588,7 +588,7 @@ static int _xtRadixSortU(unsigned *a, size_t n, bool ascend)
 	return 0;
 }
 
-int xtSortU(unsigned *list, size_t count, xtSortType type, bool ascend)
+int xtSortU(unsigned *list, size_t count, enum xtSortType type, bool ascend)
 {
 	switch (type) {
 	case XT_SORT_BUBBLE:
@@ -617,7 +617,7 @@ int xtSortU(unsigned *list, size_t count, xtSortType type, bool ascend)
 	return 0;
 }
 
-int xtSortD(int *list, size_t count, xtSortType type, bool ascend)
+int xtSortD(int *list, size_t count, enum xtSortType type, bool ascend)
 {
 	switch (type) {
 	case XT_SORT_BUBBLE:
@@ -646,7 +646,7 @@ int xtSortD(int *list, size_t count, xtSortType type, bool ascend)
 	return 0;
 }
 
-int xtSortP(void *list, size_t count, xtSortType type, int (*cmp)(void*,void*), bool ascend, size_t elemSize)
+int xtSortP(void *list, size_t count, enum xtSortType type, int (*cmp)(void*,void*), bool ascend, size_t elemSize)
 {
 	if (!cmp)
 		return XT_EINVAL;
@@ -670,7 +670,7 @@ static int _xtSortStrcmp(void *a, void *b)
 	return strcmp(*(char**)a, *(char**)b);
 }
 
-int xtSortStr(char **list, size_t count, xtSortType type, bool ascend)
+int xtSortStr(char **list, size_t count, enum xtSortType type, bool ascend)
 {
 	return xtSortP(list, count, type, _xtSortStrcmp, ascend, sizeof(char*));
 }

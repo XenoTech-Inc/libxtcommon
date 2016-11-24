@@ -48,7 +48,7 @@
 //  This processes one or more 64-byte data blocks, but does NOT update the bit counters. There are no alignment 
 //  requirements.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-static void *_xtMD5TransformFunction(_xtMD5Context *restrict ctx, uint8_t *restrict data, uintmax_t size)
+static void *_xtMD5TransformFunction(struct _xtMD5Context *restrict ctx, uint8_t *restrict data, uintmax_t size)
 {
 	uint8_t *ptr;
 	uint32_t a, b, c, d;
@@ -155,7 +155,7 @@ static void *_xtMD5TransformFunction(_xtMD5Context *restrict ctx, uint8_t *restr
 	return ptr;
 }
 
-static void _xtMD5Digest(_xtMD5Context *restrict ctx, uint8_t *restrict digest) 
+static void _xtMD5Digest(struct _xtMD5Context *restrict ctx, uint8_t *restrict digest) 
 {
 	uint32_t used;
 	uint32_t free;
@@ -203,7 +203,7 @@ static void _xtMD5Digest(_xtMD5Context *restrict ctx, uint8_t *restrict digest)
 	digest[15] = (uint8_t) (ctx->d >> 24);
 }
 
-static void _xtMD5Init(_xtMD5Context *ctx)
+static void _xtMD5Init(struct _xtMD5Context *ctx)
 {
 	ctx->a = 0x67452301;
 	ctx->b = 0xefcdab89;
@@ -214,7 +214,7 @@ static void _xtMD5Init(_xtMD5Context *ctx)
 	ctx->hi = 0;
 }
 
-static void _xtMD5Update(_xtMD5Context *restrict ctx, uint8_t *restrict buf, size_t buflen)
+static void _xtMD5Update(struct _xtMD5Context *restrict ctx, uint8_t *restrict buf, size_t buflen)
 {
 	uint32_t saved_lo;
 	uint32_t used;
@@ -323,7 +323,7 @@ static const uint32_t SHA256_K[64] = {
 //
 //  Compress 512-bits
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-static void _xtSHA256TransformFunction(_xtSHA256Context *restrict ctx, uint8_t *restrict buf)
+static void _xtSHA256TransformFunction(struct _xtSHA256Context *restrict ctx, uint8_t *restrict buf)
 {
 	uint32_t	S[8];
 	uint32_t	W[64];
@@ -367,7 +367,7 @@ static void _xtSHA256TransformFunction(_xtSHA256Context *restrict ctx, uint8_t *
 	}
 }
 
-static void _xtSHA256Digest(_xtSHA256Context *restrict ctx, uint8_t *restrict digest)
+static void _xtSHA256Digest(struct _xtSHA256Context *restrict ctx, uint8_t *restrict digest)
 {
 	int i;
 	
@@ -407,7 +407,7 @@ static void _xtSHA256Digest(_xtSHA256Context *restrict ctx, uint8_t *restrict di
 	}
 }
 
-static void _xtSHA256Init(_xtSHA256Context *ctx)
+static void _xtSHA256Init(struct _xtSHA256Context *ctx)
 {
 	ctx->curlen = 0;
 	ctx->length = 0;
@@ -421,7 +421,7 @@ static void _xtSHA256Init(_xtSHA256Context *ctx)
 	ctx->state[7] = 0x5BE0CD19UL;
 }
 
-static void _xtSHA256Update(_xtSHA256Context *restrict ctx, uint8_t *restrict buf, size_t buflen)
+static void _xtSHA256Update(struct _xtSHA256Context *restrict ctx, uint8_t *restrict buf, size_t buflen)
 {
 	uint32_t n;
 	if (ctx->curlen > sizeof(ctx->buf)) {
@@ -529,7 +529,7 @@ static const uint64_t SHA512_K[80] = {
 //
 //  Compress 1024-bits
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-static void _xtSHA512TransformFunction(_xtSHA512Context *restrict ctx, uint8_t * restrict buf)
+static void _xtSHA512TransformFunction(struct _xtSHA512Context *restrict ctx, uint8_t * restrict buf)
 {
 	uint64_t	S[8];
 	uint64_t	W[80];
@@ -570,7 +570,7 @@ static void _xtSHA512TransformFunction(_xtSHA512Context *restrict ctx, uint8_t *
 	}
 }
 
-static void _xtSHA512Digest(_xtSHA512Context *restrict ctx, uint8_t *restrict digest)
+static void _xtSHA512Digest(struct _xtSHA512Context *restrict ctx, uint8_t *restrict digest)
 {
 	int i;
 	
@@ -612,7 +612,7 @@ static void _xtSHA512Digest(_xtSHA512Context *restrict ctx, uint8_t *restrict di
 	}
 }
 
-static void _xtSHA512Init(_xtSHA512Context *ctx)
+static void _xtSHA512Init(struct _xtSHA512Context *ctx)
 {
 	ctx->curlen = 0;
 	ctx->length = 0;
@@ -626,7 +626,7 @@ static void _xtSHA512Init(_xtSHA512Context *ctx)
 	ctx->state[7] = 0x5be0cd19137e2179LLU;
 }
 
-static void _xtSHA512Update(_xtSHA512Context *restrict ctx, uint8_t *restrict buf, size_t buflen)
+static void _xtSHA512Update(struct _xtSHA512Context *restrict ctx, uint8_t *restrict buf, size_t buflen)
 {
 	uint32_t n;
 	
@@ -659,7 +659,7 @@ static void _xtSHA512Update(_xtSHA512Context *restrict ctx, uint8_t *restrict bu
 //	SHA512 END
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void xtHashDigest(xtHash *ctx)
+void xtHashDigest(struct xtHash *ctx)
 {
 	unsigned hashSize = 0;
 	switch (ctx->algorithm) {
@@ -684,13 +684,13 @@ void xtHashDigest(xtHash *ctx)
 	ctx->ascii[hashSize * 2] = '\0';
 }
 
-void xtHashInit(xtHash *ctx, xtHashAlgorithm algorithm)
+void xtHashInit(struct xtHash *ctx, enum xtHashAlgorithm algorithm)
 {
 	ctx->algorithm = algorithm;
 	xtHashReset(ctx);
 }
 
-void xtHashReset(xtHash *ctx)
+void xtHashReset(struct xtHash *ctx)
 {
 	switch (ctx->algorithm) {
 	case XT_HASH_MD5 :
@@ -705,7 +705,7 @@ void xtHashReset(xtHash *ctx)
 	}
 }
 
-void xtHashUpdate(xtHash *restrict ctx, void *restrict buf, size_t buflen)
+void xtHashUpdate(struct xtHash *restrict ctx, void *restrict buf, size_t buflen)
 {
 	switch (ctx->algorithm) {
 	case XT_HASH_MD5 :

@@ -38,7 +38,7 @@ int xtBatteryGetPowerLevel(void);
 /**
  * The available CPU architectures that can be detected.
  */
-typedef enum xtCPUArch {
+enum xtCPUArch {
 	/* Unknown CPU architecture */
 	XT_CPU_ARCH_UNKNOWN,
 	/** x64 from AMD or Intel */
@@ -49,11 +49,11 @@ typedef enum xtCPUArch {
 	XT_CPU_ARCH_ARM,
 	/** IA-64, the Intel Itanium architecture */
 	XT_CPU_ARCH_IA64
-} xtCPUArch;
+};
 /**
  * Contains a lot of information about the CPU.
  */
-typedef struct xtCPUInfo {
+struct xtCPUInfo {
 	/**
 	 * The name of the processor. This is likely to also contain the manufacterer name
 	 * and clock frequency.
@@ -62,7 +62,7 @@ typedef struct xtCPUInfo {
 	/**
 	 * The architecture of the processor.
 	 */
-	xtCPUArch architecture;
+	enum xtCPUArch architecture;
 	/**
 	 * The amount of cores that your CPU possesses.
 	 */
@@ -71,11 +71,11 @@ typedef struct xtCPUInfo {
 	 * Processor cache sizes in bytes.
 	 */
 	unsigned L1Cache, L2Cache, L3Cache;
-} xtCPUInfo;
+};
 /**
  * Dumps the processor information to the specified stream.
  */
-void xtCPUDump(const xtCPUInfo *cpuInfo, FILE *f);
+void xtCPUDump(const struct xtCPUInfo *cpuInfo, FILE *f);
 /**
  * Retrieves information about the processor. All fields will ALWAYS be filled with default values,
  * even although an error may occur while retrieving some info. This means that it is possible that not all
@@ -87,11 +87,11 @@ void xtCPUDump(const xtCPUInfo *cpuInfo, FILE *f);
  * Problems when compiling for Windows 32 bit: The info will always be retrieved partially. The amount of
  * physical cores will always be same as the amount of logical cores.
  */
-bool xtCPUGetInfo(xtCPUInfo *cpuInfo);
+bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo);
 /**
  * Returns if this processor has some sort of HyperThreading enabled. (Multiple threads per core)
  */
-bool xtCPUHasHyperThreading(const xtCPUInfo *cpuInfo);
+bool xtCPUHasHyperThreading(const struct xtCPUInfo *cpuInfo);
 /**
  * Clears the console screen.
  */

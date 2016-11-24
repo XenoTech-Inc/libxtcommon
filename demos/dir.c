@@ -17,7 +17,7 @@ const char *getFileType(unsigned type)
 int main(void)
 {
 	int ret;
-	xtList list;
+	struct xtList list;
 	if ((ret = xtListCreate(&list, 256))) {
 		printf("Unable to create the list: %s\n", xtGetErrorStr(ret));
 		return EXIT_FAILURE;

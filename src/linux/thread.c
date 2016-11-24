@@ -53,7 +53,7 @@ int xtMutexUnlock(xtMutex *m)
 
 static void *_xtThreadStart(void *arg)
 {
-	xtThread *t = arg;
+	struct xtThread *t = arg;
 	// Execute the function
 	t->func(t, t->arg);
 	// The thread has forfilled it's purpose now, let it die in peace
@@ -61,7 +61,7 @@ static void *_xtThreadStart(void *arg)
 	return NULL;
 }
 
-int xtThreadContinue(xtThread *t)
+int xtThreadContinue(struct xtThread *t)
 {
 	if (xtThreadGetID(t) == xtThreadGetID(NULL))
 		return XT_EINVAL; // Do not allow the same caller
@@ -73,7 +73,7 @@ int xtThreadContinue(xtThread *t)
 	return 0;
 }
 
-int xtThreadCreate(xtThread *t, void *(*func) (xtThread *t, void *arg), void *arg, unsigned stackSizeKB)
+int xtThreadCreate(struct xtThread *t, void *(*func) (struct xtThread *t, void *arg), void *arg, unsigned stackSizeKB)
 {
 	// Turn it into KB's
 	stackSizeKB *= 1024;
@@ -115,7 +115,7 @@ error:
 	return _xtTranslateSysError(errno);
 }
 
-size_t xtThreadGetID(const xtThread *t)
+size_t xtThreadGetID(const struct xtThread *t)
 {
 	if (t)
 		return t->nativeThread;
@@ -123,18 +123,18 @@ size_t xtThreadGetID(const xtThread *t)
 		return pthread_self();
 }
 
-inline int xtThreadGetSuspendCount(const xtThread *t)
+inline int xtThreadGetSuspendCount(const struct xtThread *t)
 {
 	return t->suspendCount;
 }
 
-bool xtThreadIsAlive(const xtThread *t)
+bool xtThreadIsAlive(const struct xtThread *t)
 {
 	// If ESRCH is returned it means that no such thread was found, thus the thread is dead in our words
 	return pthread_kill(t->nativeThread, 0) != ESRCH;
 }
 
-bool xtThreadJoin(xtThread *t)
+bool xtThreadJoin(struct xtThread *t)
 {
 	pthread_mutex_destroy(&t->suspendMutex);
 	pthread_cond_destroy(&t->suspendCond);
@@ -143,7 +143,7 @@ bool xtThreadJoin(xtThread *t)
 	return pthread_join(t->nativeThread, NULL) == 0;
 }
 
-int xtThreadSuspend(xtThread *t)
+int xtThreadSuspend(struct xtThread *t)
 {
 	if (xtThreadGetID(t) != xtThreadGetID(NULL))
 		return XT_EINVAL; // Only allow the same caller

@@ -62,7 +62,7 @@ static void arndd(int *a, size_t n)
 		a[i] = rand();
 }
 
-xtSortType types[] = {
+enum xtSortType types[] = {
 	XT_SORT_BUBBLE,
 	XT_SORT_HEAP  ,
 	XT_SORT_INSERT,

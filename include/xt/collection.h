@@ -47,14 +47,14 @@ struct xtHashmapIterator {
  * This hashmap ONLY works with objects that ARE dynamically allocated. The keys however do not need to be dynamically allocated.
  * This hashmap is NOT thread safe. The hashmap manages almost all memory for you. The key and value are both destroyed if any data is removed.
  */
-typedef struct xtHashmap {
+struct xtHashmap {
 	struct xtHashBucket **buckets;
 	size_t count, size;
 	bool (*keyCompare)(void *key1, void *key2);
 	size_t (*keyHash) (void *key);
 	size_t keySize;
 	struct xtHashmapIterator it;
-} xtHashmap;
+};
 /**
  * Creates a new hashmap.
  * If this function fails, you must NOT use the hashmap for any purpose. This is unsafe.
@@ -64,35 +64,35 @@ typedef struct xtHashmap {
  * @param keyCompare - A function pointer to the function which will compare two keys, and return if they are the same.
  * @param keyHash - A function pointer to the function which will create a hash of your custom key type.
  */
-bool xtHashmapCreate(xtHashmap *map, size_t size, size_t keySize, bool (*keyCompare) (void*, void*), size_t (*keyHash) (void*));
+bool xtHashmapCreate(struct xtHashmap *map, size_t size, size_t keySize, bool (*keyCompare) (void*, void*), size_t (*keyHash) (void*));
 /**
  * Destroys the hashmap, all memory associated with the hashmap is released.
  * Once this function has executed, the specified hashmap becomes invalid and should NOT be used again for any purpose. This will result in undefined behaviour.
  * @param map - The hashmap to destroy. A null pointer is allowed.
  */
-void xtHashmapDestroy(xtHashmap *map);
+void xtHashmapDestroy(struct xtHashmap *map);
 /**
  * Retrieves the bucket with the same key as is specified from the hashmap.
  * @param map - A pointer to the hashmap.
  * @param key - The key to look for.
  * @return A pointer to the bucket.
  */
-struct xtHashBucket *xtHashmapGet(xtHashmap *map, void *key);
+struct xtHashBucket *xtHashmapGet(struct xtHashmap *map, void *key);
 /**
  * Returns the amount of elements that currently reside in the hashmap.
  */
-size_t xtHashmapGetCount(const xtHashmap *map);
+size_t xtHashmapGetCount(const struct xtHashmap *map);
 /*
  * Returns the amount of elements that this hashmap is able to hold.
  */
-size_t xtHashmapGetSize(const xtHashmap *map);
+size_t xtHashmapGetSize(const struct xtHashmap *map);
 /**
  * Retrieves the value that the bucket with the given key holds.
  * @param map - A pointer to the hashmap.
  * @param key - The key to look for.
  * @return A pointer to the value that the found bucket holds.
  */
-void *xtHashmapGetValue(xtHashmap *map, void *key);
+void *xtHashmapGetValue(struct xtHashmap *map, void *key);
 /**
  * Retrieves the value and key that the bucket that comes next in line holds.
  * @param map - A pointer to the hashmap.
@@ -100,11 +100,11 @@ void *xtHashmapGetValue(xtHashmap *map, void *key);
  * @param value - A pointer which will be changed to point to any found value.
  * @return A boolean indicating if a next bucket was found. If not, the loop has ended and the iterator gets reset.
  */
-bool xtHashmapForeach(xtHashmap *map, void **key, void **value);
+bool xtHashmapForeach(struct xtHashmap *map, void **key, void **value);
 /**
  * Resets the iterator, use this incase you want to prematurely terminate an xtHashmapForeach().
  */
-void xtHashmapForeachEnd(xtHashmap *map);
+void xtHashmapForeachEnd(struct xtHashmap *map);
 /**
  * Puts an element in the hashmap.
  * @param map - A pointer to the hashmap.
@@ -112,7 +112,7 @@ void xtHashmapForeachEnd(xtHashmap *map);
  * @param value - A pointer to the value to put into the hashmap.
  * @return A boolean indicating if the bucket has been put into into the hashmap.
  */
-bool xtHashmapPut(xtHashmap *map, void *key, void *value);
+bool xtHashmapPut(struct xtHashmap *map, void *key, void *value);
 /**
  * Removes any found element from the hashmap.
  * This only works for objects allocated which are allocated by malloc or alike. C++ classes allocated with new should not be used.
@@ -121,7 +121,7 @@ bool xtHashmapPut(xtHashmap *map, void *key, void *value);
  * @param key - A pointer to the key, which will be used to lookup a value, and remove it.
  * @return A boolean indicating if anything was found and is removed.
  */
-bool xtHashmapRemove(xtHashmap *map, void *key);
+bool xtHashmapRemove(struct xtHashmap *map, void *key);
 
 /* LIST */
 
@@ -134,88 +134,88 @@ bool xtHashmapRemove(xtHashmap *map, void *key);
  *
  * Bounds checking is performed on all operations.
  */
-typedef struct xtList {
+struct xtList {
 	bool canGrow;
 	size_t count, capacity;
 	void **data;
 	void (*destroyElementFunc) (struct xtList *list, void *data);
 	void (*destroyListFunc) (struct xtList *list);
-} xtList;
+};
 /**
  * Attempts to add some data to the list.
  * The list will grow automatically if necessary and configured to allow this.
  * @return Zero if the data has been added, otherwise an error code.
  */
-int xtListAdd(xtList *list, void *data);
+int xtListAdd(struct xtList *list, void *data);
 /**
  * Overwrites the data at the specified index. You can ONLY replace elements with this function.
  * It is not possible to append elements to the end of the list with this function.
  * If an element is about to be replaced, it's destructor shall be called prior to replacement.
  * @return Zero if the data has been replaced, otherwise an error code.
  **/
-int xtListAddAt(xtList *list, void *data, size_t index);
+int xtListAddAt(struct xtList *list, void *data, size_t index);
 /**
  * Clears the list of all data. All element destructors shall be called.
  */
-void xtListClear(xtList *list);
+void xtListClear(struct xtList *list);
 /**
  * Creates a new list. By default, automatic growth is enabled.
  * @param capacity - The initial capacity for the list. Specify zero to use the default value.
  * @return Zero if the list has been created successfully, otherwise an error code.
  */
-int xtListCreate(xtList *list, size_t capacity);
+int xtListCreate(struct xtList *list, size_t capacity);
 /**
  * Destroys the list. All element destructors shall be called, including the list destructor.
  */
-void xtListDestroy(xtList *list);
+void xtListDestroy(struct xtList *list);
 /**
  * Enables or disables automatic growth of the list.
  */
-void xtListEnableGrowth(xtList *list, bool flag);
+void xtListEnableGrowth(struct xtList *list, bool flag);
 /**
  * Increases the capacity of the list to \a minCapacity if the list currently has a smaller capacity.
  * @return Zero if the capacity is already sufficiently large enough or if the growth has succeeded, otherwise an error code.
  */
-int xtListEnsureCapacity(xtList *list, size_t minCapacity);
+int xtListEnsureCapacity(struct xtList *list, size_t minCapacity);
 /**
  * Retrieves the element at the specified index from the list.
  * @param data - This pointer will receive the data from the list.
  * @return Zero if the data has been fetched successfully, otherwise an error code.
  */
-int xtListGet(const xtList *list, size_t index, void **data);
+int xtListGet(const struct xtList *list, size_t index, void **data);
 /**
  * Returns the current capacity for the list.
  */
-size_t xtListGetCapacity(const xtList *list);
+size_t xtListGetCapacity(const struct xtList *list);
 /**
  * Returns the current amount of elements in the list.
  */
-size_t xtListGetCount(const xtList *list);
+size_t xtListGetCount(const struct xtList *list);
 /**
  * Increases the current capacity by \a n elements.
  * @return Zero if the capacity growth has succeeded, otherwise an error code.
  */
-int xtListGrow(xtList *list, size_t n);
+int xtListGrow(struct xtList *list, size_t n);
 /**
  * Attempts to locate the element in the list, and then remove it.
  * @return Zero if the data has been found and removed, otherwise an error code.
  */
-int xtListRemove(xtList *list, void *data);
+int xtListRemove(struct xtList *list, void *data);
 /**
  * Removes the element at the specified position from the list.
  * @return Zero if the the data has been removed, otherwise an error code.
  */
-int xtListRemoveAt(xtList *list, size_t index);
+int xtListRemoveAt(struct xtList *list, size_t index);
 /**
  * Sets the function that is to be called when an element is removed or replaced.
  * Specify a null pointer to remove the function.
  */
-void xtListSetElementDestroyFunc(xtList *list, void (*destroyElementFunc) (xtList *list, void *data));
+void xtListSetElementDestroyFunc(struct xtList *list, void (*destroyElementFunc) (struct xtList *list, void *data));
 /**
  * Sets the function that is to be called when the list is being destroyed.
  * Specify a null pointer to remove the function.
  */
-void xtListSetListDestroyFunc(xtList *list, void (*destroyListFunc) (xtList *list));
+void xtListSetListDestroyFunc(struct xtList *list, void (*destroyListFunc) (struct xtList *list));
 
 /* STACK */
 

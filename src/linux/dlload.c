@@ -7,7 +7,7 @@
 // STD headers
 #include <stdio.h> // snprintf
 
-void *xtDLOpen(const char *filename, xtDLFlag flag)
+void *xtDLOpen(const char *filename, enum xtDLFlag flag)
 {
 	int _flag;
 	if (flag == XT_DL_LAZY)

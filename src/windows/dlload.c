@@ -4,7 +4,7 @@
 // System headers
 #include <windows.h>
 
-void *xtDLOpen(const char *filename, xtDLFlag flag)
+void *xtDLOpen(const char *filename, enum xtDLFlag flag)
 {
 	(void) flag;
 	return (void*) LoadLibrary(filename);

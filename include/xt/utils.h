@@ -19,18 +19,18 @@ extern "C" {
 // STD headers
 #include <stdbool.h>
 
-typedef struct xtBuildOptions {
+struct xtBuildOptions {
 	/** Contains the CFLAGS options. */
 	const char *configure;
 	const char *date;
 	const char *version;
 	unsigned versionMajor;
 	unsigned versionMinor;
-} xtBuildOptions;
+};
 /**
  * Contains information regarding how the library was compiled.
  */
-extern const xtBuildOptions XT_BUILD_OPTIONS;
+extern const struct xtBuildOptions XT_BUILD_OPTIONS;
 /**
  * Prints the specified message to stderr and exits the program with EXIT_FAILURE.
  */

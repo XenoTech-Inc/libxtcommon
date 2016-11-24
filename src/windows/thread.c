@@ -43,7 +43,7 @@ int xtMutexUnlock(xtMutex *m)
 
 static unsigned __stdcall _xtThreadStart(void *arg)
 {
-	xtThread *t = arg;
+	struct xtThread *t = arg;
 	// Execute the function
 	t->func(t, t->arg);
 	// The thread has forfilled it's purpose now, let it die in peace
@@ -52,7 +52,7 @@ static unsigned __stdcall _xtThreadStart(void *arg)
 	return 0;
 }
 
-int xtThreadContinue(xtThread *t)
+int xtThreadContinue(struct xtThread *t)
 {
 	if (xtThreadGetID(t) == xtThreadGetID(NULL))
 		return XT_EINVAL; // Do not allow the same caller
@@ -64,7 +64,7 @@ int xtThreadContinue(xtThread *t)
 	return 0;
 }
 
-int xtThreadCreate(xtThread *t, void *(*func) (xtThread *t, void *arg), void *arg, unsigned stackSizeKB)
+int xtThreadCreate(struct xtThread *t, void *(*func) (struct xtThread *t, void *arg), void *arg, unsigned stackSizeKB)
 {
 	// Turn it into KB's
 	stackSizeKB *= 1024;
@@ -87,7 +87,7 @@ error:
 	return _xtTranslateSysError(errno); // Yes, this time it's errno on Windows instead of GetLastError()
 }
 
-size_t xtThreadGetID(const xtThread *t)
+size_t xtThreadGetID(const struct xtThread *t)
 {
 	if (t)
 		return t->tid;
@@ -95,25 +95,25 @@ size_t xtThreadGetID(const xtThread *t)
 		return GetCurrentThreadId();
 }
 
-inline int xtThreadGetSuspendCount(const xtThread *t)
+inline int xtThreadGetSuspendCount(const struct xtThread *t)
 {
 	return t->suspendCount;
 }
 
-bool xtThreadIsAlive(const xtThread *t)
+bool xtThreadIsAlive(const struct xtThread *t)
 {
 	// Check if the event is signaled. As long as it ain't, the thread is still alive
 	return WaitForSingleObject(t->exitEvent, 0) != WAIT_OBJECT_0;
 }
 
-bool xtThreadJoin(xtThread *t)
+bool xtThreadJoin(struct xtThread *t)
 {
 	// No need to check if the thread is alive. This check should always block until the thread has terminated, 
 	// and otherwise return immediately
 	return WaitForSingleObject(t->exitEvent, INFINITE) == WAIT_OBJECT_0;
 }
 
-int xtThreadSuspend(xtThread *t)
+int xtThreadSuspend(struct xtThread *t)
 {
 	if (xtThreadGetID(t) != xtThreadGetID(NULL))
 		return XT_EINVAL; // Only allow the same caller

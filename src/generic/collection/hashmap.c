@@ -13,7 +13,7 @@ static void xtHashmapDeleteBucket(struct xtHashBucket *bucket)
 	free(bucket);
 }
 
-bool xtHashmapCreate(xtHashmap *map, size_t size, size_t keySize, bool (*keyCompare) (void*, void*), size_t (*keyHash) (void*))
+bool xtHashmapCreate(struct xtHashmap *map, size_t size, size_t keySize, bool (*keyCompare) (void*, void*), size_t (*keyHash) (void*))
 {
 	map->buckets = (struct xtHashBucket**) malloc(size * sizeof(struct xtHashBucket*));
 	if (!map->buckets)
@@ -30,7 +30,7 @@ bool xtHashmapCreate(xtHashmap *map, size_t size, size_t keySize, bool (*keyComp
 	return true;
 }
 
-void xtHashmapDestroy(xtHashmap *map)
+void xtHashmapDestroy(struct xtHashmap *map)
 {
 	if (!map)
 		return;
@@ -45,7 +45,7 @@ void xtHashmapDestroy(xtHashmap *map)
 	free(map->buckets);
 }
 
-struct xtHashBucket *xtHashmapGet(xtHashmap *map, void *key)
+struct xtHashBucket *xtHashmapGet(struct xtHashmap *map, void *key)
 {
 	size_t hash;
 	hash = map->keyHash(key);
@@ -60,23 +60,23 @@ struct xtHashBucket *xtHashmapGet(xtHashmap *map, void *key)
 	return NULL;
 }
 
-size_t xtHashmapGetCount(const xtHashmap *map)
+size_t xtHashmapGetCount(const struct xtHashmap *map)
 {
 	return map->count;
 }
 
-size_t xtHashmapGetSize(const xtHashmap *map)
+size_t xtHashmapGetSize(const struct xtHashmap *map)
 {
 	return map->size;
 }
 
-void *xtHashmapGetValue(xtHashmap *map, void *key)
+void *xtHashmapGetValue(struct xtHashmap *map, void *key)
 {
 	struct xtHashBucket *b = xtHashmapGet(map, key);
 	return b ? b->value : NULL;
 }
 
-static bool xtHashmapIteratorNext(xtHashmap *map, void **key, void **value)
+static bool xtHashmapIteratorNext(struct xtHashmap *map, void **key, void **value)
 {
 	// if more entries left
 	if (map->it.entry) {
@@ -102,7 +102,7 @@ static bool xtHashmapIteratorNext(xtHashmap *map, void **key, void **value)
 	return false;
 }
 
-static bool xtHashmapIteratorStart(xtHashmap *map, void **key, void **value)
+static bool xtHashmapIteratorStart(struct xtHashmap *map, void **key, void **value)
 {
 	for (size_t i = 0; i < map->size; ++i) {
 		if (map->buckets[i]) {
@@ -120,7 +120,7 @@ static bool xtHashmapIteratorStart(xtHashmap *map, void **key, void **value)
 	return false;
 }
 
-bool xtHashmapForeach(xtHashmap *map, void **key, void **value)
+bool xtHashmapForeach(struct xtHashmap *map, void **key, void **value)
 {
 	if (!map->it.entry && map->it.nr >= map->size) {
 		map->it.nr = 0;
@@ -133,13 +133,13 @@ bool xtHashmapForeach(xtHashmap *map, void **key, void **value)
 	return false;
 }
 
-void xtHashmapForeachEnd(xtHashmap *map)
+void xtHashmapForeachEnd(struct xtHashmap *map)
 {
 	map->it.entry = NULL;
 	map->it.nr = map->size;
 }
 
-bool xtHashmapPut(xtHashmap *map, void *key, void *value)
+bool xtHashmapPut(struct xtHashmap *map, void *key, void *value)
 {
 	struct xtHashBucket *entry;
 	entry = (struct xtHashBucket*) malloc(sizeof(struct xtHashBucket));
@@ -171,7 +171,7 @@ bool xtHashmapPut(xtHashmap *map, void *key, void *value)
 	return true;
 }
 
-bool xtHashmapRemove(xtHashmap *map, void *key)
+bool xtHashmapRemove(struct xtHashmap *map, void *key)
 {
 	size_t hash;
 	hash = map->keyHash(key);

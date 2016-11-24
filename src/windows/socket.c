@@ -17,19 +17,19 @@
  * Only initializes the sin_family field in the address. This is VERY IMPORTANT!!! 
  * All other fields will be left untouched.
  */
-static void _xtSockaddrInit(xtSockaddr *sa)
+static void _xtSockaddrInit(struct xtSockaddr *sa)
 {
 	((struct sockaddr_in*) sa)->sin_family = AF_INET;
 }
 
-bool xtSockaddrEquals(const xtSockaddr *sa1, const xtSockaddr *sa2)
+bool xtSockaddrEquals(const struct xtSockaddr *sa1, const struct xtSockaddr *sa2)
 {
 	// DO NOT just check the full memory! It is possible that only the address and port match, which is what we want to check for.
 	return ((struct sockaddr_in*) sa1)->sin_addr.s_addr == ((struct sockaddr_in*) sa2)->sin_addr.s_addr && 
 		((struct sockaddr_in*) sa1)->sin_port == ((struct sockaddr_in*) sa2)->sin_port;
 }
 
-bool xtSockaddrFromString(xtSockaddr *sa, const char *addr, uint16_t port)
+bool xtSockaddrFromString(struct xtSockaddr *sa, const char *addr, uint16_t port)
 {
 	char buf[32];
 	char *sep = strchr(addr, ':');
@@ -49,7 +49,7 @@ bool xtSockaddrFromString(xtSockaddr *sa, const char *addr, uint16_t port)
 	return true;
 }
 
-bool xtSockaddrFromAddr(xtSockaddr *sa, uint32_t addr, uint16_t port)
+bool xtSockaddrFromAddr(struct xtSockaddr *sa, uint32_t addr, uint16_t port)
 {
 	xtSockaddrSetAddress(sa, addr);
 	xtSockaddrSetPort(sa, port);
@@ -57,7 +57,7 @@ bool xtSockaddrFromAddr(xtSockaddr *sa, uint32_t addr, uint16_t port)
 	return true;
 }
 
-uint32_t xtSockaddrGetAddress(const xtSockaddr *sa)
+uint32_t xtSockaddrGetAddress(const struct xtSockaddr *sa)
 {
 	return ((struct sockaddr_in*) sa)->sin_addr.s_addr;
 }
@@ -72,29 +72,29 @@ uint32_t xtSockaddrGetAddressLocalHost(void)
 	return 16777343;
 }
 
-uint16_t xtSockaddrGetPort(const xtSockaddr *sa)
+uint16_t xtSockaddrGetPort(const struct xtSockaddr *sa)
 {
 	return xthtobe16(((struct sockaddr_in*) sa)->sin_port);
 }
 
-void xtSockaddrInit(xtSockaddr *sa)
+void xtSockaddrInit(struct xtSockaddr *sa)
 {
 	_xtSockaddrInit(sa);
 }
 
-void xtSockaddrSetAddress(xtSockaddr *sa, uint32_t addr)
+void xtSockaddrSetAddress(struct xtSockaddr *sa, uint32_t addr)
 {
 	((struct sockaddr_in*) sa)->sin_addr.s_addr = addr;
 	_xtSockaddrInit(sa); // Init this to be safe
 }
 
-void xtSockaddrSetPort(xtSockaddr *sa, uint16_t port)
+void xtSockaddrSetPort(struct xtSockaddr *sa, uint16_t port)
 {
 	((struct sockaddr_in*) sa)->sin_port = xthtobe16(port);
 	_xtSockaddrInit(sa); // Init this to be safe
 }
 
-char *xtSockaddrToString(const xtSockaddr *sa, char *buf, size_t buflen)
+char *xtSockaddrToString(const struct xtSockaddr *sa, char *buf, size_t buflen)
 {
 	char sbuf[32];
 	if (!inet_ntop(AF_INET, &((struct sockaddr_in*) sa)->sin_addr, sbuf, INET_ADDRSTRLEN))
@@ -111,7 +111,7 @@ char *xtSockaddrToString(const xtSockaddr *sa, char *buf, size_t buflen)
  * Converts a native socket protocol to it's xt representation.
  * XT_SOCKET_PROTO_UNKNOWN is returned if the protocol is unsupported.
  */
-static xtSocketProto _xtSocketNativeProtoToProto(int nativeProto)
+static enum xtSocketProto _xtSocketNativeProtoToProto(int nativeProto)
 {
 	switch (nativeProto) {
 	case IPPROTO_TCP: return XT_SOCKET_PROTO_TCP;
@@ -123,7 +123,7 @@ static xtSocketProto _xtSocketNativeProtoToProto(int nativeProto)
  * Converts an xtSocketProto to the native representation.
  * @return True of the conversion was successful, false otherwise.
  */
-static bool _xtSocketProtoToNativeProto(xtSocketProto proto, int *nativeType, int *nativeProto)
+static bool _xtSocketProtoToNativeProto(enum xtSocketProto proto, int *nativeType, int *nativeProto)
 {
 	switch (proto) {
 	case XT_SOCKET_PROTO_TCP:
@@ -139,7 +139,7 @@ static bool _xtSocketProtoToNativeProto(xtSocketProto proto, int *nativeType, in
 	}
 }
 
-int xtSocketBindTo(xtSocket sock, const xtSockaddr *sa)
+int xtSocketBindTo(xtSocket sock, const struct xtSockaddr *sa)
 {
 	if (bind(sock, (const struct sockaddr*) sa, sizeof(struct sockaddr_in)) == 0)
 		return 0;
@@ -148,7 +148,7 @@ int xtSocketBindTo(xtSocket sock, const xtSockaddr *sa)
 
 int xtSocketBindToAny(xtSocket sock, uint16_t port)
 {
-	xtSockaddr sa;
+	struct xtSockaddr sa;
 	xtSockaddrSetAddress(&sa, xtSockaddrGetAddressAny());
 	xtSockaddrSetPort(&sa, port);
 	return xtSocketBindTo(sock, &sa);
@@ -167,14 +167,14 @@ int xtSocketClose(xtSocket *sock)
 	return 0;
 }
 
-int xtSocketConnect(xtSocket sock, const xtSockaddr *dest)
+int xtSocketConnect(xtSocket sock, const struct xtSockaddr *dest)
 {
 	if (connect(sock, (const struct sockaddr*) dest, sizeof(struct sockaddr_in)) == 0)
 		return 0;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
-int xtSocketCreate(xtSocket *sock, xtSocketProto proto)
+int xtSocketCreate(xtSocket *sock, enum xtSocketProto proto)
 {
 	int nativeType, nativeProto;
 	if (!_xtSocketProtoToNativeProto(proto, &nativeType, &nativeProto))
@@ -213,7 +213,7 @@ void xtSocketDestruct(void)
 	WSACleanup();
 }
 
-int xtSocketGetLocalSocketAddress(xtSocket sock, xtSockaddr *sa)
+int xtSocketGetLocalSocketAddress(xtSocket sock, struct xtSockaddr *sa)
 {
 	socklen_t addrlen = sizeof(struct sockaddr_in);
 	if (getsockname(sock, (struct sockaddr*) sa, &addrlen) == 0)
@@ -223,13 +223,13 @@ int xtSocketGetLocalSocketAddress(xtSocket sock, xtSockaddr *sa)
 
 uint16_t xtSocketGetLocalPort(xtSocket sock)
 {
-	xtSockaddr sa;
+	struct xtSockaddr sa;
 	if (xtSocketGetLocalSocketAddress(sock, &sa) == 0)
 		return xtSockaddrGetPort(&sa);
 	return 0;
 }
 
-xtSocketProto xtSocketGetProtocol(const xtSocket sock)
+enum xtSocketProto xtSocketGetProtocol(const xtSocket sock)
 {
 	WSAPROTOCOL_INFO val;
 	socklen_t len = sizeof(val);
@@ -238,7 +238,7 @@ xtSocketProto xtSocketGetProtocol(const xtSocket sock)
 	return XT_SOCKET_PROTO_UNKNOWN;
 }
 
-int xtSocketGetRemoteSocketAddress(const xtSocket sock, xtSockaddr *sa)
+int xtSocketGetRemoteSocketAddress(const xtSocket sock, struct xtSockaddr *sa)
 {
 	socklen_t addrlen = sizeof(struct sockaddr_in);
 	if (getpeername(sock, (struct sockaddr*) sa, &addrlen) == 0)
@@ -408,7 +408,7 @@ int xtSocketSetTCPNoDelay(xtSocket sock, bool flag)
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
-int xtSocketTCPAccept(xtSocket sock, xtSocket *peerSock, xtSockaddr *peerAddr)
+int xtSocketTCPAccept(xtSocket sock, xtSocket *peerSock, struct xtSockaddr *peerAddr)
 {
 	socklen_t dummyLen = sizeof(struct sockaddr_in);
 	// Something is happening!
@@ -447,7 +447,7 @@ int xtSocketTCPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *
 	return 0;
 }
 
-int xtSocketUDPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRead, xtSockaddr *sender)
+int xtSocketUDPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRead, struct xtSockaddr *sender)
 {
 	socklen_t dummyLen = sizeof(struct sockaddr_in);
 	ssize_t ret;
@@ -463,7 +463,7 @@ int xtSocketUDPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRe
 	return 0;
 }
 
-int xtSocketUDPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *bytesSent, const xtSockaddr *dest)
+int xtSocketUDPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *bytesSent, const struct xtSockaddr *dest)
 {
 	ssize_t ret;
 	ret = sendto(sock, buf, buflen, 0, (const struct sockaddr*) dest, sizeof(struct sockaddr_in));
@@ -499,7 +499,7 @@ static short _xtSocketPollEventFixSysFlags(short sysevents)
 /**
  * Translates an xtSocketPollEvent to it's native countpart.
  */
-static short _xtSocketPollEventFlagsToSys(xtSocketPollEvent events)
+static short _xtSocketPollEventFlagsToSys(enum xtSocketPollEvent events)
 {
 	short newEvents = 0;
 	if (events & XT_POLLIN)
@@ -515,9 +515,9 @@ static short _xtSocketPollEventFlagsToSys(xtSocketPollEvent events)
 /**
  * Translates native epoll flags to it's xt counterpart.
  */
-static xtSocketPollEvent _xtSocketPollEventSysToFlags(short sysevents)
+static enum xtSocketPollEvent _xtSocketPollEventSysToFlags(short sysevents)
 {
-	xtSocketPollEvent newEvents = 0;
+	enum xtSocketPollEvent newEvents = 0;
 	if (sysevents & POLLIN)
 		newEvents |= XT_POLLIN;
 	if (sysevents & POLLOUT)
@@ -529,7 +529,7 @@ static xtSocketPollEvent _xtSocketPollEventSysToFlags(short sysevents)
 	return newEvents;
 }
 
-int xtSocketPollAdd(xtSocketPoll *p, xtSocket sock, void *data, xtSocketPollEvent events)
+int xtSocketPollAdd(struct xtSocketPoll *p, xtSocket sock, void *data, enum xtSocketPollEvent events)
 {
 	unsigned index = p->count;
 	if (index == p->size)
@@ -544,11 +544,11 @@ int xtSocketPollAdd(xtSocketPoll *p, xtSocket sock, void *data, xtSocketPollEven
 	return 0;
 }
 
-int xtSocketPollCreate(xtSocketPoll **p, unsigned size)
+int xtSocketPollCreate(struct xtSocketPoll **p, unsigned size)
 {
 	if (size == 0)
 		return XT_EINVAL;
-	xtSocketPoll *_p = malloc(sizeof(xtSocketPoll));
+	struct xtSocketPoll *_p = malloc(sizeof(*_p));
 	if (!_p)
 		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 	_p->fds = NULL;
@@ -591,7 +591,7 @@ error:
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
-void xtSocketPollDestroy(xtSocketPoll *p)
+void xtSocketPollDestroy(struct xtSocketPoll *p)
 {
 	if (!p)
 		return;
@@ -601,33 +601,33 @@ void xtSocketPollDestroy(xtSocketPoll *p)
 	free(p);
 }
 
-unsigned xtSocketPollGetCount(const xtSocketPoll *p)
+unsigned xtSocketPollGetCount(const struct xtSocketPoll *p)
 {
 	return p->count;
 }
 
-void *xtSocketPollGetData(const xtSocketPoll *p, unsigned index)
+void *xtSocketPollGetData(const struct xtSocketPoll *p, unsigned index)
 {
 	
 	return p->readyData[index].data;
 }
 
-xtSocketPollEvent xtSocketPollGetEvent(const xtSocketPoll *p, unsigned index)
+enum xtSocketPollEvent xtSocketPollGetEvent(const struct xtSocketPoll *p, unsigned index)
 {
 	return p->readyData[index].events;
 }
 
-unsigned xtSocketPollGetSize(const xtSocketPoll *p)
+unsigned xtSocketPollGetSize(const struct xtSocketPoll *p)
 {
 	return p->size;
 }
 
-xtSocket xtSocketPollGetSocket(const xtSocketPoll *p, unsigned index)
+xtSocket xtSocketPollGetSocket(const struct xtSocketPoll *p, unsigned index)
 {
 	return p->readyData[index].fd;
 }
 
-int xtSocketPollMod(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent events)
+int xtSocketPollMod(struct xtSocketPoll *p, xtSocket sock, enum xtSocketPollEvent events)
 {
 	for (unsigned i = 0; i < p->size; ++i) {
 		if (p->fds[i].fd == sock) {
@@ -638,7 +638,7 @@ int xtSocketPollMod(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent events)
 	return XT_EINVAL;
 }
 
-int xtSocketPollRemove(xtSocketPoll *p, xtSocket sock)
+int xtSocketPollRemove(struct xtSocketPoll *p, xtSocket sock)
 {
 	// Find the socket
 	// Clean up possible sensitive data
@@ -673,7 +673,7 @@ int xtSocketPollRemove(xtSocketPoll *p, xtSocket sock)
 	return 0;
 }
 
-int xtSocketPollSetEvent(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent events)
+int xtSocketPollSetEvent(struct xtSocketPoll *p, xtSocket sock, enum xtSocketPollEvent events)
 {
 	for (unsigned i = 0; i < p->socketsReady; ++i) {
 		if (p->readyData[i].fd == sock) {
@@ -684,7 +684,7 @@ int xtSocketPollSetEvent(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent event
 	return XT_EINVAL;
 }
 
-int xtSocketPollWait(xtSocketPoll *p, int timeout, unsigned *socketsReady)
+int xtSocketPollWait(struct xtSocketPoll *p, int timeout, unsigned *socketsReady)
 {
 	int eventCount = WSAPoll(p->fds, p->count, timeout);
 	if (eventCount == -1) {

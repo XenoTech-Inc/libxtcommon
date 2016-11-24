@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int xtListAdd(xtList *list, void *data)
+int xtListAdd(struct xtList *list, void *data)
 {
 	if (list->count == list->capacity) {
 		if (!list->canGrow)
@@ -22,7 +22,7 @@ int xtListAdd(xtList *list, void *data)
 	return 0;
 }
 
-int xtListAddAt(xtList *list, void *data, size_t index)
+int xtListAddAt(struct xtList *list, void *data, size_t index)
 {
 	if (index >= list->count)
 		return XT_EINVAL; // Can only replace elements
@@ -33,14 +33,14 @@ int xtListAddAt(xtList *list, void *data, size_t index)
 	return 0;
 }
 
-void xtListClear(xtList *list)
+void xtListClear(struct xtList *list)
 {
 	// Remove elements at the end, this is faster
 	while (list->count > 0)
 		xtListRemoveAt(list, list->count - 1);
 }
 
-int xtListCreate(xtList *list, size_t capacity)
+int xtListCreate(struct xtList *list, size_t capacity)
 {
 	if (capacity == 0)
 		capacity = XT_LIST_CAPACITY_DEFAULT;
@@ -58,7 +58,7 @@ int xtListCreate(xtList *list, size_t capacity)
 	return 0;
 }
 
-void xtListDestroy(xtList *list)
+void xtListDestroy(struct xtList *list)
 {
 	xtListClear(list);
 	if (list->destroyListFunc)
@@ -66,19 +66,19 @@ void xtListDestroy(xtList *list)
 	free(list->data);
 }
 
-void xtListEnableGrowth(xtList *list, bool flag)
+void xtListEnableGrowth(struct xtList *list, bool flag)
 {
 	list->canGrow = flag;
 }
 
-int xtListEnsureCapacity(xtList *list, size_t minCapacity)
+int xtListEnsureCapacity(struct xtList *list, size_t minCapacity)
 {
 	if (list->capacity >= minCapacity)
 		return 0;
 	return xtListGrow(list, minCapacity - xtListGetCapacity(list));
 }
 
-int xtListGet(const xtList *list, size_t index, void **data)
+int xtListGet(const struct xtList *list, size_t index, void **data)
 {
 	if (index >= list->count)
 		return XT_EINVAL;
@@ -86,17 +86,17 @@ int xtListGet(const xtList *list, size_t index, void **data)
 	return 0;
 }
 
-size_t xtListGetCapacity(const xtList *list)
+size_t xtListGetCapacity(const struct xtList *list)
 {
 	return list->capacity;
 }
 
-size_t xtListGetCount(const xtList *list)
+size_t xtListGetCount(const struct xtList *list)
 {
 	return list->count;
 }
 
-int xtListGrow(xtList *list, size_t n)
+int xtListGrow(struct xtList *list, size_t n)
 {
 	void **temp;
 	if (!(temp = realloc(list->data, (list->capacity + n) * sizeof(list->data))))
@@ -106,7 +106,7 @@ int xtListGrow(xtList *list, size_t n)
 	return 0;
 }
 
-int xtListRemove(xtList *list, void *data)
+int xtListRemove(struct xtList *list, void *data)
 {
 	for (size_t i = 0; i < list->count; ++i) {
 		if (list->data[i] == data) {
@@ -117,7 +117,7 @@ int xtListRemove(xtList *list, void *data)
 	return XT_ENOENT;
 }
 
-int xtListRemoveAt(xtList *list, size_t index)
+int xtListRemoveAt(struct xtList *list, size_t index)
 {
 	if (index >= list->count)
 		return XT_EINVAL;
@@ -133,12 +133,12 @@ int xtListRemoveAt(xtList *list, size_t index)
 	return 0;
 }
 
-void xtListSetElementDestroyFunc(xtList *list, void (*destroyElementFunc) (xtList *list, void *data))
+void xtListSetElementDestroyFunc(struct xtList *list, void (*destroyElementFunc) (struct xtList *list, void *data))
 {
 	list->destroyElementFunc = destroyElementFunc;
 }
 
-void xtListSetListDestroyFunc(xtList *list, void (*destroyListFunc) (xtList *list))
+void xtListSetListDestroyFunc(struct xtList *list, void (*destroyListFunc) (struct xtList *list))
 {
 	list->destroyListFunc = destroyListFunc;
 }

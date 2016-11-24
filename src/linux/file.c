@@ -126,7 +126,7 @@ const char *xtFileGetExtension(const char *path)
 /**
  * This function belongs to xtFileGetFiles().
  */
-static void _xtFileGetFilesElementDestroy(xtList *list, void *data)
+static void _xtFileGetFilesElementDestroy(struct xtList *list, void *data)
 {
 	(void) list;
 	struct xtFile *file = data;
@@ -141,7 +141,7 @@ static int caseCompare(const struct dirent **a, const struct dirent **b)
 	return strcasecmp((*a)->d_name, (*b)->d_name);
 }
 
-int xtFileGetFiles(const char *path, xtList *files)
+int xtFileGetFiles(const char *path, struct xtList *files)
 {
 	int ret;
 	xtListSetElementDestroyFunc(files, _xtFileGetFilesElementDestroy);

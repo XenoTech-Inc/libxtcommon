@@ -107,7 +107,7 @@ const char *xtFileGetExtension(const char *path)
 /**
  * This function belongs to xtFileGetFiles().
  */
-static void _xtFileGetFilesElementDestroy(xtList *list, void *data)
+static void _xtFileGetFilesElementDestroy(struct xtList *list, void *data)
 {
 	(void) list;
 	struct xtFile *file = data;
@@ -115,7 +115,7 @@ static void _xtFileGetFilesElementDestroy(xtList *list, void *data)
 	free(file);
 }
 
-int xtFileGetFiles(const char *path, xtList *files)
+int xtFileGetFiles(const char *path, struct xtList *files)
 {
 	int ret;
 	WIN32_FIND_DATA fdFile;

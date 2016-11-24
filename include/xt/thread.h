@@ -78,7 +78,7 @@ int xtMutexUnlock(xtMutex *m);
  *
  * You should threat this struct as if it were opaque.
  */
-typedef struct xtThread {
+struct xtThread {
 	/** The target function for the thread to execute. */
 	void *(*func) (struct xtThread *t, void *arg);
 	/** The argument that is passed to the target function. */
@@ -93,7 +93,7 @@ typedef struct xtThread {
 	xtMutex suspendMutex;
 	unsigned tid;
 #endif
-} xtThread;
+};
 /**
  * This function decreases the thread's suspend count by one.
  * If the suspend count is zero or lower, the thread shall be woken up when asleep.
@@ -101,7 +101,7 @@ typedef struct xtThread {
  * @param t - The thread of which to decrease the suspend count. This must NOT be the caller thread.
  * @return Zero on success, otherwise an error code.
  */
-int xtThreadContinue(xtThread *t);
+int xtThreadContinue(struct xtThread *t);
 /**
  * Creates a new thread. If the thread has been created successfully, it will start execution immediately.
  * @param func - A function pointer to the function which the thread shall execute.
@@ -111,33 +111,33 @@ int xtThreadContinue(xtThread *t);
  * @return Zero if the thread has been created, otherwise an error code.
  * @remarks You need to call xtThreadJoin() to clean up the new thread properly, otherwise system resources will leak.
  */
-int xtThreadCreate(xtThread *t, void *(*func) (xtThread *t, void *arg), void *arg, unsigned stackSizeKB);
+int xtThreadCreate(struct xtThread *t, void *(*func) (struct xtThread *t, void *arg), void *arg, unsigned stackSizeKB);
 /**
  * Returns the unique identifier of the specified thread. Pass a null to get the ID of the caller thread.
  */
-size_t xtThreadGetID(const xtThread *t);
+size_t xtThreadGetID(const struct xtThread *t);
 /**
  * Returns the current suspend count for the specified thread.
  */
-int xtThreadGetSuspendCount(const xtThread *t);
+int xtThreadGetSuspendCount(const struct xtThread *t);
 /**
  * Returns if the specified thread is still executing their task and has not terminated yet.
  */
-bool xtThreadIsAlive(const xtThread *t);
+bool xtThreadIsAlive(const struct xtThread *t);
 /**
  * Joins the specified thread. This operation blocks until the specified thread has terminated.
  * All of the thread's resources will then be cleaned up. A call to this function should ONLY be made once.
  * Once this function has executed, the specified thread becomes invalid and should NOT be used again for any purpose.
  * @returns True the join operation was successful, false otherwise.
  */
-bool xtThreadJoin(xtThread *t);
+bool xtThreadJoin(struct xtThread *t);
 /**
  * Increases the suspend count by one. If the suspend count is higher than zero, the thread will be suspended
  * on a call to this function. The thread will not be suspended when the suspend count is zero or lower.
  * @param t - The thread to put to sleep. This must ALWAYS be the caller thread.
  * @return - Zero on success, otherwise an error code.
  */
-int xtThreadSuspend(xtThread *t);
+int xtThreadSuspend(struct xtThread *t);
 /**
  * Causes the calling thread to relinquish the CPU.
  * The thread is moved to the end of the queue for its static priority and a new thread gets to run.

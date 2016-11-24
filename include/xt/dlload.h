@@ -20,12 +20,12 @@ extern "C" {
 /**
  * All possible flags that you can pass to xtDLOpen().
  */
-typedef enum xtDLFlag {
+enum xtDLFlag {
 	/** The symbol will be loaded when you call that particular symbol. */
 	XT_DL_LAZY,
 	/** Loads all unresolved symbols immediately. */
 	XT_DL_NOW
-} xtDLFlag;
+};
 /**
  * A pointer to a generic function. The sole purpose of this typedef is to
  * prevent UB when casting function pointers in xtDLSym().
@@ -40,7 +40,7 @@ typedef void (*xtGenericFuncPtr)(void*);
  * @remarks You should call xtDLClose() on any handle that you don't need any longer.
  * Failure to do so will result in leakage of system resources.
  */
-void *xtDLOpen(const char *filename, xtDLFlag flag);
+void *xtDLOpen(const char *filename, enum xtDLFlag flag);
 /**
  * Closes a handle and releases any associated system resources with it.
  */

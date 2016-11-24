@@ -37,7 +37,7 @@ extern "C" {
  * This is a wrapper for struct sockaddr_in, which makes it very easy to use. Using the raw struct sockaddr_in can be a real pain.
  * This struct is POD. It is different across platforms though.
  */
-typedef struct xtSockaddr {
+struct xtSockaddr {
 #if defined(XT_IS_LINUX)
 	short sin_family;
 	unsigned short sin_port;
@@ -57,26 +57,26 @@ typedef struct xtSockaddr {
 	} sin_addr;
 	char sin_zero[8];
 #endif
-} xtSockaddr;
+};
 /**
  * Checks if two addresses are equal.
  */
-bool xtSockaddrEquals(const xtSockaddr *sa1, const xtSockaddr *sa2);
+bool xtSockaddrEquals(const struct xtSockaddr *sa1, const struct xtSockaddr *sa2);
 /**
  * A constructor which translates the IP address from the provided string.
  * The string MAY contain the port to set. If the string contains the port, then that port value is used. If the string does not contain a port, the value of \a port is used.
  * If the translation fails for whatever reason, then the address is left untouched.
  * String IP format : [IP address] OR [IP address]:[Port]
  */
-bool xtSockaddrFromString(xtSockaddr *sa, const char *addr, uint16_t port);
+bool xtSockaddrFromString(struct xtSockaddr *sa, const char *addr, uint16_t port);
 /**
  * Sets the address from an ipv4 address represented as decimals. The port is always set by \a port.
  */
-bool xtSockaddrFromAddr(xtSockaddr *sa, uint32_t addr, uint16_t port);
+bool xtSockaddrFromAddr(struct xtSockaddr *sa, uint32_t addr, uint16_t port);
 /**
  * Returns the IP address as raw 4 byte number.
  */
-uint32_t xtSockaddrGetAddress(const xtSockaddr *sa);
+uint32_t xtSockaddrGetAddress(const struct xtSockaddr *sa);
 /**
  * This address is used when you don't need to bind a socket to a specific IP.
  * When you use this value as the address when binding a socket, the socket accepts connections to all the IPs of the machine.
@@ -88,26 +88,26 @@ uint32_t xtSockaddrGetAddressAny(void);
  * Instead use xtSockaddrGetAddressAny() for that!
  */
 uint32_t xtSockaddrGetAddressLocalHost(void);
-uint16_t xtSockaddrGetPort(const xtSockaddr *sa);
+uint16_t xtSockaddrGetPort(const struct xtSockaddr *sa);
 /**
  * Initializes a sockaddr. This MUST be done before it can be used by any sockets.
  * All xtSockaddr functions which SET a value in the sockaddr do this automatically to be safe. By calling this function,
  * you can do it manually incase that is desired.
  */
-void xtSockaddrInit(xtSockaddr *sa);
-void xtSockaddrSetAddress(xtSockaddr *sa, uint32_t addr);
-void xtSockaddrSetPort(xtSockaddr *sa, uint16_t port);
+void xtSockaddrInit(struct xtSockaddr *sa);
+void xtSockaddrSetAddress(struct xtSockaddr *sa, uint32_t addr);
+void xtSockaddrSetPort(struct xtSockaddr *sa, uint16_t port);
 /**
  * Returns this address as a string formatted as : [IP]:[PORT].
  * A null pointer is returned on failure to translate the address.
  */
-char *xtSockaddrToString(const xtSockaddr *sa, char *buf, size_t buflen);
+char *xtSockaddrToString(const struct xtSockaddr *sa, char *buf, size_t buflen);
 /**
  * @brief All protocols that are supported by the xtSockets.
  */
-typedef enum xtSockProto {
+enum xtSocketProto {
 	XT_SOCKET_PROTO_UNKNOWN, XT_SOCKET_PROTO_TCP, XT_SOCKET_PROTO_UDP
-} xtSocketProto;
+};
 /**
  * @brief Super speedy sockets.
  *
@@ -139,7 +139,7 @@ typedef enum xtSockProto {
  * @return Zero if the socket has been bound successfully, otherwise an error code.
  * @remarks Ports below 1024 may require admin rights.
  */
-int xtSocketBindTo(xtSocket sock, const xtSockaddr *sa);
+int xtSocketBindTo(xtSocket sock, const struct xtSockaddr *sa);
 /**
  * Binds the socket to the specified interface.
  * @param port - The port to bind to. Port 0 lets the kernel pick a random port.
@@ -160,7 +160,7 @@ int xtSocketClose(xtSocket *sock);
  * Data that came from other devices is now simply discarded, as if it never existed. The kernel takes care of this for us.
  * @return Zero if the socket has connected successfully, otherwise an error code.
  */
-int xtSocketConnect(xtSocket sock, const xtSockaddr *dest);
+int xtSocketConnect(xtSocket sock, const struct xtSockaddr *dest);
 /**
  * Creates a new socket which is directly available for use.
  * This socket must always be closed by xtSocketClose().
@@ -168,7 +168,7 @@ int xtSocketConnect(xtSocket sock, const xtSockaddr *dest);
  * @param proto - The protocol that the socket should be using.
  * @return Zero if the socket has been created, otherwise an error code.
  */
-int xtSocketCreate(xtSocket *sock, xtSocketProto proto);
+int xtSocketCreate(xtSocket *sock, enum xtSocketProto proto);
 /**
  * Cleans up any resources that were necessary for the sockets to function.
  * Failure to call this function may lead to the leakage of system resources.
@@ -182,7 +182,7 @@ void xtSocketDestruct(void);
  * @param sa - A pointer to the structure which will receive the address of the interface.
  * @return Zero if the address has been retrieved, otherwise an error code.
  */
-int xtSocketGetLocalSocketAddress(xtSocket sock, xtSockaddr *sa);
+int xtSocketGetLocalSocketAddress(xtSocket sock, struct xtSockaddr *sa);
 /**
  * Tells you the port of the interface where \a sock is bound to.
  * On error, zero is returned.
@@ -192,12 +192,12 @@ uint16_t xtSocketGetLocalPort(xtSocket sock);
  * Returns the protocol that is associated with this socket. If any error occurs,
  * XT_SOCKET_PROTO_UNKNOWN is returned.
  */
-xtSocketProto xtSocketGetProtocol(const xtSocket sock);
+enum xtSocketProto xtSocketGetProtocol(const xtSocket sock);
 /**
  * Tells you the address of the peer connected to \a sock.
  * @return Zero if the address has been retrieved, otherwise an error code.
  */
-int xtSocketGetRemoteSocketAddress(const xtSocket sock, xtSockaddr *sa);
+int xtSocketGetRemoteSocketAddress(const xtSocket sock, struct xtSockaddr *sa);
 /**
  * Tells you if an error has occurred on \a sock. After a successful call to this function,
  * the error code is cleared.
@@ -331,7 +331,7 @@ int xtSocketSetTCPNoDelay(xtSocket sock, bool flag);
  * @return Zero if a peer has connected successfully, otherwise an error code.
  * @remarks The socket must be in listen mode for this function to work.
  */
-int xtSocketTCPAccept(xtSocket sock, xtSocket *peerSock, xtSockaddr *peerAddr);
+int xtSocketTCPAccept(xtSocket sock, xtSocket *peerSock, struct xtSockaddr *peerAddr);
 /**
  * Blocks until "some" data has been read on the socket. This does not necessarily have to be the size of \a buflen.
  * @param bytesRead - Receives the amount of bytes that have been read.
@@ -350,22 +350,22 @@ int xtSocketTCPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *
  * @param sender - Receives the address of the sender.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
-int xtSocketUDPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRead, xtSockaddr *sender);
+int xtSocketUDPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRead, struct xtSockaddr *sender);
 /**
  * Writes the data in \a buf to the address of \a dest.
  * @param bytesSent - Receives the amount of bytes that have been sent.
  * @param dest - Contains the address of the destination. For a connected UDP socket, you can specify a null pointer.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
-int xtSocketUDPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *bytesSent, const xtSockaddr *dest);
+int xtSocketUDPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *bytesSent, const struct xtSockaddr *dest);
 /**
- * @brief Typedef for an opaque pointer.
+ * @brief Declaration for an opaque pointer.
  */
-typedef struct xtSocketPoll xtSocketPoll;
+struct xtSocketPoll;
 /**
  * @brief All types of events that can occur on a socket.
  */
-typedef enum xtSocketPollEvent {
+enum xtSocketPollEvent {
 	/** No event has occurred. */
 	XT_POLLNONE = 0x00,
 	/** Normal data can be read without blocking. */
@@ -376,7 +376,7 @@ typedef enum xtSocketPollEvent {
 	XT_POLLERR = 0x08,
 	/** A stream-oriented connection was either disconnected or aborted. */
 	XT_POLLHUP = 0x10
-} xtSocketPollEvent;
+};
 /**
  * Adds a socket for monitoring.
  * After a successful call to this function, the socket will be monitored for the
@@ -385,55 +385,55 @@ typedef enum xtSocketPollEvent {
  * @param data - The data to associate with the socket.
  * @param events - The events which are to be monitored.
  */
-int xtSocketPollAdd(xtSocketPoll *p, xtSocket sock, void *data, xtSocketPollEvent events);
+int xtSocketPollAdd(struct xtSocketPoll *p, xtSocket sock, void *data, enum xtSocketPollEvent events);
 /**
  * Initiates the poll structure for socket monitoring.
  * @param size - The amount of sockets that will fit into the structure.
  */
-int xtSocketPollCreate(xtSocketPoll **p, unsigned size);
+int xtSocketPollCreate(struct xtSocketPoll **p, unsigned size);
 /**
  * Destroys the structure and cleans up all resources.
  * The structure is rendered unuseable after calling this function.
  * The sockets remain unaffected.
  */
-void xtSocketPollDestroy(xtSocketPoll *p);
-unsigned xtSocketPollGetCount(const xtSocketPoll *p);
+void xtSocketPollDestroy(struct xtSocketPoll *p);
+unsigned xtSocketPollGetCount(const struct xtSocketPoll *p);
 /**
  * Returns the data that is associated with the socket at \a index.
  * @remarks No bounds checking is performed. Specifying a too high index
  * results in undefined behavior.
  */
-void *xtSocketPollGetData(const xtSocketPoll *p, unsigned index);
+void *xtSocketPollGetData(const struct xtSocketPoll *p, unsigned index);
 /**
  * Returns the current event that is happening on the socket at \a index.
  * @remarks No bounds checking is performed. Specifying a too high index
  * results in undefined behavior.
  */
-xtSocketPollEvent xtSocketPollGetEvent(const xtSocketPoll *p, unsigned index);
-unsigned xtSocketPollGetSize(const xtSocketPoll *p);
+enum xtSocketPollEvent xtSocketPollGetEvent(const struct xtSocketPoll *p, unsigned index);
+unsigned xtSocketPollGetSize(const struct xtSocketPoll *p);
 /**
  * Returns the socket at \a index.
  * @remarks No bounds checking is performed. Specifying a too high index
  * results in undefined behavior.
  */
-xtSocket xtSocketPollGetSocket(const xtSocketPoll *p, unsigned index);
+xtSocket xtSocketPollGetSocket(const struct xtSocketPoll *p, unsigned index);
 /**
  * Modifies the events for which a socket will be monitored. This will take effect
  * on the next call to xtSocketPollWait().
  * @returns Zero if the socket was found and modified, otherwise an error code.
  */
-int xtSocketPollMod(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent events);
+int xtSocketPollMod(struct xtSocketPoll *p, xtSocket sock, enum xtSocketPollEvent events);
 /**
  * Removes the specified socket from monitoring. The socket will be invalidated in the ready array.
  * It's file descriptor will be set to XT_SOCKET_INVALID_FD and it's data set to null.
  * Do note that this means it is still present in the ready array until the next call to xtSocketPollWait().
  * @returns Zero if the socket was found and is removed, otherwise an error code.
  */
-int xtSocketPollRemove(xtSocketPoll *p, xtSocket sock);
+int xtSocketPollRemove(struct xtSocketPoll *p, xtSocket sock);
 /**
  * Sets the current event(s) for a ready socket.
  */
-int xtSocketPollSetEvent(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent event);
+int xtSocketPollSetEvent(struct xtSocketPoll *p, xtSocket sock, enum xtSocketPollEvent event);
 /**
  * Determines the status of one or more sockets.
  * All sockets are automically rearmed for the next call to this function.
@@ -448,7 +448,7 @@ int xtSocketPollSetEvent(xtSocketPoll *p, xtSocket sock, xtSocketPollEvent event
  * left untouched on error.
  * @return Zero is the function has executed successfully, otherwise an error code.
  */
-int xtSocketPollWait(xtSocketPoll *p, int timeout, unsigned *socketsReady);
+int xtSocketPollWait(struct xtSocketPoll *p, int timeout, unsigned *socketsReady);
 
 #ifdef __cplusplus
 }

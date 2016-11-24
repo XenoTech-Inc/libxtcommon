@@ -88,7 +88,7 @@ static void osTest(void)
 	printf("Console size retval=%d, size: w=%u, h=%u\n", ret, width, height);
 	puts("#####################################\n## CPU info");
 	unsigned long long end, start = xtClockGetMonotimeUS();
-	xtCPUInfo info;
+	struct xtCPUInfo info;
 	bool retval = xtCPUGetInfo(&info);
 	end = xtClockGetMonotimeUS();
 	printf("All CPU info retrieved?: %s\n", (retval ? "Yes" : "No"));
@@ -96,7 +96,7 @@ static void osTest(void)
 	xtCPUDump(&info, stdout);
 }
 
-static void tMainTask(xtThread *restrict t1, xtThread *restrict t2)
+static void tMainTask(struct xtThread *restrict t1, struct xtThread *restrict t2)
 {
 	char nbuf[32];
 	printf("TMain: Does T1 equal T2?: %s\n", (xtThreadGetID(t1) == xtThreadGetID(t2) ? "Yes" : "No"));
@@ -106,7 +106,7 @@ static void tMainTask(xtThread *restrict t1, xtThread *restrict t2)
 	printf("TMain: Is T2 alive?: %s\n", (xtThreadIsAlive(t2) ? "Yes" : "No"));
 }
 
-static void *t1Task(xtThread *t, void *arg)
+static void *t1Task(struct xtThread *t, void *arg)
 {
 	(void) t;
 	int ret;
@@ -125,7 +125,7 @@ static void *t1Task(xtThread *t, void *arg)
 	return NULL;
 }
 
-static void *t2Task(xtThread *t, void *arg)
+static void *t2Task(struct xtThread *t, void *arg)
 {
 	(void) t;
 	int ret;
@@ -149,7 +149,7 @@ static void threadTest(void)
 	char sbuf[256];
 	int ret;
 	xtMutex m;
-	xtThread t1, t2;
+	struct xtThread t1, t2;
 	if ((ret = xtMutexCreate(&m)) != 0)
 		goto err;
 	if ((ret = xtThreadCreate(&t1, t1Task, &m, 0)) != 0)
@@ -182,13 +182,13 @@ static void timeTest(void)
 	printf("Time mono diff %u msecs later (in usecs): %llu\n", sleepTimeMS, (timeLater - timeNow));
 }
 
-static void *socketTestT2(xtThread *t, void *arg)
+static void *socketTestT2(struct xtThread *t, void *arg)
 {
 	(void) t;
 	(void) arg;
 	char sbuf[256];
 	int ret;
-	xtSockaddr sa;
+	struct xtSockaddr sa;
 	xtSocket s;
 	ret = xtSocketCreate(&s, XT_SOCKET_PROTO_TCP);
 	printf("Socket creation: %s\n", xtGetErrorStr(ret));
@@ -214,12 +214,12 @@ static void socketTest(void)
 	}
 	char sbuf[256];
 	int ret;
-	xtSockaddr sa;
+	struct xtSockaddr sa;
 	xtSocket serverSock;
 	ret = xtSocketCreate(&serverSock, XT_SOCKET_PROTO_TCP);
 	
-
-	xtThread t;
+	
+	struct xtThread t;
 	xtThreadCreate(&t, socketTestT2, NULL, 64);
 	
 	ret = xtSocketBindToAny(serverSock, 25659);
@@ -229,7 +229,7 @@ static void socketTest(void)
 	ret = xtSocketListen(serverSock, 10);
 	printf("Socket listen: %s\n", xtGetErrorStr(ret));
 	
-	xtSockaddr peerAddr;
+	struct xtSockaddr peerAddr;
 	xtSocket peerSocket;
 	
 	const int maxTries = 10;
@@ -258,9 +258,9 @@ static void stringTest(void)
 	printf("Max LLU value uint64 to string : %s\n", xtUint64ToStr(ULLONG_MAX, nbuf, 32));
 }
 
-static void *threadTestSleep(xtThread *t, void *arg)
+static void *threadTestSleep(struct xtThread *t, void *arg)
 {
-	(void)arg;
+	(void) arg;
 	puts("Going to suspend soon!");
 	xtThreadSuspend(t);
 	puts("Awoken!");
@@ -287,7 +287,7 @@ int main(void)
 	puts("--------------------------------------------------------------------------------\n-- THREAD TEST");
 	threadTest();
 	puts("--------------------------------------------------------------------------------\n-- THREAD SLEEP TEST");
-		xtThread t;
+		struct xtThread t;
 		xtThreadCreate(&t, threadTestSleep, NULL, 64);
 		xtSleepMS(500);
 		xtThreadContinue(&t);
