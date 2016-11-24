@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 #define XT_VERSION_MAJOR 0
-#define XT_VERSION_MINOR 5
+#define XT_VERSION_MINOR 6
 
 // STD headers
 #include <stdbool.h>
