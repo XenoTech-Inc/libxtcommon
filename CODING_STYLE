@@ -3,17 +3,17 @@ XT Coding Style
 
 1. Whitespace
 
-XT indents with tabs. Normally you should indent everything with tabs. 
-There are special occasions however, where this is not the case. e.g if you're 
-typing a very long line of code so you're splitting them in two lines, or if
-you're making a switch with padding. Then you need to combine tabs with spaces.
-First put the tabs, then the spaces.
+XT indents with tabs. Normally you should indent everything with tabs.
+There are special occasions however, where this is not the case. e.g if
+you're typing a very long line of code so you're splitting them in two
+lines, or if you're making a switch with padding. Then you need to
+combine tabs with spaces. First put the tabs, then the spaces.
 
 Never leave dangling whitespace after lines!
 
 2. Line width
 
-Lines can be longer than 80 characters. However, try to not make them 
+Lines can be longer than 80 characters. However, try to not make them
 ridiculously long. Try to keep it under 150 characters. That is a very
 reasonable limit. Screens are big these days. Terminals as well!
 
@@ -23,47 +23,51 @@ Here follows a list of naming conventions under different circumstances:
 Normal:   someInteger
 Static:   someInteger
 Global:   someInteger (If it is a constant, it MAY be named like a macro)
-Internal: _someInteger (Variables which should not be touched externally)
 Macro:    SOME_INTEGER
+
+Static struct, enum, or union definition:
+struct _some_integer {}
 
 Functions:        xtSomeInteger()
 Static functions: _xtSomeInteger()
 
 Enums, structs and unions should never be typedef'd.
-Typedefs are an exception for primitive types, because you have no choice there.
-Look at xtSocket type for example. Never must any typedefs end with "_t".
-If the structure is meant to be internal, it should be prefixed with an 
-underscore. Also if it's internal only, it should be typed with underscores
-instead of camelcase e.g.  _xt_hash_data instead of _xtHashData.
-You should keep the number of underscores at a minimum though, as it is pretty
-annoying to type and read.
+Typedefs are an exception for primitive types, because you have no
+choice there. Look at xtSocket type for example. Never may typedefs end
+with "_t". If the variable is meant to be internal only, it should be
+prefixed with an underscore. Also it should be typed with underscores
+instead of camelcase e.g. _xt_hash_data instead of_xtHashData. You
+should keep the number of underscores at a minimum though, as it is
+pretty annoying to type and read.
 
 4. Block structure
 
-The braces should always be placed on the same line. Never place them on the 
-second line. Always omit braces if the body of an if statement does not require
-braces. This applies to 'for', 'do' and 'while' loops.
+The braces should always be placed on the same line. Never place them on
+the second line. Always omit braces if the body of an if statement does
+not require braces. This applies to 'for', 'do' and 'while' loops.
 if (something == 1)
 	doThis();
-When having multiple lines (or statements), always (obviously) use the braces.
+When having multiple lines (or statements), always (obviously) use the
+braces.
 if (something == 2) {
 	doThis();
 	doThat();
 }
-Switch statements should have the cases on the same indentation as the switch 
-itself. This is to prevent large indentation which you easily can get with
-switches. It's also best practice to have a default case in the switch. You
-should put it at the bottom. Alo you should indent the statement(s) after the case
-at exactly the same indentation, unless this makes it real awkward to work with.
+Switch statements should have the cases on the same indentation as the
+switch itself. This is to prevent large indentation which you easily can
+get with switches. It's also best practice to have a default case in the
+switch. You should put it at the bottom. Also you should indent the
+statement(s) after the case at exactly the same indentation, unless
+this makes it real awkward to work with.
 switch (something) {
 case 1:  doThis();
 case 2:  doThat();
 default: doSomethingElse();
 }
-And if switches have fall-through cases, the style is the same. Do note the 
-whitespace after case 1!.
+And if switches have fall-through cases, the style is the same.
+Do note the whitespace after case 1!.
 switch (something) {
-case 1:  
+case 1:
 case 2:  doThat();
 default: doSomethingElse();
 }
@@ -72,13 +76,12 @@ default: doSomethingElse();
 
 Use the correct type for the operation that you're going to perform.
 If you know that a number will never be lower than zero, use unsigned!
-If you know that you need very large number for e.g a timestamp, use unsigned 
-long long.
-ONLY use the types from stdint.h when you really need exactly the desired width.
-If you are creating a function which needs flags of some sort, you should put 
-them in an enum.
-This is to prevent human stupidity from specifying the wrong types. In C it's 
-still possible to do by casting, but then you are a moron.
+If you know that you need very large number for e.g a timestamp, use
+unsigned long long.
+ONLY use the types from stdint.h when you really need exactly the
+desired width. If you are creating a function which needs flags of some
+sort, you should put them in an enum. Enums should have their members 
+specified in hexdecimals when they may be combined with binary logic.
 
 6. Header inclusion and macros
 
@@ -88,9 +91,9 @@ The inclusion order in .h and .c files, must be the following
 [System headers sorted alphabetically]
 [std headers sorted alphabetically]
 
-Macros should always be completely in uppercase. An exception can be made if 
-the macro is just an alias for 
-another function. Do think wisely about this.
+Macros should always be completely in uppercase. An exception can be
+made if the macro is just an alias for another function.
+Do think wisely about this.
 
 7. Header include guards and C extern
 
@@ -119,37 +122,43 @@ if (yourVariable == 20)
 
 9. Compilation
 
-You should make sure that if you're compiling with maximum warning level, or 
-maximum optimization, that NO warnings from the compiler will erupt. 
-We don't want code which creates warnings!
+You should make sure that if you're compiling with maximum warning
+level, or maximum optimization, that NO warnings from the compiler
+will erupt. We don't want code which creates warnings!
 
 10. Error checking
 
-Functions part of the XT family should have pretty good error checking. malloc 
-(and friends) should always be checked. When a function requires a struct of
-some kind, you should NOT check whether it's a valid pointer or not. Only in a destroy 
-function should you perhaps choose to do so. The XT family does not think of 
-human stupidity too much. Checking for dangling pointers is useless in C anyways.
+Functions part of the XT family should have pretty good error checking.
+malloc (and friends) should always be checked. When a function requires
+a struct of some kind, you should NOT check whether it's a valid pointer
+or not. Only in a destroy function should you perhaps choose to do so.
+Checking for dangling pointers is useless in C anyways.
 
-It is very smart however, to mention it in the function documentation if you're 
-not checking for a certain thing. Take a look at xtSocketPollGetSocket() for
-example, it says this in it's documentation:
-@remarks No bounds checking is performed. Specifying a too high index results 
-in undefined behavior.
+It is very smart however, to mention it in the function documentation if
+you're not checking for a certain thing. Take a look at
+xtSocketPollGetSocket() for example, it says this in it's documentation:
+@remarks No bounds checking is performed. Specifying a too high index
+results in undefined behavior.
 That is an important thing to mention!
 
-11. Documentation
+11. File permissions and encoding
 
-This is a very subjective topic. You should ALWAYS write documention for a 
-function, except if...
-It's really obvious what the function does. For example, xtHashmapGetCount() 
-should not require documentation. Okay captain obvious?
-Functions should especially have documentation if they have some quirks, like 
-xtSocketPollWait().
-Variables do not necessarily require documentation. Do what you think is wise.
-Bottom line? Use common-sense.
+Files should always have 664 as their binary permission. Files that
+should be executable should ONLY set the executable bit next to having
+664 as permission. Files should ALWAYS use ASCII as encoding.
+You should consider UTF-8 (and it's family members) usage as prohibited.
 
-12. Git
+12. Documentation
+
+This is a very subjective topic. You should ALWAYS write documention for
+a function, except if... It's really obvious what the function does.
+For example, xtHashmapGetCount() should not require documentation.
+Okay captain obvious? Functions should especially have documentation if
+they have some quirks, like xtSocketPollWait().
+Variables do not necessarily require documentation.
+Do what you think is wise. Bottom line? Use common-sense.
+
+13. Git
 
 We use the git version control system to keep track of everything easily. In
 order to make fully advantage of version control, you must obey these rules:
@@ -157,20 +166,21 @@ order to make fully advantage of version control, you must obey these rules:
 * Never rebase on the master branch
 * Push your commits to another branch if the code is incomplete or untested
 
-Commit messages shall not exceed 72 characters. The log history always indents
-the messages when viewing with git log which makes them 72 + 8 = 80 characters.
+Commit messages shall not exceed 72 characters. The log history always
+indents the messages when viewing with git log which makes them
+72 + 8 = 80 characters.
 
-It goes without saying that rebasing after pushing is a bad idea if you are not
-the only contributor. The git server does not accept fast-forward pushes. This
-does not prevent you from deleting and recreating a branch though. Just use your
-common sense.
+It goes without saying that rebasing after pushing is a bad idea if you
+are not the only contributor. The git server does not accept
+fast-forward pushes. This does not prevent you from deleting and
+recreating a branch though. Use your common sense.
 
-It is best practice to create a new branch for code that is incomplete, or has
-not been completely tested yet. Do not merge ANYTHING with the master branch
-before other key contributors were notified and have agreed to do so.
-After merging with the master, the branch should be deleted
-in order for everything to stay tidy.
-If you have committed a couple of changes and are unsure whether it should be
-merged with master, always push your commits to another branch. Tom Everaarts
-gets the final vote whether it should be included. If he rejects your code he
-has good reasons to do so.
+It is best practice to create a new branch for code that is incomplete,
+or has not been completely tested yet. Do not merge ANYTHING with the
+master branch before other key contributors were notified and have
+agreed to do so. After merging with the master, the branch should be
+deleted in order for everything to stay tidy.
+If you have committed a couple of changes and are unsure whether it
+should be merged with master, always push your commits to another
+branch. Tom Everaarts gets the final vote whether it should be included.
+If he rejects your code he has good reasons to do so.
