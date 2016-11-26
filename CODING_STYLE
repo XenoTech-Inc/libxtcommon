@@ -147,6 +147,7 @@ Files should always have 664 as their binary permission. Files that
 should be executable should ONLY set the executable bit next to having
 664 as permission. Files should ALWAYS use ASCII as encoding.
 You should consider UTF-8 (and it's family members) usage as prohibited.
+Also only use Linux line endings (LF) in all files.
 
 12. Documentation
 
