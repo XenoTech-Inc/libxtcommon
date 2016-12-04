@@ -313,12 +313,14 @@ char *xtGetOSName(char *buf, size_t  buflen)
 
 unsigned xtGetProcessCount(void)
 {
-	char line[31];
-	FILE *fp = popen("ps -fe | wc -l", "r");
-	if (!fp || !fgets(line, 31, fp))
+	char sbuf[32];
+	FILE *fp = popen("ps -A --no-headers | wc -l", "r");
+	if (!fp)
 		return 0;
+	char *ret = fgets(sbuf, sizeof(sbuf) / sizeof(sbuf[0]), fp);
 	pclose(fp);
-	return atoi(line);
+	// This value is off by about 3 processes or so. Why?
+	return ret ? strtol(sbuf, NULL, 10) : 0;
 }
 
 char *xtGetUsername(char *buf, size_t buflen)
