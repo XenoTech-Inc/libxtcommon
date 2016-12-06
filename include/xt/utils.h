@@ -33,10 +33,12 @@ struct xtBuildOptions {
 extern const struct xtBuildOptions XT_BUILD_OPTIONS;
 /**
  * Prints the specified message to stderr and exits the program with EXIT_FAILURE.
+ * stderr is always flushed first.
  */
 void xtDie(const char *msg);
 /**
  * Prints the specified message to stderr and exits the program with EXIT_FAILURE ONLY if the condition is false.
+ * stderr is always flushed first.
  */
 void xtDieOn(bool cond, const char *msg);
 

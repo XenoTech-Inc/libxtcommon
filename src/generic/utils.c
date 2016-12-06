@@ -8,6 +8,7 @@
 void xtDie(const char *msg)
 {
 	fprintf(stderr, "%s", msg);
+	fflush(stderr);
 	exit(EXIT_FAILURE);
 }
 
