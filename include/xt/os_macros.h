@@ -16,12 +16,15 @@ extern "C" {
 
 #if defined(__gnu_linux__)
 	#define XT_IS_LINUX 1
-#elif defined(_WIN32) && !defined(_WIN64)
+#elif defined(_WIN32) || defined(_WIN64)
 	#define XT_IS_WINDOWS 1
-	#define XT_IS_WINDOWS_X86 1
-#elif defined(_WIN32) && defined(_WIN64)
-	#define XT_IS_WINDOWS 1
-	#define XT_IS_WINDOWS_X64 1
+#endif
+
+#include <limits.h>
+#if UINTPTR_MAX == 0x0FFFFFFFFFFFFFFFFLLU
+	#define XT_IS_X64 1
+#elif UINTPTR_MAX == 0x0FFFFFFFF
+	#define XT_IS_X86 1
 #endif
 
 #ifdef __cplusplus

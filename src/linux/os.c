@@ -1,9 +1,11 @@
 // XT headers
 #include <xt/os.h>
 #include <xt/error.h>
+#include <xt/os_macros.h>
 #include <xt/string.h>
 
 // System headers
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h> // for open() and O_RDONLY
 #include <sys/ioctl.h> // for ioctl() and TIOCGWINSZ
@@ -14,6 +16,7 @@
 
 // STD headers
 #include <ctype.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -23,11 +26,11 @@ bool xtBatteryIsCharging(void)
 	size_t chargingStrLen = strlen(chargingStr);
 	char sbuf[64];
 	for (int i = 0; i < 10; ++i) { // Check for max 10 batteries if they exist
-		snprintf(sbuf, 64, "%s%d%s", "/sys/class/power_supply/BAT", i, "/status");
+		snprintf(sbuf, sizeof(sbuf), "%s%d%s", "/sys/class/power_supply/BAT", i, "/status");
 		int fd = open(sbuf, O_RDONLY);
 		if (fd == -1)
 			continue;
-		int retval = read(fd, sbuf, 64);
+		int retval = read(fd, sbuf, sizeof(sbuf));
 		close(fd);
 		return retval > 0 ? memcmp(chargingStr, sbuf, chargingStrLen) == 0 : false;
 	}
@@ -43,11 +46,11 @@ int xtBatteryGetPowerLevel(void)
 {
 	char sbuf[64];
 	for (int i = 0; i < 10; ++i) { // Check for max 10 batteries if they exist
-		snprintf(sbuf, 64, "%s%d%s", "/sys/class/power_supply/BAT", i, "/capacity");
+		snprintf(sbuf, sizeof(sbuf), "%s%d%s", "/sys/class/power_supply/BAT", i, "/capacity");
 		int fd = open(sbuf, O_RDONLY);
 		if (fd == -1)
 			continue;
-		int retval = read(fd, sbuf, 64);
+		int retval = read(fd, sbuf, sizeof(sbuf));
 		close(fd);
 		return retval > 0 ? strtol(sbuf, NULL, 10) : -1;
 	}
@@ -59,11 +62,11 @@ void xtCPUDump(const struct xtCPUInfo *cpuInfo, FILE *f)
 	fprintf(f, "CPU name: %s\n", cpuInfo->name);
 	char cpuArch[16];
 	switch (cpuInfo->architecture) {
-	case XT_CPU_ARCH_X64: strncpy(cpuArch, "x64", 16); break;
-	case XT_CPU_ARCH_X86: strncpy(cpuArch, "x86", 16); break;
-	case XT_CPU_ARCH_ARM: strncpy(cpuArch, "ARM", 16); break;
-	case XT_CPU_ARCH_IA64: strncpy(cpuArch, "IA64", 16); break;
-	default: strncpy(cpuArch, "Unknown", 16); break;
+	case XT_CPU_ARCH_X64: strncpy(cpuArch, "x64", sizeof(cpuArch)); break;
+	case XT_CPU_ARCH_X86: strncpy(cpuArch, "x86", sizeof(cpuArch)); break;
+	case XT_CPU_ARCH_ARM: strncpy(cpuArch, "ARM", sizeof(cpuArch)); break;
+	case XT_CPU_ARCH_IA64: strncpy(cpuArch, "IA64", sizeof(cpuArch)); break;
+	default: strncpy(cpuArch, "Unknown", sizeof(cpuArch)); break;
 	}
 	fprintf(f, "CPU architecture: %s\n", cpuArch);
 	fprintf(f, "Physical cores: %u\n", cpuInfo->physicalCores);
@@ -149,7 +152,7 @@ bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo)
 	if (fp) {
 		// Retrieve a lot of values!!
 		while (xtStringReadLine(sbuf, sizeof(sbuf), NULL, fp)) {
-			strncpy(sbuf2, sbuf, 128);
+			strncpy(sbuf2, sbuf, sizeof(sbuf));
 			numTokens = sizeof(tokens) / sizeof(tokens[0]);
 			xtStringSplit(sbuf, " \t", tokens, &numTokens);
 			if (xtStringStartsWith(sbuf, "Architecture")) {
@@ -209,7 +212,7 @@ void xtConsoleClear(void)
 {
 	//system("clear && printf '"); // This is slow!
 	// Alias for <ESC>c, the VT100 code to reset the terminal :D
-	printf("%s", "\033c"); // Really ultra fast
+	fputs("\033c", stdout); // Really ultra fast
 }
 
 int xtConsoleGetSize(unsigned *cols, unsigned *rows)
@@ -238,18 +241,19 @@ bool xtConsoleIsAvailable(void)
 
 bool xtConsoleSetTitle(const char *title)
 {
-	char buf[512];
-	snprintf(buf, 512, "%s%s%s", "printf \"\033]0;", title, "\007\"");
-	return system(buf) != -1;
+	char sbuf[256];
+	snprintf(sbuf, sizeof(sbuf), "%s%s%s", "printf \"\033]0;", title, "\007\"");
+	return system(sbuf) != -1;
 }
 
 unsigned long long xtRAMGetAmountFree(void)
 {
-	/* Doesn't show correct amount of RAM on 32 bit systems with 4GB+ RAM
+#if XT_IS_X64
+	// Doesn't show correct amount of RAM on 32 bit systems with 4GB+ RAM
 	struct sysinfo info;
-	sysinfo(&info); // Cannot fail
+	sysinfo(&info);
 	return info.freeram;
-	*/
+#else
 	FILE *f = fopen("/proc/meminfo", "rb");
 	if (!f)
 		return 0;
@@ -263,15 +267,17 @@ unsigned long long xtRAMGetAmountFree(void)
 	}
 	fclose(f);
 	return 0;
+#endif
 }
 
 unsigned long long xtRAMGetAmountTotal(void)
 {
-	/* Doesn't show correct amount of RAM on 32 bit systems with 4GB+ RAM
+#if XT_IS_X64
+	// Doesn't show correct amount of RAM on 32 bit systems with 4GB+ RAM
 	struct sysinfo info;
-	sysinfo(&info); // Cannot fail
+	sysinfo(&info);
 	return info.totalram;
-	*/
+#else
 	FILE *f = fopen("/proc/meminfo", "rb");
 	if (!f)
 		return 0;
@@ -285,6 +291,7 @@ unsigned long long xtRAMGetAmountTotal(void)
 	}
 	fclose(f);
 	return 0;
+#endif
 }
 
 unsigned xtGetCurrentPID(void)
@@ -295,38 +302,42 @@ unsigned xtGetCurrentPID(void)
 char *xtGetHostname(char *buf, size_t buflen)
 {
 	// For in the future maybe, HOST_NAME_MAX is the maximum length of the hostname in limits.h
-	if (gethostname(buf, buflen) != 0)
-		return NULL;
-	return buf;
+	return gethostname(buf, buflen) == 0 ? buf : NULL;
 }
 
-char *xtGetOSName(char *buf, size_t  buflen)
+char *xtGetOSName(char *buf, size_t buflen)
 {
+	int ret = 0;
 	FILE *fp = popen("/usr/bin/lsb_release -d | /bin/sed -e 's/.*:\\s//'", "r");
-	if (!fp || !xtStringReadLine(buf, buflen, NULL, fp)) {
-		snprintf(buf, buflen, "%s", "Linux");
-		return buf;
+	if (fp) {
+		ret = fread(buf, 1, buflen, fp);
+		pclose(fp);
 	}
-	fclose(fp);
+	if (ret == 0)
+		snprintf(buf, buflen, "Linux");
+	else
+		buf[ret - 1] = '\0'; // Remove newline char
 	return buf;
 }
 
 unsigned xtGetProcessCount(void)
 {
-	char sbuf[32];
-	FILE *fp = popen("ps -A --no-headers | wc -l", "r");
-	if (!fp)
+	DIR *d;
+	struct dirent *dir;
+	unsigned count = 0;
+	if (!(d = opendir("/proc")))
 		return 0;
-	char *ret = fgets(sbuf, sizeof(sbuf) / sizeof(sbuf[0]), fp);
-	pclose(fp);
-	// This value is off by about 3 processes or so. Why?
-	return ret ? strtol(sbuf, NULL, 10) : 0;
+	while ((dir = readdir(d))) {
+		// If the map starts with a number, it's always a legit process
+		if (strtoul(dir->d_name, NULL, 10) != 0)
+			++count;
+	}
+	closedir(d);
+	return count;
 }
 
 char *xtGetUsername(char *buf, size_t buflen)
 {
 	// For in the future maybe, LOGIN_NAME_MAX is the maximum length of the name. in limits.h
-	if (getlogin_r(buf, buflen) == 0)
-		return buf;
-	return NULL;
+	return getlogin_r(buf, buflen) == 0 ? buf : NULL;
 }

@@ -38,14 +38,14 @@ extern "C" {
  * This struct is POD. It is different across platforms though.
  */
 struct xtSockaddr {
-#if defined(XT_IS_LINUX)
+#if XT_IS_LINUX
 	short sin_family;
 	unsigned short sin_port;
 	struct {
 		unsigned long s_addr;
 	} sin_addr;
 	char sin_zero[8];
-#elif defined(XT_IS_WINDOWS)
+#elif XT_IS_WINDOWS
 	short sin_family;
 	unsigned short sin_port;
 	struct {
@@ -114,10 +114,10 @@ enum xtSocketProto {
  * The sockets contains a nice amount of easy to use functions and are optimized for speed.
  * Non-blocking operations are supported!
  */
-#if defined(XT_IS_LINUX)
+#if XT_IS_LINUX
 	typedef int xtSocket;
 	#define XT_SOCKET_INVALID_FD (-1)
-#elif defined(XT_IS_WINDOWS)
+#elif XT_IS_WINDOWS
 	typedef uintptr_t xtSocket;
 	#define XT_SOCKET_INVALID_FD ((xtSocket) (~0))
 #endif

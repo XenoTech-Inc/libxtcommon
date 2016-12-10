@@ -52,11 +52,11 @@ void xtCPUDump(const struct xtCPUInfo *cpuInfo, FILE *f)
 	fprintf(f, "CPU name: %s\n", cpuInfo->name);
 	char cpuArch[16];
 	switch (cpuInfo->architecture) {
-	case XT_CPU_ARCH_X64: strncpy(cpuArch, "x64", 16); break;
-	case XT_CPU_ARCH_X86: strncpy(cpuArch, "x86", 16); break;
-	case XT_CPU_ARCH_ARM: strncpy(cpuArch, "ARM", 16); break;
-	case XT_CPU_ARCH_IA64: strncpy(cpuArch, "IA64", 16); break;
-	default: strncpy(cpuArch, "Unknown", 16); break;
+	case XT_CPU_ARCH_X64: strncpy(cpuArch, "x64", sizeof(cpuArch)); break;
+	case XT_CPU_ARCH_X86: strncpy(cpuArch, "x86", sizeof(cpuArch)); break;
+	case XT_CPU_ARCH_ARM: strncpy(cpuArch, "ARM", sizeof(cpuArch)); break;
+	case XT_CPU_ARCH_IA64: strncpy(cpuArch, "IA64", sizeof(cpuArch)); break;
+	default: strncpy(cpuArch, "Unknown", sizeof(cpuArch)); break;
 	}
 	fprintf(f, "CPU architecture: %s\n", cpuArch);
 	fprintf(f, "Physical cores: %u\n", cpuInfo->physicalCores);

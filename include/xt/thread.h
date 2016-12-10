@@ -20,7 +20,7 @@ extern "C" {
 #include <xt/os_macros.h>
 
 // System headers
-#if defined(XT_IS_LINUX)
+#if XT_IS_LINUX
 	#include <pthread.h>
 #endif
 
@@ -35,9 +35,9 @@ extern "C" {
  * An extra performance boost is gained because the mutexes are created on the stack.
  * You should threat this mutex as if it were opaque.
  */
-#if defined(XT_IS_LINUX)
+#if XT_IS_LINUX
 	typedef pthread_mutex_t xtMutex;
-#elif defined(XT_IS_WINDOWS)
+#elif XT_IS_WINDOWS
 	typedef RTL_CRITICAL_SECTION xtMutex;
 #endif
 /**
@@ -84,11 +84,11 @@ struct xtThread {
 	/** The argument that is passed to the target function. */
 	void *arg;
 	int suspendCount;
-#if defined(XT_IS_LINUX)
+#if XT_IS_LINUX
 	pthread_t nativeThread;
 	pthread_cond_t suspendCond;
 	pthread_mutex_t suspendMutex;
-#elif defined(XT_IS_WINDOWS)
+#elif XT_IS_WINDOWS
 	HANDLE exitEvent, nativeThread;
 	xtMutex suspendMutex;
 	unsigned tid;

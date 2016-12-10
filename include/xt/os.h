@@ -1,7 +1,8 @@
 /**
  * @brief Used to retrieve deep system information.
  *
- * All functions in here are used to retrieve information about the system's hardware.
+ * All functions in here are used to retrieve information about the
+ * system's hardware and OS information.
  * @file os.h
  * @author Tom Everaarts
  * @date 2016
@@ -22,7 +23,8 @@ extern "C" {
 
 /**
  * Returns if the battery is charging now. False is returned on error.
- * @remarks If the battery is fully charged, the system will usually report that the battery is NOT charging.
+ * @remarks If the battery is fully charged, the system will usually
+ * report that the battery is NOT charging.
  */
 bool xtBatteryIsCharging(void);
 /**
@@ -31,8 +33,9 @@ bool xtBatteryIsCharging(void);
 bool xtBatteryIsPresent(void);
 /**
  * Returns the percentage of the battery's power level.
- * @returns -1 If no battery is present or there was an error reading the power level.\n
- * Otherwise the power level is returned in the usual range from 0% to 100%.
+ * @returns -1 If no battery is present or if there was an error reading
+ * the power level. Otherwise the power level is returned in the usual
+ * range from 0% to 100%.
  */
 int xtBatteryGetPowerLevel(void);
 /**
@@ -55,8 +58,8 @@ enum xtCPUArch {
  */
 struct xtCPUInfo {
 	/**
-	 * The name of the processor. This is likely to also contain the manufacterer name
-	 * and clock frequency.
+	 * The name of the processor. This is likely to also contain the
+	 * manufacterer name and clock frequency.
 	 */
 	char name[64];
 	/**
@@ -131,7 +134,9 @@ unsigned xtGetCurrentPID(void);
  */
 char *xtGetHostname(char *buf, size_t buflen);
 /**
- * Returns the name of the OS that this computer is running. On error a null pointer is returned.
+ * Returns the name of the OS that this computer is running. On failure
+ * a less accurate representation of the OS name is returned.
+ * (e.g "Linux" instead of "Ubuntu 14.04.5 LTS")
  * @remarks For Linux, this only works on LSB compliant distros.
  */
 char *xtGetOSName(char *buf, size_t buflen);
