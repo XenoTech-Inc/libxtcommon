@@ -129,14 +129,14 @@ bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo)
 			f = fopen(sbuf, "rb");
 			if (f) {
 				fgets(sbuf, sizeof(sbuf), f);
-				currLevel = atoi(sbuf);
+				currLevel = (unsigned) strtoul(sbuf, NULL, 10);
 				fclose(f);
 				snprintf(sbuf, sizeof(sbuf), "%s%u%s%u%s", base, i, "/cache/index", j, "/size");
 				f = fopen(sbuf, "rb");
 				if (!f)
 					continue;
 				fgets(sbuf, sizeof(sbuf), f);
-				cacheSizes[currLevel - 1] += atoi(sbuf);
+				cacheSizes[currLevel - 1] += (unsigned) strtoul(sbuf, NULL, 10);
 				fclose(f);
 			}
 		}

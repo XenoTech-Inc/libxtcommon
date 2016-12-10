@@ -44,7 +44,7 @@ bool xtSockaddrFromString(struct xtSockaddr *sa, const char *addr, uint16_t port
 	}
 	if (inet_pton(AF_INET, buf, &((struct sockaddr_in*) sa)->sin_addr) != 1)
 		return false;
-	xtSockaddrSetPort(sa, sep ? atoi(++sep) : port);
+	xtSockaddrSetPort(sa, sep ? (unsigned short) strtoul(++sep, NULL, 10) : port);
 	_xtSockaddrInit(sa); // Init this to be safe
 	return true;
 }
