@@ -111,9 +111,10 @@ int xtConsoleGetSize(unsigned *cols, unsigned *rows);
  */
 bool xtConsoleIsAvailable(void);
 /**
- * Changes the console title.
+ * Changes the console title. This will only have effect if stdout is
+ * associated with a terminal, otherwise it's a NOP.
  */
-bool xtConsoleSetTitle(const char *title);
+void xtConsoleSetTitle(const char *title);
 /**
  * Returns the total amount of physical RAM available for use in bytes.
  * Zero is returned on failure.

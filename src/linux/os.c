@@ -239,11 +239,10 @@ bool xtConsoleIsAvailable(void)
 	return getenv("TERM"); // Should be NULL when there is no console
 }
 
-bool xtConsoleSetTitle(const char *title)
+void xtConsoleSetTitle(const char *title)
 {
-	char sbuf[256];
-	snprintf(sbuf, sizeof(sbuf), "%s%s%s", "printf \"\033]0;", title, "\007\"");
-	return system(sbuf) != -1;
+	if (isatty(fileno(stdout)))
+		printf("%s%s%s", "\033]0;", title, "\007");
 }
 
 unsigned long long xtRAMGetAmountFree(void)

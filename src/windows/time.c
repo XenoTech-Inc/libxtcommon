@@ -118,7 +118,7 @@ unsigned long long xtClockGetRealtimeUS(void)
 	// Filetime in 100 nanosecond resolution
 	ULONGLONG fileTimeNano100 = (((ULONGLONG) fileTime.dwHighDateTime) << 32) + fileTime.dwLowDateTime;
 	// To milliseconds and unix windows epoch offset removed
-	return fileTimeNano100 / 10 - 11644473600000 * 1000;
+	return fileTimeNano100 / 10 - 11644473600000LLU * 1000;
 }
 
 unsigned xtGetUptime(void)

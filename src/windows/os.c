@@ -1,16 +1,16 @@
 // XT headers
 #include <xt/os.h>
 #include <xt/error.h>
+#include <xt/os_macros.h>
 #include <xt/string.h>
 
 // System headers
 #include <Windows.h> // Include windows.h before TlHelp32.h, otherwise we get problems
 #include <TlHelp32.h> // For CreateToolhelp32Snapshot
-#ifdef _WIN64
+#if XT_IS_X64
 	#include <intrin.h> // For the cpuid function, only available on 64 bit...
-#else
-	#include <x86intrin.h>
 #endif
+#include <io.h> // For _isatty
 
 // STD headers
 #include <stdlib.h>
@@ -215,9 +215,10 @@ bool xtConsoleIsAvailable(void)
 	return GetCurrentProcessId() != dwProcessId;
 }
 
-bool xtConsoleSetTitle(const char *title)
+void xtConsoleSetTitle(const char *title)
 {
-	return SetConsoleTitle(title);
+	if (_isatty(_fileno(stdout)))
+		SetConsoleTitle(title);
 }
 
 unsigned long long xtRAMGetAmountFree(void)
