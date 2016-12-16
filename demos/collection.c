@@ -1,4 +1,4 @@
-#include <xt/collection.h>
+#include <xt/stack.h>
 #include <xt/error.h>
 #include <stdio.h>
 

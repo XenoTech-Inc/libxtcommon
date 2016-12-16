@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 // XT headers
-#include <xt/collection.h>
+#include <xt/list.h>
 
 // STD headers
 #include <stdbool.h>

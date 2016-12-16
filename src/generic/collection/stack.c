@@ -1,5 +1,5 @@
 // XT headers
-#include <xt/collection.h>
+#include <xt/stack.h>
 #include <xt/error.h>
 
 // STD headers
