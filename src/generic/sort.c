@@ -1,7 +1,19 @@
+// XT headers
 #include <xt/error.h>
+#include <xt/os_macros.h>
 #include <xt/sort.h>
+
+// STD headers
 #include <stdlib.h>
 #include <string.h>
+
+#if XT_IS_WINDOWS
+	#if XT_IS_X64
+		typedef long long ssize_t;
+	#elif XT_IS_X86
+		typedef long ssize_t;
+	#endif
+#endif
 
 /* swap element routines are inlined so they
 have to be defined first before we can use it */
