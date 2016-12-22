@@ -95,6 +95,31 @@ Macros should always be completely in uppercase. An exception can be
 made if the macro is just an alias for another function.
 Do think wisely about this.
 
+Nested includes must be indented. Conditional code in e.g. structs must not be
+indented. A nested include example:
+
+#if XT_IS_LINUX
+	#include <pthread.h>
+#endif
+
+E.g. conditional code:
+struct xtThread {
+	/** The target function for the thread to execute. */
+	void *(*func) (struct xtThread *t, void *arg);
+	/** The argument that is passed to the target function. */
+	void *arg;
+	int suspendCount;
+#if XT_IS_LINUX
+	pthread_t nativeThread;
+	pthread_cond_t suspendCond;
+	pthread_mutex_t suspendMutex;
+#elif XT_IS_WINDOWS
+	HANDLE exitEvent, nativeThread;
+	xtMutex suspendMutex;
+	unsigned tid;
+#endif
+};
+
 7. Header include guards and C extern
 
 ALWAYS use both of them in all headers!
@@ -144,8 +169,8 @@ That is an important thing to mention!
 11. File permissions and encoding
 
 Files should always have 664 as their binary permission. Files that
-should be executable should ONLY set the executable bit next to having
-664 as permission. Files should ALWAYS use ASCII as encoding.
+should be executable should have 775 as their binary permission.
+Files should ALWAYS use ASCII as encoding.
 You should consider UTF-8 (and it's family members) usage as prohibited.
 Also only use Linux line endings (LF) in all files.
 
