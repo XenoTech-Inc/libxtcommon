@@ -100,6 +100,11 @@ bool xtCPUHasHyperThreading(const struct xtCPUInfo *cpuInfo);
  */
 void xtConsoleClear(void);
 /**
+ * Fills row with pattern by repeating it as many times as possible.
+ * This function takes care of the new line problem of each platform's console.
+ */
+int xtConsoleFillLine(const char *pattern);
+/**
  * Tells you the available amount of columns and rows in the console.
  * Both pointers are optional. They remain untouched on error.
  * @return Zero if property has been fetched, otherwise an error code.

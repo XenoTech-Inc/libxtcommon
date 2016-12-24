@@ -193,6 +193,21 @@ void xtConsoleClear(void)
 	SetConsoleCursorPosition(handle, coordScreen); // Reset the cursor position
 }
 
+int xtConsoleFillLine(const char *pattern)
+{
+	unsigned width;
+	int ret = xtConsoleGetSize(&width, NULL);
+	if (ret)
+		return ret;
+	const char *str = pattern && *pattern ? pattern : "-";
+	while (width-- > 0) {
+		if (!*str)
+			str = pattern;
+		putchar(*str++);
+	}
+	return 0;
+}
+
 int xtConsoleGetSize(unsigned *cols, unsigned *rows)
 {
 	if (!xtConsoleIsAvailable())
