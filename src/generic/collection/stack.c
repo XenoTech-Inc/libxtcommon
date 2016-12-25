@@ -6,8 +6,8 @@
 #include <stdlib.h>
 
 #define func_init(type) void type ## Init(struct type *t) { t->data = NULL; }
-#define func_set_grow(type) void type ## SetGrow(struct type *t, int grow) { t->grow = grow; }
-#define func_get_grow(type) int type ## GetGrow(struct type *t) { return t->grow; }
+#define func_set_grow(type) void type ## SetGrowthFactor(struct type *t, int grow) { t->grow = grow; }
+#define func_get_grow(type) int  type ## GetGrowthFactor(struct type *t) { return t->grow; }
 
 func_init(xtStackHD)
 func_init(xtStackD)
@@ -296,3 +296,73 @@ func_get_cap(xtStackD )
 func_get_cap(xtStackU )
 func_get_cap(xtStackLU)
 func_get_cap(xtStackZU)
+
+int xtStackHDSetCapacity(struct xtStackHD *this, size_t capacity)
+{
+	if (this->capacity == capacity)
+		return 0;
+	short *new = realloc(this->data, capacity * sizeof(short));
+	if (!new)
+		return XT_ENOMEM;
+	this->data = new;
+	this->capacity = capacity;
+	if (this->count > capacity)
+		this->count = capacity;
+	return 0;
+}
+
+int xtStackDSetCapacity(struct xtStackD *this, size_t capacity)
+{
+	if (this->capacity == capacity)
+		return 0;
+	int *new = realloc(this->data, capacity * sizeof(int));
+	if (!new)
+		return XT_ENOMEM;
+	this->data = new;
+	this->capacity = capacity;
+	if (this->count > capacity)
+		this->count = capacity;
+	return 0;
+}
+
+int xtStackUSetCapacity(struct xtStackU *this, size_t capacity)
+{
+	if (this->capacity == capacity)
+		return 0;
+	unsigned *new = realloc(this->data, capacity * sizeof(unsigned));
+	if (!new)
+		return XT_ENOMEM;
+	this->data = new;
+	this->capacity = capacity;
+	if (this->count > capacity)
+		this->count = capacity;
+	return 0;
+}
+
+int xtStackLUSetCapacity(struct xtStackLU *this, size_t capacity)
+{
+	if (this->capacity == capacity)
+		return 0;
+	unsigned long *new = realloc(this->data, capacity * sizeof(unsigned long));
+	if (!new)
+		return XT_ENOMEM;
+	this->data = new;
+	this->capacity = capacity;
+	if (this->count > capacity)
+		this->count = capacity;
+	return 0;
+}
+
+int xtStackZUSetCapacity(struct xtStackZU *this, size_t capacity)
+{
+	if (this->capacity == capacity)
+		return 0;
+	size_t *new = realloc(this->data, capacity * sizeof(size_t));
+	if (!new)
+		return XT_ENOMEM;
+	this->data = new;
+	this->capacity = capacity;
+	if (this->count > capacity)
+		this->count = capacity;
+	return 0;
+}

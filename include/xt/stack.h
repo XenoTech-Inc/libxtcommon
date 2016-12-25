@@ -78,21 +78,21 @@ int xtStackZUCreate(struct xtStackZU *stack, size_t capacity);
  * Negative values is relative growth. Zero disables growth.
  * E.g. grow(-2) is 100% / 2 = 50%, grow(-5) is 100% / 5 = 20%
  */
-void xtStackDSetGrow (struct xtStackD  *stack, int grow);
-void xtStackHDSetGrow(struct xtStackHD *stack, int grow);
-void xtStackUSetGrow (struct xtStackU  *stack, int grow);
-void xtStackLUSetGrow(struct xtStackLU *stack, int grow);
-void xtStackZUSetGrow(struct xtStackZU *stack, int grow);
+void xtStackDSetGrowthFactor (struct xtStackD  *stack, int grow);
+void xtStackHDSetGrowthFactor(struct xtStackHD *stack, int grow);
+void xtStackUSetGrowthFactor (struct xtStackU  *stack, int grow);
+void xtStackLUSetGrowthFactor(struct xtStackLU *stack, int grow);
+void xtStackZUSetGrowthFactor(struct xtStackZU *stack, int grow);
 /**
  * Get grow policy. Positive values indicate fixed growth.
  * Negative values is relative growth. Zero disables growth.
  * E.g. grow(-2) is 100% / 2 = 50%, grow(-5) is 100% / 5 = 20%
  */
-int xtStackDGetGrow (struct xtStackD  *stack);
-int xtStackHDGetGrow(struct xtStackHD *stack);
-int xtStackUGetGrow (struct xtStackU  *stack);
-int xtStackLUGetGrow(struct xtStackLU *stack);
-int xtStackZUGetGrow(struct xtStackZU *stack);
+int xtStackDGetGrowthFactor (struct xtStackD  *stack);
+int xtStackHDGetGrowthFactor(struct xtStackHD *stack);
+int xtStackUGetGrowthFactor (struct xtStackU  *stack);
+int xtStackLUGetGrowthFactor(struct xtStackLU *stack);
+int xtStackZUGetGrowthFactor(struct xtStackZU *stack);
 /**
  * Attempts to add \a value to stack.
  * The list will grow if configured to do so.
@@ -142,6 +142,12 @@ size_t xtStackDGetSize (struct xtStackD  *stack);
 size_t xtStackUGetSize (struct xtStackU  *stack);
 size_t xtStackLUGetSize(struct xtStackLU *stack);
 size_t xtStackZUGetSize(struct xtStackZU *stack);
+
+int xtStackHDSetCapacity(struct xtStackHD *stack, size_t capacity);
+int xtStackDSetCapacity (struct xtStackD  *stack, size_t capacity);
+int xtStackUSetCapacity (struct xtStackU  *stack, size_t capacity);
+int xtStackLUSetCapacity(struct xtStackLU *stack, size_t capacity);
+int xtStackZUSetCapacity(struct xtStackZU *stack, size_t capacity);
 
 size_t xtStackHDGetCapacity(struct xtStackHD *stack);
 size_t xtStackDGetCapacity (struct xtStackD  *stack);
