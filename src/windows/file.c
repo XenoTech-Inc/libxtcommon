@@ -104,24 +104,13 @@ const char *xtFileGetExtension(const char *path)
 	++dotPlus;
 	return dotPlus != '\0' ? dotPlus : NULL;
 }
-/**
- * This function belongs to xtFileGetFiles().
- */
-static void _xtFileGetFilesElementDestroy(struct xtList *list, void *data)
-{
-	(void) list;
-	struct xtFile *file = data;
-	free(file->path);
-	free(file);
-}
 
-int xtFileGetFiles(const char *path, struct xtList *files)
+int xtFileGetFiles(const char *path, struct xtListP *files)
 {
 	int ret;
 	WIN32_FIND_DATA fdFile;
 	HANDLE handle;
 	char sbuf[4096];
-	xtListSetElementDestroyFunc(files, _xtFileGetFilesElementDestroy);
 	snprintf(sbuf, sizeof(sbuf) / sizeof(sbuf[0]), "%s\\*.*", path);
 	if ((handle = FindFirstFile(sbuf, &fdFile)) == INVALID_HANDLE_VALUE)
 		return _xtTranslateSysError(GetLastError());
@@ -152,15 +141,22 @@ int xtFileGetFiles(const char *path, struct xtList *files)
 			file->type = XT_FILE_REG;
 		else
 			file->type = XT_FILE_UNKNOWN;
-		if ((ret = xtListAdd(files, file)) != 0)
+		if ((ret = xtListPAdd(files, file)) != 0)
 			goto error;
 	}
-	FindClose(handle);
-	return 0;
+	ret = 0;
 error:
 	FindClose(handle);
-	// Just empty the whole list
-	xtListClear(files);
+	if (ret != 0) {
+		for (int i = cnt - 1; i >= 0; --i) {
+			struct xtFile *file;
+			xtListPGet(files, i, (void**) &file);
+			free(file->path);
+			free(file);
+		}
+		// Just empty the whole list
+		xtListPClear(files);
+	}
 	return ret;
 }
 

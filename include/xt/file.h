@@ -38,7 +38,7 @@ enum xtFileType {
 	XT_FILE_LNK
 };
 /**
- * @brief Holds you some information about a certain file.
+ * @brief Holds some information about a certain file.
  */
 struct xtFile {
 	char *path;
@@ -95,12 +95,23 @@ int xtFileGetExecutablePath(char *buf, size_t buflen);
 const char *xtFileGetExtension(const char *path);
 /**
  * Tells you what files reside under \a path.
- * @param files - An initialized xtList, it should be empty. The destructor of the elements will
- * be set (even on failure) always. The list will be filled with xtFile's. They are always sorted alphabetically.
+ * @param files - An initialized xtList, it should be empty. The list will be filled with xtFile's. They are always sorted alphabetically.
  * @return Zero if the file list has been retrieved, otherwise an error code.
- * @remarks You must clear the array to have the destructor called for each element.
+ * @remarks You must free each element and clear the list. E.g.:
+ * <pre>
+ * struct xtListP list;
+ * // Initialize list and get files
+ * size_t n = xtListPGetCount(&list);
+ * for (size_t i = 0; i < n; ++i) {
+ * 	struct xtFile *file;
+ * 	xtListPGet(&list, i, (void**) &file);
+ * 	free(file->path);
+ * 	free(file);
+ * }
+ * xtListPClear(&list);
+ * </pre>
  */
-int xtFileGetFiles(const char *path, struct xtList *files);
+int xtFileGetFiles(const char *path, struct xtListP *files);
 /**
  * Tells you the home directory for the user that is currently running the program.
  * @return A pointer to \a buf on success, otherwise NULL.

@@ -18,21 +18,24 @@ const char *getFileType(unsigned type)
 int main(void)
 {
 	int ret;
-	struct xtList list;
+	struct xtListP list;
 	xtConsoleFillLine("-");
 	puts("-- DIRECTORY TEST");
-	if ((ret = xtListCreate(&list, 256))) {
+	if ((ret = xtListPCreate(&list, 256))) {
 		printf("Unable to create the list: %s\n", xtGetErrorStr(ret));
 		return EXIT_FAILURE;
 	}
 	ret = xtFileGetFiles(".", &list);
 	printf("File list retrieval: %s\n", xtGetErrorStr(ret));
-	printf("Amount of files: %zu\n", xtListGetCount(&list));
+	printf("Amount of files: %zu\n", xtListPGetCount(&list));
 	struct xtFile *file;
-	for (unsigned i = 0; i < xtListGetCount(&list); ++i) {
-		xtListGet(&list, i, (void**) &file);
+	size_t n = xtListPGetCount(&list);
+	for (size_t i = 0; i < n; ++i) {
+		xtListPGet(&list, i, (void**) &file);
 		printf("%s - %s\n", getFileType(file->type), file->path);
+		free(file->path);
+		free(file);
 	}
-	xtListDestroy(&list);
+	xtListPDestroy(&list);
 	return EXIT_SUCCESS;
 }

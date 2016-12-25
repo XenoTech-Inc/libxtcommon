@@ -126,25 +126,14 @@ const char *xtFileGetExtension(const char *path)
 /**
  * This function belongs to xtFileGetFiles().
  */
-static void _xtFileGetFilesElementDestroy(struct xtList *list, void *data)
-{
-	(void) list;
-	struct xtFile *file = data;
-	free(file->path);
-	free(file);
-}
-/**
- * This function belongs to xtFileGetFiles().
- */
 static int caseCompare(const struct dirent **a, const struct dirent **b)
 {
 	return strcasecmp((*a)->d_name, (*b)->d_name);
 }
 
-int xtFileGetFiles(const char *path, struct xtList *files)
+int xtFileGetFiles(const char *path, struct xtListP *files)
 {
 	int ret;
-	xtListSetElementDestroyFunc(files, _xtFileGetFilesElementDestroy);
 	struct dirent **namelist;
 	size_t fileNameLen;
 	int cnt = scandir(path, &namelist, NULL, caseCompare);
@@ -171,19 +160,24 @@ int xtFileGetFiles(const char *path, struct xtList *files)
 		case DT_LNK: file->type = XT_FILE_LNK; break;
 		default: file->type = XT_FILE_UNKNOWN; break;
 		}
-		if ((ret = xtListAdd(files, file)) != 0)
+		if ((ret = xtListPAdd(files, file)) != 0)
 			goto error;
 	}
-	for (int i = 0; i < cnt; ++i)
-		free(namelist[i]);
-	free(namelist);
-	return 0;
+	ret = 0;
 error:
 	for (int i = 0; i < cnt; ++i)
 		free(namelist[i]);
 	free(namelist);
-	// Just empty the whole list
-	xtListClear(files);
+	if (ret != 0) {
+		for (int i = cnt - 1; i >= 0; --i) {
+			struct xtFile *file;
+			xtListPGet(files, i, (void**) &file);
+			free(file->path);
+			free(file);
+		}
+		// Just empty the whole list
+		xtListPClear(files);
+	}
 	return ret;
 }
 

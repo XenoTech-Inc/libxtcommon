@@ -28,92 +28,163 @@ extern "C" {
  *
  * An (array) list holds elements all in a contiguous block of memory. Allowing for fast insertion and lookup, but
  * removal is pretty slow if you need to shift memory.
- * This means that if the array grows larger, removing elements at the beginning will get slower. Removing elements at the end is always fast.\n\n
+ * This means that if the array grows larger, removing elements at the beginning will get slower. Removing elements at the end is always fast.
+ * The default growth factor is 100% (i.e. it doubles in size).\n\n
  *
  * Bounds checking is performed on all operations.
  */
-struct xtList {
-	bool canGrow;
+struct xtListHD {
+	short *data;
 	size_t count, capacity;
+	int grow;
+};
+
+struct xtListD {
+	int *data;
+	size_t count, capacity;
+	int grow;
+};
+
+struct xtListU {
+	unsigned *data;
+	size_t count, capacity;
+	int grow;
+};
+
+struct xtListLU {
+	unsigned long *data;
+	size_t count, capacity;
+	int grow;
+};
+
+struct xtListZU {
+	size_t *data;
+	size_t count, capacity;
+	int grow;
+};
+
+struct xtListP {
 	void **data;
-	void (*destroyElementFunc) (struct xtList *list, void *data);
-	void (*destroyListFunc) (struct xtList *list);
+	size_t count, capacity;
+	int grow;
 };
 /**
  * Attempts to add some data to the list.
- * The list will grow automatically if necessary and configured to allow this.
+ * The list will grow automatically if necessary and if it is configured to do so.
  * @return Zero if the data has been added, otherwise an error code.
  */
-int xtListAdd(struct xtList *list, void *data);
+int xtListHDAdd(struct xtListHD *list, short data);
+int xtListDAdd (struct xtListD  *list, int data);
+int xtListUAdd (struct xtListU  *list, unsigned data);
+int xtListLUAdd(struct xtListLU *list, unsigned long data);
+int xtListZUAdd(struct xtListZU *list, size_t data);
+int xtListPAdd (struct xtListP  *list, void *data);
 /**
  * Overwrites the data at the specified index. You can ONLY replace elements with this function.
  * It is not possible to append elements to the end of the list with this function.
- * If an element is about to be replaced, it's destructor shall be called prior to replacement.
  * @return Zero if the data has been replaced, otherwise an error code.
- **/
-int xtListAddAt(struct xtList *list, void *data, size_t index);
-/**
- * Clears the list of all data. All element destructors shall be called.
  */
-void xtListClear(struct xtList *list);
+int xtListHDAddAt(struct xtListHD *list, short data, size_t index);
+int xtListDAddAt (struct xtListD  *list, int data, size_t index);
+int xtListUAddAt (struct xtListU  *list, unsigned data, size_t index);
+int xtListLUAddAt(struct xtListLU *list, unsigned long data, size_t index);
+int xtListZUAddAt(struct xtListZU *list, size_t data, size_t index);
+int xtListPAddAt (struct xtListP  *list, void *data, size_t index);
+
+void xtListHDClear(struct xtListHD *list);
+void xtListDClear (struct xtListD  *list);
+void xtListUClear (struct xtListU  *list);
+void xtListLUClear(struct xtListLU *list);
+void xtListZUClear(struct xtListZU *list);
+void xtListPClear (struct xtListP  *list);
 /**
  * Creates a new list. By default, automatic growth is enabled.
  * @param capacity - The initial capacity for the list. Specify zero to use the default value.
  * @return Zero if the list has been created successfully, otherwise an error code.
  */
-int xtListCreate(struct xtList *list, size_t capacity);
-/**
- * Destroys the list. All element destructors shall be called, including the list destructor.
- */
-void xtListDestroy(struct xtList *list);
-/**
- * Enables or disables automatic growth of the list.
- */
-void xtListEnableGrowth(struct xtList *list, bool flag);
+int xtListHDCreate(struct xtListHD *list, size_t capacity);
+int xtListDCreate (struct xtListD  *list, size_t capacity);
+int xtListUCreate (struct xtListU  *list, size_t capacity);
+int xtListLUCreate(struct xtListLU *list, size_t capacity);
+int xtListZUCreate(struct xtListZU *list, size_t capacity);
+int xtListPCreate (struct xtListP  *list, size_t capacity);
+
+void xtListHDDestroy(struct xtListHD *list);
+void xtListDDestroy (struct xtListD  *list);
+void xtListUDestroy (struct xtListU  *list);
+void xtListLUDestroy(struct xtListLU *list);
+void xtListZUDestroy(struct xtListZU *list);
+void xtListPDestroy (struct xtListP  *list);
 /**
  * Increases the capacity of the list to \a minCapacity if the list currently has a smaller capacity.
  * @return Zero if the capacity is already sufficiently large enough or if the growth has succeeded, otherwise an error code.
  */
-int xtListEnsureCapacity(struct xtList *list, size_t minCapacity);
+int xtListHDEnsureCapacity(struct xtListHD *list, size_t minCapacity);
+int xtListDEnsureCapacity (struct xtListD  *list, size_t minCapacity);
+int xtListUEnsureCapacity (struct xtListU  *list, size_t minCapacity);
+int xtListLUEnsureCapacity(struct xtListLU *list, size_t minCapacity);
+int xtListZUEnsureCapacity(struct xtListZU *list, size_t minCapacity);
+int xtListPEnsureCapacity (struct xtListP  *list, size_t minCapacity);
 /**
  * Retrieves the element at the specified index from the list.
  * @param data - This pointer will receive the data from the list.
  * @return Zero if the data has been fetched successfully, otherwise an error code.
  */
-int xtListGet(const struct xtList *list, size_t index, void **data);
-/**
- * Returns the current capacity for the list.
- */
-size_t xtListGetCapacity(const struct xtList *list);
-/**
- * Returns the current amount of elements in the list.
- */
-size_t xtListGetCount(const struct xtList *list);
-/**
- * Increases the current capacity by \a n elements.
- * @return Zero if the capacity growth has succeeded, otherwise an error code.
- */
-int xtListGrow(struct xtList *list, size_t n);
-/**
- * Attempts to locate the element in the list, and then remove it.
- * @return Zero if the data has been found and removed, otherwise an error code.
- */
-int xtListRemove(struct xtList *list, void *data);
-/**
- * Removes the element at the specified position from the list.
- * @return Zero if the the data has been removed, otherwise an error code.
- */
-int xtListRemoveAt(struct xtList *list, size_t index);
-/**
- * Sets the function that is to be called when an element is removed or replaced.
- * Specify a null pointer to remove the function.
- */
-void xtListSetElementDestroyFunc(struct xtList *list, void (*destroyElementFunc) (struct xtList *list, void *data));
-/**
- * Sets the function that is to be called when the list is being destroyed.
- * Specify a null pointer to remove the function.
- */
-void xtListSetListDestroyFunc(struct xtList *list, void (*destroyListFunc) (struct xtList *list));
+int xtListHDGet(const struct xtListHD *list, size_t index, short *data);
+int xtListDGet (const struct xtListD  *list, size_t index, int *data);
+int xtListUGet (const struct xtListU  *list, size_t index, unsigned *data);
+int xtListLUGet(const struct xtListLU *list, size_t index, unsigned long *data);
+int xtListZUGet(const struct xtListZU *list, size_t index, size_t *data);
+int xtListPGet (const struct xtListP  *list, size_t index, void **data);
+
+size_t xtListHDGetCapacity(const struct xtListHD *list);
+size_t xtListDGetCapacity (const struct xtListD  *list);
+size_t xtListUGetCapacity (const struct xtListU  *list);
+size_t xtListLUGetCapacity(const struct xtListLU *list);
+size_t xtListZUGetCapacity(const struct xtListZU *list);
+size_t xtListPGetCapacity (const struct xtListP  *list);
+
+size_t xtListHDGetCount(const struct xtListHD *list);
+size_t xtListDGetCount (const struct xtListD  *list);
+size_t xtListUGetCount (const struct xtListU  *list);
+size_t xtListLUGetCount(const struct xtListLU *list);
+size_t xtListZUGetCount(const struct xtListZU *list);
+size_t xtListPGetCount (const struct xtListP  *list);
+
+int xtListHDGetGrowthFactor(struct xtListHD *list);
+int xtListDGetGrowthFactor (struct xtListD  *list);
+int xtListUGetGrowthFactor (struct xtListU  *list);
+int xtListLUGetGrowthFactor(struct xtListLU *list);
+int xtListZUGetGrowthFactor(struct xtListZU *list);
+int xtListPGetGrowthFactor (struct xtListP  *list);
+
+int xtListHDRemove(struct xtListHD *list, short data);
+int xtListDRemove (struct xtListD  *list, int data);
+int xtListURemove (struct xtListU  *list, unsigned data);
+int xtListLURemove(struct xtListLU *list, unsigned long data);
+int xtListZURemove(struct xtListZU *list, size_t data);
+int xtListPRemove (struct xtListP  *list, void *data);
+
+int xtListHDRemoveAt(struct xtListHD *list, size_t index);
+int xtListDRemoveAt (struct xtListD  *list, size_t index);
+int xtListURemoveAt (struct xtListU  *list, size_t index);
+int xtListLURemoveAt(struct xtListLU *list, size_t index);
+int xtListZURemoveAt(struct xtListZU *list, size_t index);
+int xtListPRemoveAt (struct xtListP  *list, size_t index);
+
+int xtListHDSetCapacity(struct xtListHD *list, size_t capacity);
+int xtListDSetCapacity (struct xtListD  *list, size_t capacity);
+int xtListUSetCapacity (struct xtListU  *list, size_t capacity);
+int xtListLUSetCapacity(struct xtListLU *list, size_t capacity);
+int xtListZUSetCapacity(struct xtListZU *list, size_t capacity);
+int xtListPSetCapacity (struct xtListP  *list, size_t capacity);
+
+void xtListHDSetGrowthFactor(struct xtListHD *list, int grow);
+void xtListDSetGrowthFactor (struct xtListD  *list, int grow);
+void xtListUSetGrowthFactor (struct xtListU  *list, int grow);
+void xtListLUSetGrowthFactor(struct xtListLU *list, int grow);
+void xtListZUSetGrowthFactor(struct xtListZU *list, int grow);
+void xtListPSetGrowthFactor (struct xtListP  *list, int grow);
 
 #ifdef __cplusplus
 }
