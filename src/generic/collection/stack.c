@@ -109,7 +109,7 @@ int xtStackHDPush(struct xtStackHD *this, short value)
 	size_t grow = this->grow > 0 ? (unsigned)this->grow : this->capacity / -(unsigned)this->grow;
 	// grow at least by one
 	if (!grow) ++grow;
-	short *tmp = realloc(this->data, this->capacity + grow);
+	short *tmp = realloc(this->data, (this->capacity + grow) * sizeof(short));
 	if (!tmp)
 		return XT_ENOMEM;
 	this->data = tmp;
@@ -128,7 +128,7 @@ int xtStackDPush(struct xtStackD *this, int value)
 	size_t grow = this->grow > 0 ? (unsigned)this->grow : this->capacity / -(unsigned)this->grow;
 	// grow at least by one
 	if (!grow) ++grow;
-	int *tmp = realloc(this->data, this->capacity + grow);
+	int *tmp = realloc(this->data, (this->capacity + grow) * sizeof(int));
 	if (!tmp)
 		return XT_ENOMEM;
 	this->data = tmp;
@@ -147,7 +147,7 @@ int xtStackUPush(struct xtStackU *this, unsigned value)
 	size_t grow = this->grow > 0 ? (unsigned)this->grow : this->capacity / -(unsigned)this->grow;
 	// grow at least by one
 	if (!grow) ++grow;
-	unsigned *tmp = realloc(this->data, this->capacity + grow);
+	unsigned *tmp = realloc(this->data, (this->capacity + grow) * sizeof(unsigned));
 	if (!tmp)
 		return XT_ENOMEM;
 	this->data = tmp;
@@ -166,7 +166,7 @@ int xtStackLUPush(struct xtStackLU *this, unsigned long value)
 	size_t grow = this->grow > 0 ? (unsigned)this->grow : this->capacity / -(unsigned)this->grow;
 	// grow at least by one
 	if (!grow) ++grow;
-	unsigned long *tmp = realloc(this->data, this->capacity + grow);
+	unsigned long *tmp = realloc(this->data, (this->capacity + grow) * sizeof(unsigned long));
 	if (!tmp)
 		return XT_ENOMEM;
 	this->data = tmp;
@@ -185,7 +185,7 @@ int xtStackZUPush(struct xtStackZU *this, size_t value)
 	size_t grow = this->grow > 0 ? (unsigned)this->grow : this->capacity / -(unsigned)this->grow;
 	// grow at least by one
 	if (!grow) ++grow;
-	size_t *tmp = realloc(this->data, this->capacity + grow);
+	size_t *tmp = realloc(this->data, (this->capacity + grow) * sizeof(size_t));
 	if (!tmp)
 		return XT_ENOMEM;
 	this->data = tmp;
