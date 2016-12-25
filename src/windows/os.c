@@ -205,6 +205,11 @@ int xtConsoleFillLine(const char *pattern)
 			str = pattern;
 		putchar(*str++);
 	}
+	// We must flush stdout since it is line buffered and we do not append a newline character.
+	// We do not insert a newline character on purpose because that completely destroys this
+	// function by inserting a blank new line in the console. And that is the result of Windows'
+	// violation of the general standard behavior of consoles.
+	fflush(stdout);
 	return 0;
 }
 
