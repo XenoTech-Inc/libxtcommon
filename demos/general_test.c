@@ -86,7 +86,8 @@ static void osTest(void)
 	int ret = xtConsoleGetSize(&width, &height);
 	printf("Is a console available?: %s\n", (xtConsoleIsAvailable() ? "Yes" : "No"));
 	printf("Console size retval=%d, size: w=%u, h=%u\n", ret, width, height);
-	puts("#####################################\n## CPU info");
+	xtConsoleFillLine("#");
+	puts("## CPU info");
 	unsigned long long end, start = xtClockGetMonotimeUS();
 	struct xtCPUInfo info;
 	bool retval = xtCPUGetInfo(&info);
@@ -269,7 +270,8 @@ static void *threadTestSleep(struct xtThread *t, void *arg)
 
 int main(void)
 {
-	puts("--------------------------------------------------------------------------------\n-- CONFIGURE TEST");
+	xtConsoleFillLine("-");
+	puts("-- CONFIGURE TEST");
 	printf(
 		"configured with: %s\n"
 		"built on %s\n"
@@ -280,23 +282,30 @@ int main(void)
 		XT_BUILD_OPTIONS.versionMajor,
 		XT_BUILD_OPTIONS.versionMinor
 	);
-	puts("--------------------------------------------------------------------------------\n-- FILE TEST");
+	xtConsoleFillLine("-");
+	puts("-- FILE TEST");
 	fileTest();
-	puts("--------------------------------------------------------------------------------\n-- OS TEST");
+	xtConsoleFillLine("-");
+	puts("-- OS TEST");
 	osTest();
-	puts("--------------------------------------------------------------------------------\n-- THREAD TEST");
+	xtConsoleFillLine("-");
+	puts("-- THREAD TEST");
 	threadTest();
-	puts("--------------------------------------------------------------------------------\n-- THREAD SLEEP TEST");
-		struct xtThread t;
-		xtThreadCreate(&t, threadTestSleep, NULL, 64);
-		xtSleepMS(500);
-		xtThreadContinue(&t);
-		xtThreadJoin(&t);
-	puts("--------------------------------------------------------------------------------\n-- TIME TEST");
+	xtConsoleFillLine("-");
+	puts("-- THREAD SLEEP TEST");
+	struct xtThread t;
+	xtThreadCreate(&t, threadTestSleep, NULL, 64);
+	xtSleepMS(500);
+	xtThreadContinue(&t);
+	xtThreadJoin(&t);
+	xtConsoleFillLine("-");
+	puts("-- TIME TEST");
 	timeTest();
-	puts("--------------------------------------------------------------------------------\n-- SOCKET TEST");
+	xtConsoleFillLine("-");
+	puts("-- SOCKET TEST");
 	socketTest();
-	puts("--------------------------------------------------------------------------------\n-- STRING TEST");
+	xtConsoleFillLine("-");
+	puts("-- STRING TEST");
 	stringTest();
 	return EXIT_SUCCESS;
 }

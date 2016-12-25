@@ -1,5 +1,6 @@
 #include <xt/sort.h>
 #include <xt/time.h>
+#include <xt/os.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -120,13 +121,15 @@ static void sortd(void)
 	putchar('\n');
 }
 
-static void huge(void)
+static void large(void)
 {
 	size_t n = 1 << 16LLU;
 	unsigned *a = malloc(n * sizeof(unsigned));
 	if (!a) abort();
 	unsigned long long then, now;
 	char buf[32];
+	xtConsoleFillLine("-");
+	puts("-- LARGE SORT TEST");
 	printf("Sort ascending %zu unsigned ints\n", n);
 	for (unsigned i = 0; i < NTYPE; ++i) {
 		arndu(a, n);
@@ -145,13 +148,15 @@ static void huge(void)
 int main(void)
 {
 	srand(time(NULL));
-	fputs("SORT TEST\nAlgorithms:", stdout);
+	xtConsoleFillLine("-");
+	puts("-- SORT TEST");
+	fputs("Algorithms:", stdout);
 	for (unsigned i = 0; i < NTYPE; ++i)
 		printf(" %s", names[i]);
 	putchar('\n');
 	sortu();
 	sortd();
-	huge();
+	large();
 	puts("done");
 	return 0;
 }

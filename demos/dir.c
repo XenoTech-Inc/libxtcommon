@@ -1,5 +1,6 @@
 #include <xt/file.h>
 #include <xt/error.h>
+#include <xt/os.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,6 +19,8 @@ int main(void)
 {
 	int ret;
 	struct xtList list;
+	xtConsoleFillLine("-");
+	puts("-- DIRECTORY TEST");
 	if ((ret = xtListCreate(&list, 256))) {
 		printf("Unable to create the list: %s\n", xtGetErrorStr(ret));
 		return EXIT_FAILURE;
