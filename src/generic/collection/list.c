@@ -8,7 +8,7 @@
 
 static inline int _xtListCreate(void **data, size_t elemsize, size_t n)
 {
-	if (!n)
+	if (n == 0)
 		n = XT_LIST_CAPACITY_DEFAULT;
 	if (!(*data = malloc(n * elemsize)))
 		return XT_ENOMEM;
@@ -20,7 +20,7 @@ int xtListHDAdd(struct xtListHD *list, short data)
 	if (list->count == list->capacity) {
 		if (list->grow == 0)
 			return XT_ENOBUFS;
-		size_t grow = list->grow > 0 ? (unsigned) list->grow : list->capacity / -(unsigned) list->grow;
+		size_t grow = list->grow > 0 ? (unsigned) list->grow : (list->capacity / -(unsigned) list->grow) + xtListHDGetCapacity(list);
 		int ret = xtListHDSetCapacity(list, grow);
 		if (ret != 0)
 			return ret;
@@ -35,7 +35,7 @@ int xtListDAdd(struct xtListD *list, int data)
 	if (list->count == list->capacity) {
 		if (list->grow == 0)
 			return XT_ENOBUFS;
-		size_t grow = list->grow > 0 ? (unsigned) list->grow : list->capacity / -(unsigned) list->grow;
+		size_t grow = list->grow > 0 ? (unsigned) list->grow : (list->capacity / -(unsigned) list->grow) + xtListDGetCapacity(list);
 		int ret = xtListDSetCapacity(list, grow);
 		if (ret != 0)
 			return ret;
@@ -50,7 +50,7 @@ int xtListUAdd(struct xtListU *list, unsigned data)
 	if (list->count == list->capacity) {
 		if (list->grow == 0)
 			return XT_ENOBUFS;
-		size_t grow = list->grow > 0 ? (unsigned) list->grow : list->capacity / -(unsigned) list->grow;
+		size_t grow = list->grow > 0 ? (unsigned) list->grow : (list->capacity / -(unsigned) list->grow) + xtListUGetCapacity(list);
 		int ret = xtListUSetCapacity(list, grow);
 		if (ret != 0)
 			return ret;
@@ -65,7 +65,7 @@ int xtListLUAdd(struct xtListLU *list, unsigned long data)
 	if (list->count == list->capacity) {
 		if (list->grow == 0)
 			return XT_ENOBUFS;
-		size_t grow = list->grow > 0 ? (unsigned) list->grow : list->capacity / -(unsigned) list->grow;
+		size_t grow = list->grow > 0 ? (unsigned) list->grow : (list->capacity / -(unsigned) list->grow) + xtListLUGetCapacity(list);
 		int ret = xtListLUSetCapacity(list, grow);
 		if (ret != 0)
 			return ret;
@@ -80,7 +80,7 @@ int xtListZUAdd(struct xtListZU *list, size_t data)
 	if (list->count == list->capacity) {
 		if (list->grow == 0)
 			return XT_ENOBUFS;
-		size_t grow = list->grow > 0 ? (unsigned) list->grow : list->capacity / -(unsigned) list->grow;
+		size_t grow = list->grow > 0 ? (unsigned) list->grow : (list->capacity / -(unsigned) list->grow) + xtListZUGetCapacity(list);
 		int ret = xtListZUSetCapacity(list, grow);
 		if (ret != 0)
 			return ret;
@@ -95,7 +95,7 @@ int xtListPAdd(struct xtListP *list, void *data)
 	if (list->count == list->capacity) {
 		if (list->grow == 0)
 			return XT_ENOBUFS;
-		size_t grow = list->grow > 0 ? (unsigned) list->grow : list->capacity / -(unsigned) list->grow;
+		size_t grow = list->grow > 0 ? (unsigned) list->grow : (list->capacity / -(unsigned) list->grow) + xtListPGetCapacity(list);
 		int ret = xtListPSetCapacity(list, grow);
 		if (ret != 0)
 			return ret;
@@ -171,6 +171,8 @@ func_clear(xtListP )
 int xtListHDCreate(struct xtListHD *list, size_t capacity)
 {
 	void *data;
+	if (capacity == 0)
+		capacity = XT_LIST_CAPACITY_DEFAULT;
 	int ret = _xtListCreate(&data, sizeof(short), capacity);
 	if (ret)
 		return ret;
@@ -181,6 +183,8 @@ int xtListHDCreate(struct xtListHD *list, size_t capacity)
 int xtListDCreate(struct xtListD *list, size_t capacity)
 {
 	void *data;
+	if (capacity == 0)
+		capacity = XT_LIST_CAPACITY_DEFAULT;
 	int ret = _xtListCreate(&data, sizeof(int), capacity);
 	if (ret)
 		return ret;
@@ -191,6 +195,8 @@ int xtListDCreate(struct xtListD *list, size_t capacity)
 int xtListUCreate(struct xtListU *list, size_t capacity)
 {
 	void *data;
+	if (capacity == 0)
+		capacity = XT_LIST_CAPACITY_DEFAULT;
 	int ret = _xtListCreate(&data, sizeof(unsigned), capacity);
 	if (ret)
 		return ret;
@@ -201,6 +207,8 @@ int xtListUCreate(struct xtListU *list, size_t capacity)
 int xtListLUCreate(struct xtListLU *list, size_t capacity)
 {
 	void *data;
+	if (capacity == 0)
+		capacity = XT_LIST_CAPACITY_DEFAULT;
 	int ret = _xtListCreate(&data, sizeof(unsigned long), capacity);
 	if (ret)
 		return ret;
@@ -211,6 +219,8 @@ int xtListLUCreate(struct xtListLU *list, size_t capacity)
 int xtListZUCreate(struct xtListZU *list, size_t capacity)
 {
 	void *data;
+	if (capacity == 0)
+		capacity = XT_LIST_CAPACITY_DEFAULT;
 	int ret = _xtListCreate(&data, sizeof(size_t), capacity);
 	if (ret)
 		return ret;
@@ -221,6 +231,8 @@ int xtListZUCreate(struct xtListZU *list, size_t capacity)
 int xtListPCreate(struct xtListP *list, size_t capacity)
 {
 	void *data;
+	if (capacity == 0)
+		capacity = XT_LIST_CAPACITY_DEFAULT;
 	int ret = _xtListCreate(&data, sizeof(void*), capacity);
 	if (ret)
 		return ret;
@@ -289,7 +301,8 @@ func_get_growth_factor(xtListP )
 
 int xtListHDRemove(struct xtListHD *list, short data)
 {
-	for (size_t i = 0; i < list->count; ++i) {
+	size_t count = list->count;
+	for (size_t i = 0; i < count; ++i) {
 		if (list->data[i] == data) {
 			xtListHDRemoveAt(list, i);
 			return 0;
@@ -300,7 +313,8 @@ int xtListHDRemove(struct xtListHD *list, short data)
 
 int xtListDRemove(struct xtListD *list, int data)
 {
-	for (size_t i = 0; i < list->count; ++i) {
+	size_t count = list->count;
+	for (size_t i = 0; i < count; ++i) {
 		if (list->data[i] == data) {
 			xtListDRemoveAt(list, i);
 			return 0;
@@ -311,7 +325,8 @@ int xtListDRemove(struct xtListD *list, int data)
 
 int xtListURemove(struct xtListU *list, unsigned data)
 {
-	for (size_t i = 0; i < list->count; ++i) {
+	size_t count = list->count;
+	for (size_t i = 0; i < count; ++i) {
 		if (list->data[i] == data) {
 			xtListURemoveAt(list, i);
 			return 0;
@@ -322,7 +337,8 @@ int xtListURemove(struct xtListU *list, unsigned data)
 
 int xtListLURemove(struct xtListLU *list, unsigned long data)
 {
-	for (size_t i = 0; i < list->count; ++i) {
+	size_t count = list->count;
+	for (size_t i = 0; i < count; ++i) {
 		if (list->data[i] == data) {
 			xtListLURemoveAt(list, i);
 			return 0;
@@ -333,7 +349,8 @@ int xtListLURemove(struct xtListLU *list, unsigned long data)
 
 int xtListZURemove(struct xtListZU *list, size_t data)
 {
-	for (size_t i = 0; i < list->count; ++i) {
+	size_t count = list->count;
+	for (size_t i = 0; i < count; ++i) {
 		if (list->data[i] == data) {
 			xtListZURemoveAt(list, i);
 			return 0;
@@ -344,7 +361,8 @@ int xtListZURemove(struct xtListZU *list, size_t data)
 
 int xtListPRemove(struct xtListP *list, void *data)
 {
-	for (size_t i = 0; i < list->count; ++i) {
+	size_t count = list->count;
+	for (size_t i = 0; i < count; ++i) {
 		if (list->data[i] == data) {
 			xtListPRemoveAt(list, i);
 			return 0;

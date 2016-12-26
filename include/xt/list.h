@@ -26,10 +26,12 @@ extern "C" {
 /**
  * @brief A very easy to use (array) list.
  *
- * An (array) list holds elements all in a contiguous block of memory. Allowing for fast insertion and lookup, but
- * removal is pretty slow if you need to shift memory.
- * This means that if the array grows larger, removing elements at the beginning will get slower. Removing elements at the end is always fast.
- * The default growth factor is 100% (i.e. it doubles in size).\n\n
+ * A list holds elements all in a contiguous block of memory. Allowing
+ * for fast insertion and lookup, but removal is pretty slow if you need
+ * to shift memory. This means that if the array grows larger, removing
+ * elements at the beginning will get slower. Removing elements at the
+ * end is always fast. The default growth factor is 100%
+ * (i.e. it doubles in size).\n\n
  *
  * Bounds checking is performed on all operations.
  */
@@ -70,7 +72,8 @@ struct xtListP {
 };
 /**
  * Attempts to add some data to the list.
- * The list will grow automatically if necessary and if it is configured to do so.
+ * The list will grow automatically if necessary and if it is configured
+ * to do so.
  * @return Zero if the data has been added, otherwise an error code.
  */
 int xtListHDAdd(struct xtListHD *list, short data);
@@ -80,8 +83,9 @@ int xtListLUAdd(struct xtListLU *list, unsigned long data);
 int xtListZUAdd(struct xtListZU *list, size_t data);
 int xtListPAdd (struct xtListP  *list, void *data);
 /**
- * Overwrites the data at the specified index. You can ONLY replace elements with this function.
- * It is not possible to append elements to the end of the list with this function.
+ * Overwrites the data at the specified index. You can ONLY replace
+ * elements with this function. It is not possible to append elements
+ * to the end of the list with this function.
  * @return Zero if the data has been replaced, otherwise an error code.
  */
 int xtListHDAddAt(struct xtListHD *list, short data, size_t index);
@@ -99,8 +103,10 @@ void xtListZUClear(struct xtListZU *list);
 void xtListPClear (struct xtListP  *list);
 /**
  * Creates a new list. By default, automatic growth is enabled.
- * @param capacity - The initial capacity for the list. Specify zero to use the default value.
- * @return Zero if the list has been created successfully, otherwise an error code.
+ * @param capacity - The initial capacity for the list. Specify zero
+ * to use the default value.
+ * @return Zero if the list has been created successfully, otherwise
+ * an error code.
  */
 int xtListHDCreate(struct xtListHD *list, size_t capacity);
 int xtListDCreate (struct xtListD  *list, size_t capacity);
@@ -116,8 +122,10 @@ void xtListLUDestroy(struct xtListLU *list);
 void xtListZUDestroy(struct xtListZU *list);
 void xtListPDestroy (struct xtListP  *list);
 /**
- * Increases the capacity of the list to \a minCapacity if the list currently has a smaller capacity.
- * @return Zero if the capacity is already sufficiently large enough or if the growth has succeeded, otherwise an error code.
+ * Increases the capacity of the list to \a minCapacity if the list
+ * currently has a smaller capacity.
+ * @return Zero if the capacity is already sufficiently large enough
+ * or if the growth has succeeded, otherwise an error code.
  */
 int xtListHDEnsureCapacity(struct xtListHD *list, size_t minCapacity);
 int xtListDEnsureCapacity (struct xtListD  *list, size_t minCapacity);
@@ -128,7 +136,8 @@ int xtListPEnsureCapacity (struct xtListP  *list, size_t minCapacity);
 /**
  * Retrieves the element at the specified index from the list.
  * @param data - This pointer will receive the data from the list.
- * @return Zero if the data has been fetched successfully, otherwise an error code.
+ * @return Zero if the data has been fetched successfully, otherwise
+ * an error code.
  */
 int xtListHDGet(const struct xtListHD *list, size_t index, short *data);
 int xtListDGet (const struct xtListD  *list, size_t index, int *data);
@@ -171,7 +180,11 @@ int xtListURemoveAt (struct xtListU  *list, size_t index);
 int xtListLURemoveAt(struct xtListLU *list, size_t index);
 int xtListZURemoveAt(struct xtListZU *list, size_t index);
 int xtListPRemoveAt (struct xtListP  *list, size_t index);
-
+/**
+ * Sets the absolute capacity for the list. This function
+ * can shrink the list too. This will result in the immidiate loss of
+ * all trailing elements which are not going to fit!
+ */
 int xtListHDSetCapacity(struct xtListHD *list, size_t capacity);
 int xtListDSetCapacity (struct xtListD  *list, size_t capacity);
 int xtListUSetCapacity (struct xtListU  *list, size_t capacity);
