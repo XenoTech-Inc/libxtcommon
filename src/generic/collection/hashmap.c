@@ -6,58 +6,97 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void xtHashmapDeleteBucket(struct xtHashBucket *bucket)
+static void _xtHashmapDeleteBucket(struct xtHashBucket *bucket)
 {
-	free(bucket->value);
-	free(bucket->key);
+	//free(bucket->value);
+	//free(bucket->key);
 	free(bucket);
 }
 
-bool xtHashmapCreate(struct xtHashmap *map, size_t size, size_t keySize, bool (*keyCompare) (void*, void*), size_t (*keyHash) (void*))
+int xtHashmapAdd(struct xtHashmap *map, void *key, void *value)
 {
-	map->buckets = (struct xtHashBucket**) malloc(size * sizeof(struct xtHashBucket*));
+	struct xtHashBucket *entry;
+	entry = (struct xtHashBucket*) malloc(sizeof(struct xtHashBucket));
+	if (!entry)
+		return XT_ENOMEM;
+	entry->key = key;
+	entry->value = value;
+	size_t hash = map->keyHash(key);
+	struct xtHashBucket *b = map->buckets[hash % map->capacity];
+	entry->next = NULL;
+	if (!b)
+		map->buckets[hash % map->capacity] = entry;
+	else {
+		while (b) {
+			if (hash == map->keyHash(b->key) && map->keyCompare(b->key, key))
+				// oops, already exists
+				return XT_EEXIST;
+			if (b->next)
+				b = b->next;
+			else
+				break;
+		}
+		b->next = entry;
+	}
+	++map->count;
+	return 0;
+}
+
+int xtHashmapCreate(
+	struct xtHashmap *map, size_t capacity,
+	size_t (*keyHash) (const void*), bool (*keyCompare) (const void*, const void*)
+)
+{
+	map->buckets = malloc(capacity * sizeof(struct xtHashBucket*));
 	if (!map->buckets)
-		return false;
-	map->size = size;
+		return XT_ENOMEM;
+	if (capacity == 0)
+		capacity = XT_HASHMAP_CAPACITY_DEFAULT;
+	map->capacity = capacity;
 	map->count = 0;
-	for (size_t i = 0; i < size; ++i)
+	for (size_t i = 0; i < capacity; ++i)
 		map->buckets[i] = NULL;
-	map->keyCompare = keyCompare;
 	map->keyHash = keyHash;
-	map->keySize = keySize;
+	map->keyCompare = keyCompare;
 	map->it.entry = NULL;
 	map->it.nr = 0;
-	return true;
+	return 0;
 }
 
 void xtHashmapDestroy(struct xtHashmap *map)
 {
-	if (!map)
-		return;
-	for (size_t i = 0; i < map->size; ++i) {
+	size_t capacity = map->capacity;
+	for (size_t i = 0; i < capacity; ++i) {
 		if (map->buckets[i]) {
 			for (struct xtHashBucket *next, *b = map->buckets[i]; b; b = next) {
 				next = b->next;
-				xtHashmapDeleteBucket(b);
+				_xtHashmapDeleteBucket(b);
 			}
 		}
 	}
 	free(map->buckets);
 }
 
-struct xtHashBucket *xtHashmapGet(struct xtHashmap *map, void *key)
+int xtHashmapGet(const struct xtHashmap *map, const void *key, struct xtHashBucket **bucket)
 {
 	size_t hash;
 	hash = map->keyHash(key);
-	struct xtHashBucket *b = map->buckets[hash % map->size];
+	struct xtHashBucket *b = map->buckets[hash % map->capacity];
 	if (!b)
-		return NULL;
+		return XT_ENOENT;
 	while (b) {
-		if (hash == map->keyHash(b->key) && map->keyCompare(b->key, key))
-			return b;
+		if (hash == map->keyHash(b->key) && map->keyCompare(b->key, key)) {
+			*bucket = b;
+			return 0;
+		}
 		b = b->next;
 	}
-	return NULL;
+	return XT_ENOENT;
+}
+
+size_t xtHashmapGetCapacity(const struct xtHashmap *map)
+{
+	return map->capacity;
 }
 
 size_t xtHashmapGetCount(const struct xtHashmap *map)
@@ -65,20 +104,19 @@ size_t xtHashmapGetCount(const struct xtHashmap *map)
 	return map->count;
 }
 
-size_t xtHashmapGetSize(const struct xtHashmap *map)
+int xtHashmapGetValue(const struct xtHashmap *map, const void *key, void **value)
 {
-	return map->size;
-}
-
-void *xtHashmapGetValue(struct xtHashmap *map, void *key)
-{
-	struct xtHashBucket *b = xtHashmapGet(map, key);
-	return b ? b->value : NULL;
+	struct xtHashBucket *b;
+	int ret = xtHashmapGet(map, key, &b);
+	if (ret != 0)
+		return ret;
+	*value = b->value;
+	return 0;
 }
 
 static bool xtHashmapIteratorNext(struct xtHashmap *map, void **key, void **value)
 {
-	// if more entries left
+	// If more entries left
 	if (map->it.entry) {
 		if (key)
 			*key = map->it.entry->key;
@@ -87,8 +125,8 @@ static bool xtHashmapIteratorNext(struct xtHashmap *map, void **key, void **valu
 		map->it.entry = map->it.entry->next;
 		return true;
 	}
-	// look for next bucket
-	for (++map->it.nr; map->it.nr < map->size; ++map->it.nr) {
+	// Look for next bucket
+	for (++map->it.nr; map->it.nr < map->capacity; ++map->it.nr) {
 		if (map->buckets[map->it.nr]) {
 			struct xtHashBucket *b = map->buckets[map->it.nr];
 			if (key)
@@ -102,9 +140,9 @@ static bool xtHashmapIteratorNext(struct xtHashmap *map, void **key, void **valu
 	return false;
 }
 
-static bool xtHashmapIteratorStart(struct xtHashmap *map, void **key, void **value)
+static bool _xtHashmapIteratorStart(struct xtHashmap *map, void **key, void **value)
 {
-	for (size_t i = 0; i < map->size; ++i) {
+	for (size_t i = 0; i < map->capacity; ++i) {
 		if (map->buckets[i]) {
 			struct xtHashBucket *b;
 			b = map->buckets[i];
@@ -122,75 +160,43 @@ static bool xtHashmapIteratorStart(struct xtHashmap *map, void **key, void **val
 
 bool xtHashmapForeach(struct xtHashmap *map, void **key, void **value)
 {
-	if (!map->it.entry && map->it.nr >= map->size) {
+	if (!map->it.entry && map->it.nr >= map->capacity) {
 		map->it.nr = 0;
-		if (xtHashmapIteratorStart(map, key, value))
+		if (_xtHashmapIteratorStart(map, key, value))
 			return true;
 	} else if (xtHashmapIteratorNext(map, key, value))
 		return true;
 	map->it.entry = NULL;
-	map->it.nr = map->size;
+	map->it.nr = map->capacity;
 	return false;
 }
 
 void xtHashmapForeachEnd(struct xtHashmap *map)
 {
 	map->it.entry = NULL;
-	map->it.nr = map->size;
+	map->it.nr = map->capacity;
 }
 
-bool xtHashmapPut(struct xtHashmap *map, void *key, void *value)
-{
-	struct xtHashBucket *entry;
-	entry = (struct xtHashBucket*) malloc(sizeof(struct xtHashBucket));
-	if (!entry)
-		return false;
-	entry->key = malloc(map->keySize);
-	if (!entry->key)
-		return false;
-	memcpy(entry->key, key, map->keySize);
-	entry->value = value;
-	size_t hash = map->keyHash(key);
-	struct xtHashBucket *b = map->buckets[hash % map->size];
-	entry->next = NULL;
-	if (!b)
-		map->buckets[hash % map->size] = entry;
-	else {
-		while (b) {
-			if (hash == map->keyHash(b->key) && map->keyCompare(b->key, key))
-				// oops, already exists
-				return false;
-			if (b->next)
-				b = b->next;
-			else
-				break;
-		}
-		b->next = entry;
-	}
-	++map->count;
-	return true;
-}
-
-bool xtHashmapRemove(struct xtHashmap *map, void *key)
+int xtHashmapRemove(struct xtHashmap *map, void *key)
 {
 	size_t hash;
 	hash = map->keyHash(key);
-	struct xtHashBucket *b = map->buckets[hash % map->size];
+	struct xtHashBucket *b = map->buckets[hash % map->capacity];
 	if (!b)
-		return false;
+		return XT_ENOENT;
 	struct xtHashBucket *prev = b;
 	do {
 		if (hash == map->keyHash(b->key) && map->keyCompare(b->key, key)) {
 			if (prev != b)
 				prev->next = b->next;
 			else
-				map->buckets[hash % map->size] = b->next;
-			xtHashmapDeleteBucket(b);
+				map->buckets[hash % map->capacity] = b->next;
+			_xtHashmapDeleteBucket(b);
 			--map->count;
-			return true;
+			return 0;
 		}
 		prev = b;
 		b = b->next;
 	} while (b);
-	return false;
+	return XT_ENOENT;
 }
