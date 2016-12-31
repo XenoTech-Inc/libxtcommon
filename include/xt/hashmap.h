@@ -24,6 +24,18 @@ extern "C" {
 #include <stddef.h>
 
 #define XT_HASHMAP_CAPACITY_DEFAULT 1024
+#define XT_HASHMAP_GROWTH_LIMIT_DEFAULT .75f
+#define XT_HASHMAP_GROWTH_FACTOR_DEFAULT 1.5f
+
+// All flags that are supported by the hashmap.
+/** Do nothing if key or value has been removed */
+#define XT_HASHMAP_FREE_NOTHING 0x00
+/** Free a key if it has been removed */
+#define XT_HASHMAP_FREE_KEY 0x01
+/** Free a value if it has been removed */
+#define XT_HASHMAP_FREE_VALUE 0x02
+/** Free both key and value if it has been removed */
+#define XT_HASHMAP_FREE_ITEM (XT_HASHMAP_FREE_KEY | XT_HASHMAP_FREE_VALUE)
 
 /**
  * @brief An entry in the hashmap.
@@ -50,6 +62,8 @@ struct xtHashmapIterator {
 struct xtHashmap {
 	struct xtHashBucket **buckets;
 	size_t capacity, count;
+	float grow_limit, grow;
+	unsigned flags;
 	size_t (*keyHash) (const void *key);
 	bool (*keyCompare)(const void *key1, const void *key2);
 	struct xtHashmapIterator it;
@@ -85,6 +99,12 @@ int xtHashmapGet(const struct xtHashmap *map, const void *key, struct xtHashBuck
 size_t xtHashmapGetCapacity(const struct xtHashmap *map);
 
 size_t xtHashmapGetCount(const struct xtHashmap *map);
+
+unsigned xtHashmapGetFlags(const struct xtHashmap *map);
+
+float xtHashmapGetGrowthFactor(const struct xtHashmap *map);
+
+float xtHashmapGetGrowthLimit(const struct xtHashmap *map);
 /**
  * Retrieves the value that is associated with \a key.
  * @param value - This pointer will receive a pointer to the value in the hashmap.
@@ -109,6 +129,17 @@ void xtHashmapForeachEnd(struct xtHashmap *map);
  * free them by hand!
  */
 int xtHashmapRemove(struct xtHashmap *map, void *key);
+/**
+ * Sets the absolute capacity for the hashmap. This function cannot shrink the
+ * hashmap.
+ */
+int xtHashmapSetCapacity(struct xtHashmap *map, size_t capacity);
+
+void xtHashmapSetFlags(struct xtHashmap *map, unsigned flags);
+
+void xtHashmapSetGrowthFactor(struct xtHashmap *map, float growthFactor);
+
+void xtHashmapSetGrowthLimit(struct xtHashmap *map, float growthLimit);
 
 #ifdef __cplusplus
 }

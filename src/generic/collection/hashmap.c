@@ -3,20 +3,48 @@
 #include <xt/error.h>
 
 // STD headers
+#include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-static void _xtHashmapDeleteBucket(struct xtHashBucket *bucket)
+static bool _xtHashmapIteratorStart(struct xtHashmap *map, struct xtHashmapIterator *it, void **key, void **value);
+static bool _xtHashmapIteratorNext(struct xtHashmap *map, struct xtHashmapIterator *it, void **key, void **value);
+
+/* Create internal copy and inherit all settings from old hashmap */
+static int _xtHashmapCopy(struct xtHashmap *new, const struct xtHashmap *orig, size_t size)
 {
-	//free(bucket->value);
-	//free(bucket->key);
+	int ret = xtHashmapCreate(new, size, orig->keyHash, orig->keyCompare);
+	if (ret)
+		return ret;
+	xtHashmapSetGrowthFactor(new, xtHashmapGetGrowthFactor(orig));
+	xtHashmapSetGrowthLimit(new, xtHashmapGetGrowthLimit(orig));
+	xtHashmapSetFlags(new, xtHashmapGetFlags(orig));
+	return 0;
+}
+
+static void _xtHashmapDeleteBucket(struct xtHashmap *map, struct xtHashBucket *bucket)
+{
+	unsigned flags = map->flags;
+	if (flags & XT_HASHMAP_FREE_VALUE)
+		free(bucket->value);
+	if (flags & XT_HASHMAP_FREE_KEY)
+		free(bucket->key);
 	free(bucket);
 }
 
 int xtHashmapAdd(struct xtHashmap *map, void *key, void *value)
 {
+	if (map->count >= map->capacity * map->grow_limit) {
+		// Do not grow if growth factor is less than 100%
+		if (map->grow < 1.0001f)
+			return XT_ENOBUFS;
+		int ret = xtHashmapSetCapacity(map, map->capacity * map->grow);
+		if (ret)
+			return ret;
+	}
 	struct xtHashBucket *entry;
-	entry = (struct xtHashBucket*) malloc(sizeof(struct xtHashBucket));
+	entry = malloc(sizeof(struct xtHashBucket));
 	if (!entry)
 		return XT_ENOMEM;
 	entry->key = key;
@@ -60,6 +88,9 @@ int xtHashmapCreate(
 	map->keyCompare = keyCompare;
 	map->it.entry = NULL;
 	map->it.nr = 0;
+	map->grow_limit = XT_HASHMAP_GROWTH_LIMIT_DEFAULT;
+	map->grow = XT_HASHMAP_GROWTH_FACTOR_DEFAULT;
+	map->flags = 0;
 	return 0;
 }
 
@@ -70,7 +101,7 @@ void xtHashmapDestroy(struct xtHashmap *map)
 		if (map->buckets[i]) {
 			for (struct xtHashBucket *next, *b = map->buckets[i]; b; b = next) {
 				next = b->next;
-				_xtHashmapDeleteBucket(b);
+				_xtHashmapDeleteBucket(map, b);
 			}
 		}
 	}
@@ -104,6 +135,21 @@ size_t xtHashmapGetCount(const struct xtHashmap *map)
 	return map->count;
 }
 
+unsigned xtHashmapGetFlags(const struct xtHashmap *map)
+{
+	return map->flags;
+}
+
+float xtHashmapGetGrowthFactor(const struct xtHashmap *map)
+{
+	return map->grow;
+}
+
+float xtHashmapGetGrowthLimit(const struct xtHashmap *map)
+{
+	return map->grow_limit;
+}
+
 int xtHashmapGetValue(const struct xtHashmap *map, const void *key, void **value)
 {
 	struct xtHashBucket *b;
@@ -114,44 +160,49 @@ int xtHashmapGetValue(const struct xtHashmap *map, const void *key, void **value
 	return 0;
 }
 
-static bool xtHashmapIteratorNext(struct xtHashmap *map, void **key, void **value)
+static bool _xtHashmapIteratorNext(struct xtHashmap *map, struct xtHashmapIterator *it, void **key, void **value)
 {
 	// If more entries left
-	if (map->it.entry) {
+	if (it->entry) {
 		if (key)
-			*key = map->it.entry->key;
+			*key = it->entry->key;
 		if (value)
-			*value = map->it.entry->value;
-		map->it.entry = map->it.entry->next;
+			*value = it->entry->value;
+		it->entry = it->entry->next;
 		return true;
 	}
 	// Look for next bucket
-	for (++map->it.nr; map->it.nr < map->capacity; ++map->it.nr) {
-		if (map->buckets[map->it.nr]) {
-			struct xtHashBucket *b = map->buckets[map->it.nr];
+	for (++it->nr; it->nr < map->capacity; ++it->nr) {
+		if (map->buckets[it->nr]) {
+			struct xtHashBucket *b = map->buckets[it->nr];
 			if (key)
 				*key = b->key;
 			if (value)
 				*value = b->value;
-			map->it.entry = b->next;
+			it->entry = b->next;
 			return true;
 		}
 	}
 	return false;
 }
 
-static bool _xtHashmapIteratorStart(struct xtHashmap *map, void **key, void **value)
+static bool xtHashmapIteratorNext(struct xtHashmap *map, void **key, void **value)
+{
+	return _xtHashmapIteratorNext(map, &map->it, key, value);
+}
+
+static bool _xtHashmapIteratorStart(struct xtHashmap *map, struct xtHashmapIterator *it, void **key, void **value)
 {
 	for (size_t i = 0; i < map->capacity; ++i) {
 		if (map->buckets[i]) {
 			struct xtHashBucket *b;
 			b = map->buckets[i];
-			map->it.nr = i;
+			it->nr = i;
 			if (key)
 				*key = b->key;
 			if (value)
 				*value = b->value;
-			map->it.entry = b->next;
+			it->entry = b->next;
 			return true;
 		}
 	}
@@ -162,7 +213,7 @@ bool xtHashmapForeach(struct xtHashmap *map, void **key, void **value)
 {
 	if (!map->it.entry && map->it.nr >= map->capacity) {
 		map->it.nr = 0;
-		if (_xtHashmapIteratorStart(map, key, value))
+		if (_xtHashmapIteratorStart(map, &map->it, key, value))
 			return true;
 	} else if (xtHashmapIteratorNext(map, key, value))
 		return true;
@@ -191,7 +242,7 @@ int xtHashmapRemove(struct xtHashmap *map, void *key)
 				prev->next = b->next;
 			else
 				map->buckets[hash % map->capacity] = b->next;
-			_xtHashmapDeleteBucket(b);
+			_xtHashmapDeleteBucket(map, b);
 			--map->count;
 			return 0;
 		}
@@ -199,4 +250,65 @@ int xtHashmapRemove(struct xtHashmap *map, void *key)
 		b = b->next;
 	} while (b);
 	return XT_ENOENT;
+}
+
+int xtHashmapSetCapacity(struct xtHashmap *map, size_t capacity)
+{
+	if (capacity < 1)
+		return XT_EINVAL;
+	// Always grow by at least one element
+	if (capacity < map->capacity)
+		capacity = map->capacity + 1;
+	// Save old iterator state
+	struct xtHashBucket *obuck = map->it.nr >= map->capacity ? NULL : map->buckets[map->it.nr];
+	// NOTE obuck->key may be NULL even if obuck is not NULL
+	void *okey = obuck ? obuck->key : NULL;
+	// Create a completely new hashmap and deep copy all data
+	struct xtHashmap new;
+	int ret = _xtHashmapCopy(&new, map, capacity);
+	if (ret)
+		return ret;
+	void *nkey, *nval;
+	struct xtHashmapIterator it;
+	if (_xtHashmapIteratorStart(map, &it, &nkey, &nval))
+		do {
+			if ((ret = xtHashmapAdd(&new, nkey, nval)) != 0) {
+				xtHashmapDestroy(&new);
+				return ret;
+			}
+		} while (_xtHashmapIteratorNext(map, &it, &nkey, &nval));
+	else
+		abort();
+	// Clean up old hashmap and assign new one
+	// Make sure the old hashmap does not free its items
+	xtHashmapSetFlags(map, xtHashmapGetFlags(map) & ~XT_HASHMAP_FREE_ITEM);
+	xtHashmapDestroy(map);
+	// Restore iterator state
+	new.it.entry = NULL;
+	new.it.nr = capacity;
+	if (obuck) {
+		while (xtHashmapForeach(&new, &nkey, NULL))
+			if (okey == nkey)
+				goto assign;
+		// New hashmap got corrupted
+		abort();
+	}
+assign:
+	*map = new;
+	return 0;
+}
+
+void xtHashmapSetFlags(struct xtHashmap *map, unsigned flags)
+{
+	map->flags = flags;
+}
+
+void xtHashmapSetGrowthFactor(struct xtHashmap *map, float growthFactor)
+{
+	map->grow = growthFactor;
+}
+
+void xtHashmapSetGrowthLimit(struct xtHashmap *map, float growthLimit)
+{
+	map->grow_limit = growthLimit;
 }
