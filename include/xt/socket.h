@@ -367,15 +367,15 @@ struct xtSocketPoll;
  */
 enum xtSocketPollEvent {
 	/** No event has occurred. */
-	XT_POLLNONE = 0x00,
+	XT_POLLNONE = 0x01,
 	/** Normal data can be read without blocking. */
-	XT_POLLIN = 0x02,
+	XT_POLLIN   = 0x02,
 	/** Normal data can be written without blocking. */
-	XT_POLLOUT = 0x04,
+	XT_POLLOUT  = 0x04,
 	/** An error has occurred. */
-	XT_POLLERR = 0x08,
+	XT_POLLERR  = 0x08,
 	/** A stream-oriented connection was either disconnected or aborted. */
-	XT_POLLHUP = 0x10
+	XT_POLLHUP  = 0x10
 };
 /**
  * Adds a socket for monitoring.
