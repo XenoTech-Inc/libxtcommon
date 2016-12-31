@@ -26,31 +26,31 @@ extern "C" {
 struct xtQueueHD {
 	short *data;
 	size_t count, capacity, front, rear;
-	unsigned flags;
+	int grow;
 };
 
 struct xtQueueD {
 	int *data;
 	size_t count, capacity, front, rear;
-	unsigned flags;
+	int grow;
 };
 
 struct xtQueueU {
 	unsigned *data;
 	size_t count, capacity, front, rear;
-	unsigned flags;
+	int grow;
 };
 
 struct xtQueueLU {
 	unsigned long *data;
 	size_t count, capacity, front, rear;
-	unsigned flags;
+	int grow;
 };
 
 struct xtQueueZU {
 	size_t *data;
 	size_t count, capacity, front, rear;
-	unsigned flags;
+	int grow;
 };
 
 void xtQueueHDInit(struct xtQueueHD *queue);
@@ -59,11 +59,31 @@ void xtQueueUInit (struct xtQueueU  *queue);
 void xtQueueLUInit(struct xtQueueLU *queue);
 void xtQueueZUInit(struct xtQueueZU *queue);
 
-int xtQueueHDCreate(struct xtQueueHD *queue, size_t capacity, unsigned flags);
-int xtQueueDCreate (struct xtQueueD  *queue, size_t capacity, unsigned flags);
-int xtQueueUCreate (struct xtQueueU  *queue, size_t capacity, unsigned flags);
-int xtQueueLUCreate(struct xtQueueLU *queue, size_t capacity, unsigned flags);
-int xtQueueZUCreate(struct xtQueueZU *queue, size_t capacity, unsigned flags);
+int xtQueueHDCreate(struct xtQueueHD *queue, size_t capacity);
+int xtQueueDCreate (struct xtQueueD  *queue, size_t capacity);
+int xtQueueUCreate (struct xtQueueU  *queue, size_t capacity);
+int xtQueueLUCreate(struct xtQueueLU *queue, size_t capacity);
+int xtQueueZUCreate(struct xtQueueZU *queue, size_t capacity);
+/**
+ * Changes grow policy. Positive values indicate fixed growth.
+ * Negative values is relative growth. Zero disables growth.
+ * E.g. grow(-2) is 100% / 2 = 50%, grow(-5) is 100% / 5 = 20%
+ */
+void xtQueueDSetGrowthFactor (struct xtQueueD  *stack, int grow);
+void xtQueueHDSetGrowthFactor(struct xtQueueHD *stack, int grow);
+void xtQueueUSetGrowthFactor (struct xtQueueU  *stack, int grow);
+void xtQueueLUSetGrowthFactor(struct xtQueueLU *stack, int grow);
+void xtQueueZUSetGrowthFactor(struct xtQueueZU *stack, int grow);
+/**
+ * Get grow policy. Positive values indicate fixed growth.
+ * Negative values is relative growth. Zero disables growth.
+ * E.g. grow(-2) is 100% / 2 = 50%, grow(-5) is 100% / 5 = 20%
+ */
+int xtQueueDGetGrowthFactor (struct xtQueueD  *stack);
+int xtQueueHDGetGrowthFactor(struct xtQueueHD *stack);
+int xtQueueUGetGrowthFactor (struct xtQueueU  *stack);
+int xtQueueLUGetGrowthFactor(struct xtQueueLU *stack);
+int xtQueueZUGetGrowthFactor(struct xtQueueZU *stack);
 
 int xtQueueHDPush(struct xtQueueHD *queue, short value);
 int xtQueueDPush (struct xtQueueD  *queue, int value);
@@ -100,6 +120,12 @@ size_t xtQueueDGetCapacity (struct xtQueueD  *queue);
 size_t xtQueueUGetCapacity (struct xtQueueU  *queue);
 size_t xtQueueLUGetCapacity(struct xtQueueLU *queue);
 size_t xtQueueZUGetCapacity(struct xtQueueZU *queue);
+
+int xtQueueHDSetCapacity(struct xtQueueHD *queue, size_t capacity);
+int xtQueueDSetCapacity (struct xtQueueD  *queue, size_t capacity);
+int xtQueueUSetCapacity (struct xtQueueU  *queue, size_t capacity);
+int xtQueueLUSetCapacity(struct xtQueueLU *queue, size_t capacity);
+int xtQueueZUSetCapacity(struct xtQueueZU *queue, size_t capacity);
 
 #ifdef __cplusplus
 }

@@ -26,8 +26,8 @@ void init(void)
 
 int push(void)
 {
-#define LISTSZ 256
-#define QUEUESZ 256
+#define LISTSZ 666
+#define QUEUESZ 100
 	int ret = 1;
 	struct xtQueueHD qhd;
 	struct xtQueueD  qd ;
@@ -64,23 +64,23 @@ int push(void)
 		listzu[i] = rand();
 	}
 	puts("Creating queues");
-	if (xtQueueHDCreate(&qhd, QUEUESZ, 0)) {
+	if (xtQueueHDCreate(&qhd, QUEUESZ)) {
 		fputs("Failed to create QueueHD\n", stderr);
 		goto fail;
 	}
-	if (xtQueueDCreate(&qd, QUEUESZ, 0)) {
+	if (xtQueueDCreate(&qd, QUEUESZ)) {
 		fputs("Failed to create QueueD\n", stderr);
 		goto fail;
 	}
-	if (xtQueueUCreate(&qu, QUEUESZ, 0)) {
+	if (xtQueueUCreate(&qu, QUEUESZ)) {
 		fputs("Failed to create QueueU\n", stderr);
 		goto fail;
 	}
-	if (xtQueueLUCreate(&qlu, QUEUESZ, 0)) {
+	if (xtQueueLUCreate(&qlu, QUEUESZ)) {
 		fputs("Failed to create QueueLU\n", stderr);
 		goto fail;
 	}
-	if (xtQueueZUCreate(&qzu, QUEUESZ, 0)) {
+	if (xtQueueZUCreate(&qzu, QUEUESZ)) {
 		fputs("Failed to create QueueZU\n", stderr);
 		goto fail;
 	}

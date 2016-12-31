@@ -6,12 +6,26 @@
 #include <stdlib.h>
 
 #define func_init(type) void type ## Init(struct type *t) { t->data = NULL; }
+#define func_set_grow(type) void type ## SetGrowthFactor(struct type *t, int grow) { t->grow = grow; }
+#define func_get_grow(type) int  type ## GetGrowthFactor(struct type *t) { return t->grow; }
 
 func_init(xtQueueHD)
 func_init(xtQueueD )
 func_init(xtQueueU )
 func_init(xtQueueLU)
 func_init(xtQueueZU)
+
+func_set_grow(xtQueueHD)
+func_set_grow(xtQueueD)
+func_set_grow(xtQueueU)
+func_set_grow(xtQueueLU)
+func_set_grow(xtQueueZU)
+
+func_get_grow(xtQueueHD)
+func_get_grow(xtQueueD)
+func_get_grow(xtQueueU)
+func_get_grow(xtQueueLU)
+func_get_grow(xtQueueZU)
 
 static inline int xt_queue_create(void **data, size_t elemsize, size_t n)
 {
@@ -22,66 +36,74 @@ static inline int xt_queue_create(void **data, size_t elemsize, size_t n)
 	return 0;
 }
 
-#define queue_init(this, data, cap, flags) \
+#define queue_init(this, data, cap) \
 	this->data = data; \
 	this->count = this->front = this->rear = 0; \
 	this->capacity = cap; \
-	this->flags = flags;
+	this->grow = -2;
 
-int xtQueueHDCreate(struct xtQueueHD *this, size_t capacity, unsigned flags)
+int xtQueueHDCreate(struct xtQueueHD *this, size_t capacity)
 {
 	void *data;
 	int ret = xt_queue_create(&data, sizeof(short), capacity);
 	if (ret)
 		return ret;
-	queue_init(this, data, capacity, flags);
+	queue_init(this, data, capacity);
 	return 0;
 }
 
-int xtQueueDCreate(struct xtQueueD *this, size_t capacity, unsigned flags)
+int xtQueueDCreate(struct xtQueueD *this, size_t capacity)
 {
 	void *data;
 	int ret = xt_queue_create(&data, sizeof(int), capacity);
 	if (ret)
 		return ret;
-	queue_init(this, data, capacity, flags);
+	queue_init(this, data, capacity);
 	return 0;
 }
 
-int xtQueueUCreate(struct xtQueueU *this, size_t capacity, unsigned flags)
+int xtQueueUCreate(struct xtQueueU *this, size_t capacity)
 {
 	void *data;
 	int ret = xt_queue_create(&data, sizeof(unsigned), capacity);
 	if (ret)
 		return ret;
-	queue_init(this, data, capacity, flags);
+	queue_init(this, data, capacity);
 	return 0;
 }
 
-int xtQueueLUCreate(struct xtQueueLU *this, size_t capacity, unsigned flags)
+int xtQueueLUCreate(struct xtQueueLU *this, size_t capacity)
 {
 	void *data;
 	int ret = xt_queue_create(&data, sizeof(unsigned long), capacity);
 	if (ret)
 		return ret;
-	queue_init(this, data, capacity, flags);
+	queue_init(this, data, capacity);
 	return 0;
 }
 
-int xtQueueZUCreate(struct xtQueueZU *this, size_t capacity, unsigned flags)
+int xtQueueZUCreate(struct xtQueueZU *this, size_t capacity)
 {
 	void *data;
 	int ret = xt_queue_create(&data, sizeof(size_t), capacity);
 	if (ret)
 		return ret;
-	queue_init(this, data, capacity, flags);
+	queue_init(this, data, capacity);
 	return 0;
 }
 
 int xtQueueHDPush(struct xtQueueHD *this, short value)
 {
-	if (this->count == this->capacity)
-		return XT_EINVAL;
+	if (this->count == this->capacity) {
+		if (!this->grow)
+			return XT_ENOBUFS;
+		size_t grow = this->grow > 0 ? (unsigned)this->grow : this->capacity / (unsigned)-this->grow;
+		// grow at least by one
+		if (!grow) ++grow;
+		int ret = xtQueueHDSetCapacity(this, this->capacity + grow);
+		if (ret)
+			return ret;
+	}
 	this->data[this->front] = value;
 	this->front = (this->front + 1) % this->capacity;
 	++this->count;
@@ -90,8 +112,16 @@ int xtQueueHDPush(struct xtQueueHD *this, short value)
 
 int xtQueueDPush(struct xtQueueD *this, int value)
 {
-	if (this->count == this->capacity)
-		return XT_EINVAL;
+	if (this->count == this->capacity) {
+		if (!this->grow)
+			return XT_ENOBUFS;
+		size_t grow = this->grow > 0 ? (unsigned)this->grow : this->capacity / (unsigned)-this->grow;
+		// grow at least by one
+		if (!grow) ++grow;
+		int ret = xtQueueDSetCapacity(this, this->capacity + grow);
+		if (ret)
+			return ret;
+	}
 	this->data[this->front] = value;
 	this->front = (this->front + 1) % this->capacity;
 	++this->count;
@@ -100,8 +130,16 @@ int xtQueueDPush(struct xtQueueD *this, int value)
 
 int xtQueueUPush(struct xtQueueU *this, unsigned value)
 {
-	if (this->count == this->capacity)
-		return XT_EINVAL;
+	if (this->count == this->capacity) {
+		if (!this->grow)
+			return XT_ENOBUFS;
+		size_t grow = this->grow > 0 ? (unsigned)this->grow : this->capacity / (unsigned)-this->grow;
+		// grow at least by one
+		if (!grow) ++grow;
+		int ret = xtQueueUSetCapacity(this, this->capacity + grow);
+		if (ret)
+			return ret;
+	}
 	this->data[this->front] = value;
 	this->front = (this->front + 1) % this->capacity;
 	++this->count;
@@ -110,8 +148,16 @@ int xtQueueUPush(struct xtQueueU *this, unsigned value)
 
 int xtQueueLUPush(struct xtQueueLU *this, unsigned long value)
 {
-	if (this->count == this->capacity)
-		return XT_EINVAL;
+	if (this->count == this->capacity) {
+		if (!this->grow)
+			return XT_ENOBUFS;
+		size_t grow = this->grow > 0 ? (unsigned)this->grow : this->capacity / (unsigned)-this->grow;
+		// grow at least by one
+		if (!grow) ++grow;
+		int ret = xtQueueLUSetCapacity(this, this->capacity + grow);
+		if (ret)
+			return ret;
+	}
 	this->data[this->front] = value;
 	this->front = (this->front + 1) % this->capacity;
 	++this->count;
@@ -120,8 +166,16 @@ int xtQueueLUPush(struct xtQueueLU *this, unsigned long value)
 
 int xtQueueZUPush(struct xtQueueZU *this, size_t value)
 {
-	if (this->count == this->capacity)
-		return XT_EINVAL;
+	if (this->count == this->capacity) {
+		if (!this->grow)
+			return XT_ENOBUFS;
+		size_t grow = this->grow > 0 ? (unsigned)this->grow : this->capacity / (unsigned)-this->grow;
+		// grow at least by one
+		if (!grow) ++grow;
+		int ret = xtQueueZUSetCapacity(this, this->capacity + grow);
+		if (ret)
+			return ret;
+	}
 	this->data[this->front] = value;
 	this->front = (this->front + 1) % this->capacity;
 	++this->count;
@@ -281,3 +335,103 @@ func_get_cap(xtQueueD )
 func_get_cap(xtQueueU )
 func_get_cap(xtQueueLU)
 func_get_cap(xtQueueZU)
+
+int xtQueueHDSetCapacity(struct xtQueueHD *queue, size_t capacity)
+{
+	if (queue->capacity == capacity)
+		return 0;
+	struct xtQueueHD new;
+	int ret = xtQueueHDCreate(&new, capacity);
+	if (ret)
+		return ret;
+	size_t j = 0, n = queue->count;
+	if (n > capacity)
+		n = capacity;
+	for (size_t i = queue->front, cap = queue->capacity; j < n; i = (i + 1) % cap)
+		new.data[j++] = queue->data[i];
+	new.front = j;
+	new.count = n;
+	xtQueueHDDestroy(queue);
+	*queue = new;
+	return 0;
+}
+
+int xtQueueDSetCapacity(struct xtQueueD *queue, size_t capacity)
+{
+	if (queue->capacity == capacity)
+		return 0;
+	struct xtQueueD new;
+	int ret = xtQueueDCreate(&new, capacity);
+	if (ret)
+		return ret;
+	size_t j = 0, n = queue->count;
+	if (n > capacity)
+		n = capacity;
+	for (size_t i = queue->front, cap = queue->capacity; j < n; i = (i + 1) % cap)
+		new.data[j++] = queue->data[i];
+	new.front = j;
+	new.count = n;
+	xtQueueDDestroy(queue);
+	*queue = new;
+	return 0;
+}
+
+int xtQueueUSetCapacity(struct xtQueueU *queue, size_t capacity)
+{
+	if (queue->capacity == capacity)
+		return 0;
+	struct xtQueueU new;
+	int ret = xtQueueUCreate(&new, capacity);
+	if (ret)
+		return ret;
+	size_t j = 0, n = queue->count;
+	if (n > capacity)
+		n = capacity;
+	for (size_t i = queue->front, cap = queue->capacity; j < n; i = (i + 1) % cap)
+		new.data[j++] = queue->data[i];
+	new.front = j;
+	new.count = n;
+	xtQueueUDestroy(queue);
+	*queue = new;
+	return 0;
+}
+
+int xtQueueLUSetCapacity(struct xtQueueLU *queue, size_t capacity)
+{
+	if (queue->capacity == capacity)
+		return 0;
+	struct xtQueueLU new;
+	int ret = xtQueueLUCreate(&new, capacity);
+	if (ret)
+		return ret;
+	size_t j = 0, n = queue->count;
+	if (n > capacity)
+		n = capacity;
+	for (size_t i = queue->front, cap = queue->capacity; j < n; i = (i + 1) % cap)
+		new.data[j++] = queue->data[i];
+	new.front = j;
+	new.count = n;
+	xtQueueLUDestroy(queue);
+	*queue = new;
+	return 0;
+}
+
+int xtQueueZUSetCapacity(struct xtQueueZU *queue, size_t capacity)
+{
+	if (queue->capacity == capacity)
+		return 0;
+	struct xtQueueZU new;
+	int ret = xtQueueZUCreate(&new, capacity);
+	if (ret)
+		return ret;
+	size_t j = 0, n = queue->count;
+	if (n > capacity)
+		n = capacity;
+	for (size_t i = queue->front, cap = queue->capacity; j < n; i = (i + 1) % cap)
+		new.data[j++] = queue->data[i];
+	new.front = j;
+	new.count = n;
+	xtQueueZUDestroy(queue);
+	*queue = new;
+	return 0;
+}
