@@ -149,6 +149,8 @@ int xtListPAddAt(struct xtListP *list, void *data, size_t index)
 {
 	if (index >= list->count)
 		return XT_EINVAL;
+	if ((list->flags & XT_LIST_FREE_ITEM) && list->data[index])
+		free(list->data[index]);
 	list->data[index] = data;
 	return 0;
 }
@@ -160,13 +162,21 @@ func_clear(xtListD )
 func_clear(xtListU )
 func_clear(xtListLU)
 func_clear(xtListZU)
-func_clear(xtListP )
+
+void xtListPClear(struct xtListP *list)
+{
+	if (list->flags & XT_LIST_FREE_ITEM)
+		for (size_t i = 0, n = list->count; i < n; ++i)
+			free(list->data[i]);
+	list->count = 0;
+}
 
 #define list_init(this, data, cap) \
 	this->data = data;\
 	this->count = 0;\
 	this->capacity = cap;\
-	this->grow = -1;
+	this->grow = -1;\
+	this->flags = 0;
 
 int xtListHDCreate(struct xtListHD *list, size_t capacity)
 {
@@ -289,6 +299,15 @@ func_get_count(xtListU )
 func_get_count(xtListLU)
 func_get_count(xtListZU)
 func_get_count(xtListP )
+
+#define func_get_flags(type) unsigned  type ## GetFlags(const struct type *t) { return t->flags; }
+
+func_get_flags(xtListHD)
+func_get_flags(xtListD )
+func_get_flags(xtListU )
+func_get_flags(xtListLU)
+func_get_flags(xtListZU)
+func_get_flags(xtListP )
 
 #define func_get_growth_factor(type) int  type ## GetGrowthFactor(struct type *t) { return t->grow; }
 
@@ -439,9 +458,11 @@ int xtListPRemoveAt(struct xtListP *list, size_t index)
 {
 	if (index >= list->count)
 		return XT_EINVAL;
-	if (index == list->count - 1)
+	if (index == list->count - 1) {
+		if ((list->flags & XT_LIST_FREE_ITEM) && list->data[index])
+			free(list->data[index]);
 		list->data[index] = NULL;
-	else
+	} else
 		memmove(&list->data[index], &list->data[index + 1], (list->count - index - 1) * sizeof(void*));
 	--list->count;
 	return 0;
@@ -510,6 +531,9 @@ int xtListZUSetCapacity(struct xtListZU *list, size_t capacity)
 int xtListPSetCapacity(struct xtListP *list, size_t capacity)
 {
 	void *temp;
+	if ((list->flags & XT_LIST_FREE_ITEM) && list->count > capacity)
+		for (size_t i = capacity, n = list->count; i < n; ++i)
+			free(list->data[i]);
 	if (!(temp = realloc(list->data, capacity * sizeof(void*))))
 		return XT_ENOMEM;
 	list->data = temp;
@@ -518,6 +542,15 @@ int xtListPSetCapacity(struct xtListP *list, size_t capacity)
 		list->count = capacity;
 	return 0;
 }
+
+#define func_set_flags(type) void type ## SetFlags(struct type *t, unsigned flags) { t->flags = flags; }
+
+func_set_flags(xtListHD)
+func_set_flags(xtListD )
+func_set_flags(xtListU )
+func_set_flags(xtListLU)
+func_set_flags(xtListZU)
+func_set_flags(xtListP )
 
 #define func_set_growth_factor(type) void type ## SetGrowthFactor(struct type *t, int grow) { t->grow = grow; }
 

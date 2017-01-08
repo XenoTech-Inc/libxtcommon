@@ -23,6 +23,12 @@ extern "C" {
 
 #define XT_LIST_CAPACITY_DEFAULT 1024
 
+// All flags that are supported by the list.
+/** Do nothing if an item has been removed */
+#define XT_LIST_FREE_NOTHING 0x00
+/** Free an item if it has been removed */
+#define XT_LIST_FREE_ITEM    0x01
+
 /**
  * @brief A very easy to use (array) list.
  *
@@ -39,36 +45,42 @@ struct xtListHD {
 	short *data;
 	size_t count, capacity;
 	int grow;
+	unsigned flags;
 };
 
 struct xtListD {
 	int *data;
 	size_t count, capacity;
 	int grow;
+	unsigned flags;
 };
 
 struct xtListU {
 	unsigned *data;
 	size_t count, capacity;
 	int grow;
+	unsigned flags;
 };
 
 struct xtListLU {
 	unsigned long *data;
 	size_t count, capacity;
 	int grow;
+	unsigned flags;
 };
 
 struct xtListZU {
 	size_t *data;
 	size_t count, capacity;
 	int grow;
+	unsigned flags;
 };
 
 struct xtListP {
 	void **data;
 	size_t count, capacity;
 	int grow;
+	unsigned flags;
 };
 /**
  * Attempts to add some data to the list.
@@ -160,6 +172,13 @@ size_t xtListLUGetCount(const struct xtListLU *list);
 size_t xtListZUGetCount(const struct xtListZU *list);
 size_t xtListPGetCount (const struct xtListP  *list);
 
+unsigned xtListHDGetFlags(const struct xtListHD *list);
+unsigned xtListDGetFlags (const struct xtListD  *list);
+unsigned xtListUGetFlags (const struct xtListU  *list);
+unsigned xtListLUGetFlags(const struct xtListLU *list);
+unsigned xtListZUGetFlags(const struct xtListZU *list);
+unsigned xtListPGetFlags (const struct xtListP  *list);
+
 int xtListHDGetGrowthFactor(struct xtListHD *list);
 int xtListDGetGrowthFactor (struct xtListD  *list);
 int xtListUGetGrowthFactor (struct xtListU  *list);
@@ -191,6 +210,13 @@ int xtListUSetCapacity (struct xtListU  *list, size_t capacity);
 int xtListLUSetCapacity(struct xtListLU *list, size_t capacity);
 int xtListZUSetCapacity(struct xtListZU *list, size_t capacity);
 int xtListPSetCapacity (struct xtListP  *list, size_t capacity);
+
+void xtListHDSetFlags(struct xtListHD *list, unsigned flags);
+void xtListDSetFlags (struct xtListD *list , unsigned flags);
+void xtListUSetFlags (struct xtListU *list , unsigned flags);
+void xtListLUSetFlags(struct xtListLU *list, unsigned flags);
+void xtListZUSetFlags(struct xtListZU *list, unsigned flags);
+void xtListPSetFlags (struct xtListP *list , unsigned flags);
 
 void xtListHDSetGrowthFactor(struct xtListHD *list, int grow);
 void xtListDSetGrowthFactor (struct xtListD  *list, int grow);
