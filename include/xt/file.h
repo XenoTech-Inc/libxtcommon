@@ -62,6 +62,11 @@ int xtFileCopyByHandle(FILE *src, FILE *dst);
  */
 int xtFileCreateDir(const char *path);
 /**
+ * Opens the file with the default associated program.
+ * This program should be executed as new process, so keep in mind that the caller thread should return immidiately.
+ */
+void xtFileExecute(const char *path);
+/**
  * Tells you whether the specified file or directory exists.
  * It should be noted that it is possible that because of permissions
  * the function cannot check the path. This means that you should check the

@@ -53,6 +53,11 @@ int xtFileCreateDir(const char *path)
 	return CreateDirectory((LPCTSTR) path, NULL) != 0 ? 0 : _xtTranslateSysError(GetLastError());
 }
 
+void xtFileExecute(const char *path)
+{
+	ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOW);
+}
+
 int xtFileExists(const char *path, bool *exists)
 {
 	if (!path)

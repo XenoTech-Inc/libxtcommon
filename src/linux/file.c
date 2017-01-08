@@ -60,6 +60,13 @@ int xtFileCreateDir(const char *path)
 	return mkdir(path, S_IRWXU) == 0 ? 0 : _xtTranslateSysError(errno);
 }
 
+void xtFileExecute(const char *path)
+{
+	char buf[FILENAME_MAX];
+	snprintf(buf, FILENAME_MAX, "xdg-open \"%s\"", path);
+	system(buf);
+}
+
 int xtFileExists(const char *path, bool *exists)
 {
 	if (!path)

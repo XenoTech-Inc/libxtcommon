@@ -15,11 +15,12 @@
 static void fileTest(void)
 {
 	char sbuf[256], sbuf2[256];
-	if (xtFileGetExecutablePath(sbuf, sizeof(sbuf) / sizeof(sbuf[0])) != 0) {
+	if (xtFileGetExecutablePath(sbuf, sizeof(sbuf)) != 0) {
 		fprintf(stderr, "Failed to retrieve the path of myself\n");
-		snprintf(sbuf, sizeof(sbuf) / sizeof(sbuf[0]), "test_file");
+		snprintf(sbuf, sizeof(sbuf), "test_file");
 	}
 	printf("Executable path: %s\n", sbuf);
+	
 	bool result;
 	int ret;
 	unsigned long long size;
@@ -44,16 +45,16 @@ static void fileTest(void)
 	ret = xtFileIsDir(sbuf, &result);
 	printf("Is file a directory?: %d - %s\n", ret, (result ? "Yes" : "No"));
 	
-	printf("Home dir: %s\n", xtFileGetHomeDir(sbuf2, sizeof(sbuf2) / sizeof(sbuf2[0])));
+	printf("Home dir: %s\n", xtFileGetHomeDir(sbuf2, sizeof(sbuf2)));
 	
-	ret = xtFileGetTempDir(sbuf2, sizeof(sbuf2) / sizeof(sbuf2[0]));
+	ret = xtFileGetTempDir(sbuf2, sizeof(sbuf2));
 	printf("System temp dir: %d - %s\n", ret, sbuf2);
 	
-	ret = xtFileGetCWD(sbuf2, sizeof(sbuf2) / sizeof(sbuf2[0]));
+	ret = xtFileGetCWD(sbuf2, sizeof(sbuf2));
 	printf("CWD before: %d - %s\n", ret, sbuf2);
 	ret = xtFileSetCWD(sbuf2);
 	printf("CWD change: %d\n", ret);
-	ret = xtFileGetCWD(sbuf2, sizeof(sbuf2) / sizeof(sbuf2[0]));
+	ret = xtFileGetCWD(sbuf2, sizeof(sbuf2));
 	printf("CWD after : %d - %s\n", ret, sbuf2);
 	
 	printf("Creation of dir: %d\n", xtFileCreateDir("test_dir"));
@@ -61,14 +62,18 @@ static void fileTest(void)
 	
 	FILE *tmpFile;
 	char tmpFilePath[1024];
-	printf("Creation of tmpfile: %d\n", xtFileTempFile(&tmpFile, tmpFilePath, sizeof(tmpFilePath) / sizeof(tmpFilePath[0])));
+	printf("Creation of tmpfile: %d\n", xtFileTempFile(&tmpFile, tmpFilePath, sizeof(tmpFilePath)));
 	if (tmpFile) {
 		printf("Path of tmpfile: %s\n", tmpFilePath);
 		fputs("HEY!", tmpFile);
 		fflush(tmpFile);
 		fclose(tmpFile);
+		printf("Executing temporary file\n");
+		xtFileExecute(tmpFilePath);
+		puts("Giving the program a couple of seconds to open it...");
+		xtSleepMS(3000);
 		char newPath[256];
-		snprintf(newPath, sizeof(newPath) / sizeof(newPath[0]), "%s/tmp_file.txt", sbuf2);
+		snprintf(newPath, sizeof(newPath), "%s/tmp_file.txt", sbuf2);
 		printf("Copy tmp file: %d\n", xtFileCopy(tmpFilePath, newPath));
 		printf("Remove tmp file: %d\n", xtFileRemove(tmpFilePath));
 		printf("Remove tmp copy file: %d\n", xtFileRemove(newPath));
