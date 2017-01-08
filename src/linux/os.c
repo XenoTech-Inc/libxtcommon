@@ -261,6 +261,27 @@ void xtConsoleSetTitle(const char *title)
 		printf("%s%s%s", "\033]0;", title, "\007");
 }
 
+char *xtGetHostname(char *buf, size_t buflen)
+{
+	// For in the future maybe, HOST_NAME_MAX is the maximum length of the hostname in limits.h
+	return gethostname(buf, buflen) == 0 ? buf : NULL;
+}
+
+char *xtGetOSName(char *buf, size_t buflen)
+{
+	int ret = 0;
+	FILE *fp = popen("/usr/bin/lsb_release -d | /bin/sed -e 's/.*:\\s//'", "r");
+	if (fp) {
+		ret = fread(buf, 1, buflen, fp);
+		pclose(fp);
+	}
+	if (ret == 0)
+		snprintf(buf, buflen, "Linux");
+	else
+		buf[ret - 1] = '\0'; // Remove newline char
+	return buf;
+}
+
 unsigned long long xtRAMGetAmountFree(void)
 {
 #if XT_IS_X64
@@ -307,48 +328,6 @@ unsigned long long xtRAMGetAmountTotal(void)
 	fclose(f);
 	return 0;
 #endif
-}
-
-unsigned xtGetCurrentPID(void)
-{
-	return getpid();
-}
-
-char *xtGetHostname(char *buf, size_t buflen)
-{
-	// For in the future maybe, HOST_NAME_MAX is the maximum length of the hostname in limits.h
-	return gethostname(buf, buflen) == 0 ? buf : NULL;
-}
-
-char *xtGetOSName(char *buf, size_t buflen)
-{
-	int ret = 0;
-	FILE *fp = popen("/usr/bin/lsb_release -d | /bin/sed -e 's/.*:\\s//'", "r");
-	if (fp) {
-		ret = fread(buf, 1, buflen, fp);
-		pclose(fp);
-	}
-	if (ret == 0)
-		snprintf(buf, buflen, "Linux");
-	else
-		buf[ret - 1] = '\0'; // Remove newline char
-	return buf;
-}
-
-unsigned xtGetProcessCount(void)
-{
-	DIR *d;
-	struct dirent *dir;
-	unsigned count = 0;
-	if (!(d = opendir("/proc")))
-		return 0;
-	while ((dir = readdir(d))) {
-		// If the map starts with a number, it's always a legit process
-		if (strtoul(dir->d_name, NULL, 10) != 0)
-			++count;
-	}
-	closedir(d);
-	return count;
 }
 
 char *xtGetUsername(char *buf, size_t buflen)

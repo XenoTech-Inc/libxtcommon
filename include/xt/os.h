@@ -121,21 +121,6 @@ bool xtConsoleIsAvailable(void);
  */
 void xtConsoleSetTitle(const char *title);
 /**
- * Returns the total amount of physical RAM available for use in bytes.
- * Zero is returned on failure.
- */
-unsigned long long xtRAMGetAmountFree(void);
-/**
- * Returns the total amount of physical RAM available to the system in bytes.
- * Zero is returned on failure.
- * @remarks This value will differ across operating systems. This function will never display the "true" installed RAM value.
- */
-unsigned long long xtRAMGetAmountTotal(void);
-/**
- * Returns the PID for the current process. This function will always succeed.
- */
-unsigned xtGetCurrentPID(void);
-/**
  * Returns the hostname of this computer. On error a null pointer is returned.
  */
 char *xtGetHostname(char *buf, size_t buflen);
@@ -147,9 +132,16 @@ char *xtGetHostname(char *buf, size_t buflen);
  */
 char *xtGetOSName(char *buf, size_t buflen);
 /**
- * Returns the amount of processes that are active on the system. Zero is returned on error.
+ * Returns the total amount of physical RAM available for use in bytes.
+ * Zero is returned on failure.
  */
-unsigned xtGetProcessCount(void);
+unsigned long long xtRAMGetAmountFree(void);
+/**
+ * Returns the total amount of physical RAM available to the system in bytes.
+ * Zero is returned on failure.
+ * @remarks This value will differ across operating systems. This function will never display the "true" installed RAM value.
+ */
+unsigned long long xtRAMGetAmountTotal(void);
 /**
  * Returns the name of the user who is logged in on this session. On error a null pointer is returned.
  */

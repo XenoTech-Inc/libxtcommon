@@ -241,29 +241,6 @@ void xtConsoleSetTitle(const char *title)
 		SetConsoleTitle(title);
 }
 
-unsigned long long xtRAMGetAmountFree(void)
-{
-	MEMORYSTATUSEX statex;
-	statex.dwLength = sizeof(statex);
-	// Cannot fail, as we are setting this all up correctly
-	GlobalMemoryStatusEx(&statex);
-	return statex.ullAvailPhys;
-}
-
-unsigned long long xtRAMGetAmountTotal(void)
-{
-	MEMORYSTATUSEX statex;
-	statex.dwLength = sizeof(statex);
-	// Cannot fail, as we are setting this all up correctly
-	GlobalMemoryStatusEx(&statex);
-	return statex.ullTotalPhys;
-}
-
-unsigned xtGetCurrentPID(void)
-{
-	return GetCurrentProcessId();
-}
-
 char *xtGetHostname(char *buf, size_t buflen)
 {
 	char *val = getenv("COMPUTERNAME");
@@ -345,21 +322,22 @@ char *xtGetOSName(char *buf, size_t buflen)
 	return buf;
 }
 
-unsigned xtGetProcessCount(void) {
-	HANDLE hProcessSnap;
-	PROCESSENTRY32 pe32;
-	hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-	if (hProcessSnap == INVALID_HANDLE_VALUE)
-		return 0;
-	pe32.dwSize = sizeof(PROCESSENTRY32);
-	if (!Process32First(hProcessSnap, &pe32)) {
-		CloseHandle(hProcessSnap);
-		return 0;
-	}
-	unsigned processCount = 0;
-	while (Process32Next(hProcessSnap, &pe32)) ++processCount;
-	CloseHandle(hProcessSnap);
-	return processCount;
+unsigned long long xtRAMGetAmountFree(void)
+{
+	MEMORYSTATUSEX statex;
+	statex.dwLength = sizeof(statex);
+	// Cannot fail, as we are setting this all up correctly
+	GlobalMemoryStatusEx(&statex);
+	return statex.ullAvailPhys;
+}
+
+unsigned long long xtRAMGetAmountTotal(void)
+{
+	MEMORYSTATUSEX statex;
+	statex.dwLength = sizeof(statex);
+	// Cannot fail, as we are setting this all up correctly
+	GlobalMemoryStatusEx(&statex);
+	return statex.ullTotalPhys;
 }
 
 char *xtGetUsername(char *buf, size_t buflen)
