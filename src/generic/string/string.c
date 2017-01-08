@@ -88,7 +88,7 @@ char *xtStringReadLine(char *restrict str, size_t num, size_t *restrict bytesRea
 	while (--num > 0 && (c = getc(f)) != EOF) {
 		if (c == '\n') {
 			// Non-Linux line endings
-			if (*cs - 1 == '\r')
+			if (cs[-1] == '\r')
 				--cs;
 			break;
 		}
