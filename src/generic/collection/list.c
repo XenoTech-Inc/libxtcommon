@@ -6,15 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static inline int _xtListCreate(void **data, size_t elemsize, size_t n)
-{
-	if (n == 0)
-		n = XT_LIST_CAPACITY_DEFAULT;
-	if (!(*data = malloc(n * elemsize)))
-		return XT_ENOMEM;
-	return 0;
-}
-
 int xtListHDAdd(struct xtListHD *list, short data)
 {
 	if (list->count == list->capacity) {
@@ -171,82 +162,75 @@ void xtListPClear(struct xtListP *list)
 	list->count = 0;
 }
 
-#define list_init(this, data, cap) \
-	this->data = data;\
-	this->count = 0;\
-	this->capacity = cap;\
-	this->grow = -1;\
+#define list_init(this, capacity) \
+	this->count = 0; \
+	this->capacity = capacity; \
+	this->grow = -1; \
 	this->flags = 0;
 
 int xtListHDCreate(struct xtListHD *list, size_t capacity)
 {
-	void *data;
 	if (capacity == 0)
 		capacity = XT_LIST_CAPACITY_DEFAULT;
-	int ret = _xtListCreate(&data, sizeof(short), capacity);
-	if (ret)
-		return ret;
-	list_init(list, data, capacity);
+	list->data = malloc(sizeof(short) * capacity);
+	if (!list->data)
+		return XT_ENOMEM;
+	list_init(list, capacity);
 	return 0;
 }
 
 int xtListDCreate(struct xtListD *list, size_t capacity)
 {
-	void *data;
 	if (capacity == 0)
 		capacity = XT_LIST_CAPACITY_DEFAULT;
-	int ret = _xtListCreate(&data, sizeof(int), capacity);
-	if (ret)
-		return ret;
-	list_init(list, data, capacity);
+	list->data = malloc(sizeof(int) * capacity);
+	if (!list->data)
+		return XT_ENOMEM;
+	list_init(list, capacity);
 	return 0;
 }
 
 int xtListUCreate(struct xtListU *list, size_t capacity)
 {
-	void *data;
 	if (capacity == 0)
 		capacity = XT_LIST_CAPACITY_DEFAULT;
-	int ret = _xtListCreate(&data, sizeof(unsigned), capacity);
-	if (ret)
-		return ret;
-	list_init(list, data, capacity);
+	list->data = malloc(sizeof(unsigned) * capacity);
+	if (!list->data)
+		return XT_ENOMEM;
+	list_init(list, capacity);
 	return 0;
 }
 
 int xtListLUCreate(struct xtListLU *list, size_t capacity)
 {
-	void *data;
 	if (capacity == 0)
 		capacity = XT_LIST_CAPACITY_DEFAULT;
-	int ret = _xtListCreate(&data, sizeof(unsigned long), capacity);
-	if (ret)
-		return ret;
-	list_init(list, data, capacity);
+	list->data = malloc(sizeof(unsigned long) * capacity);
+	if (!list->data)
+		return XT_ENOMEM;
+	list_init(list, capacity);
 	return 0;
 }
 
 int xtListZUCreate(struct xtListZU *list, size_t capacity)
 {
-	void *data;
 	if (capacity == 0)
 		capacity = XT_LIST_CAPACITY_DEFAULT;
-	int ret = _xtListCreate(&data, sizeof(size_t), capacity);
-	if (ret)
-		return ret;
-	list_init(list, data, capacity);
+	list->data = malloc(sizeof(size_t) * capacity);
+	if (!list->data)
+		return XT_ENOMEM;
+	list_init(list, capacity);
 	return 0;
 }
 
 int xtListPCreate(struct xtListP *list, size_t capacity)
 {
-	void *data;
 	if (capacity == 0)
 		capacity = XT_LIST_CAPACITY_DEFAULT;
-	int ret = _xtListCreate(&data, sizeof(void*), capacity);
-	if (ret)
-		return ret;
-	list_init(list, data, capacity);
+	list->data = malloc(sizeof(void*) * capacity);
+	if (!list->data)
+		return XT_ENOMEM;
+	list_init(list, capacity);
 	return 0;
 }
 
