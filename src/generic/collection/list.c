@@ -250,7 +250,7 @@ int xtListPCreate(struct xtListP *list, size_t capacity)
 	return 0;
 }
 
-#define func_destroy(type) void type ## Destroy(struct type *list) { type ## Clear(list); free(list->data); }
+#define func_destroy(type) void type ## Destroy(struct type *list) { type ## Clear(list); if (list->data) { free(list->data); list->data = NULL; } }
 
 func_destroy(xtListHD)
 func_destroy(xtListD )

@@ -97,6 +97,8 @@ int xtHashmapCreate(
 void xtHashmapDestroy(struct xtHashmap *map)
 {
 	size_t capacity = map->capacity;
+	if (!map->buckets)
+		return;
 	for (size_t i = 0; i < capacity; ++i) {
 		if (map->buckets[i]) {
 			for (struct xtHashBucket *next, *b = map->buckets[i]; b; b = next) {
@@ -106,6 +108,7 @@ void xtHashmapDestroy(struct xtHashmap *map)
 		}
 	}
 	free(map->buckets);
+	map->buckets = NULL;
 }
 
 int xtHashmapGet(const struct xtHashmap *map, const void *key, struct xtHashBucket **bucket)
