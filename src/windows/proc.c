@@ -78,6 +78,8 @@ int xtProcWait(unsigned pid, unsigned timeout)
 	HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 	if (handle == NULL)
 		return _xtTranslateSysError(GetLastError());
+	if (timeout == 0)
+		timeout = INFINITE;
 	int ret = WaitForSingleObject(handle, timeout);
 	switch (ret) {
 	case WAIT_OBJECT_0: return 0;

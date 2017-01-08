@@ -55,6 +55,8 @@ int xtProcKill(unsigned pid, enum xtProcSignal signal);
  * Blocks for a maximum of \a timeout milliseconds until the specified process
  * has terminated. If the process cannot be found, this function returns
  * immidiately. If a timeout occurs, the process would still be alive.
+ * @param timeout - The maximum timeout in milliseconds. Zero means block
+ * indefinitely.
  * @return Zero if the process existed and is no longer running, otherwise an
  * error code.
  */

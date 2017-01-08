@@ -67,9 +67,11 @@ int xtProcWait(unsigned pid, unsigned timeout)
 	if (!xtProcIsAlive(pid))
 		return XT_ENOENT;
 	while (xtProcIsAlive(pid)) {
-		if (timeout <= sleepTime)
-			return XT_ETIMEDOUT;
-		timeout -= sleepTime;
+		if (timeout != 0) {
+			if (timeout <= sleepTime)
+				return XT_ETIMEDOUT;
+			timeout -= sleepTime;
+		}
 		usleep(sleepTime * 1000);
 	}
 	return 0;
