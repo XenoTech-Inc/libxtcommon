@@ -358,6 +358,8 @@ int xtSocketUDPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRe
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
 int xtSocketUDPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *bytesSent, const struct xtSockaddr *dest);
+
+#define XT_SOCKET_POLL_CAPACITY_DEFAULT 1024
 /**
  * @brief Declaration for an opaque pointer.
  */
@@ -388,15 +390,18 @@ enum xtSocketPollEvent {
 int xtSocketPollAdd(struct xtSocketPoll *p, xtSocket sock, void *data, enum xtSocketPollEvent events);
 /**
  * Initiates the poll structure for socket monitoring.
- * @param size - The amount of sockets that will fit into the structure.
+ * @param capacity - The amount of sockets that will fit into the structure.
  */
-int xtSocketPollCreate(struct xtSocketPoll **p, unsigned size);
+int xtSocketPollCreate(struct xtSocketPoll **p, unsigned capacity);
 /**
  * Destroys the structure and cleans up all resources.
  * The structure is rendered unuseable after calling this function.
  * The sockets remain unaffected.
  */
-void xtSocketPollDestroy(struct xtSocketPoll *p);
+void xtSocketPollDestroy(struct xtSocketPoll **p);
+
+unsigned xtSocketPollGetCapacity(const struct xtSocketPoll *p);
+
 unsigned xtSocketPollGetCount(const struct xtSocketPoll *p);
 /**
  * Returns the data that is associated with the socket at \a index.
@@ -410,7 +415,6 @@ void *xtSocketPollGetData(const struct xtSocketPoll *p, unsigned index);
  * results in undefined behavior.
  */
 enum xtSocketPollEvent xtSocketPollGetEvent(const struct xtSocketPoll *p, unsigned index);
-unsigned xtSocketPollGetSize(const struct xtSocketPoll *p);
 /**
  * Returns the socket at \a index.
  * @remarks No bounds checking is performed. Specifying a too high index

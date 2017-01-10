@@ -480,7 +480,7 @@ struct xtSocketPoll {
 	struct _xt_poll_data *data;
 	struct epoll_event *events;
 	int epollfd;
-	unsigned size, count, socketsReady;
+	unsigned capacity, count, socketsReady;
 };
 /**
  * Filters out or adds flags. This is to have consistent cross platform behavior.
@@ -526,13 +526,14 @@ static enum xtSocketPollEvent _xtSocketPollEventSysToFlags(uint32_t sysevents)
 
 int xtSocketPollAdd(struct xtSocketPoll *p, xtSocket sock, void *data, enum xtSocketPollEvent events)
 {
-	if (p->count == p->size)
+	unsigned capacity = p->capacity;
+	if (p->count == capacity)
 		return XT_ENOBUFS;
 	struct epoll_event event;
 	memset(&event, 0, sizeof(event)); // Prevent "uninitialised value(s)" warnings in Valgrind
 	event.events = _xtSocketPollEventFixSysFlags(_xtSocketPollEventFlagsToSys(events));
 	// Search for a free index
-	for (unsigned i = 0; i < p->size; ++i) {
+	for (unsigned i = 0; i < capacity; ++i) {
 		if (p->data[i].fd == XT_SOCKET_INVALID_FD) {
 			event.data.ptr = &p->data[i];
 			if (epoll_ctl(p->epollfd, EPOLL_CTL_ADD, sock, &event) == 0) {
@@ -547,55 +548,68 @@ int xtSocketPollAdd(struct xtSocketPoll *p, xtSocket sock, void *data, enum xtSo
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
-int xtSocketPollCreate(struct xtSocketPoll **p, unsigned size)
+int xtSocketPollCreate(struct xtSocketPoll **p, unsigned capacity)
 {
-	if (size == 0)
-		return XT_EINVAL;
-	struct xtSocketPoll *_p = malloc(sizeof(*_p));
-	if (!_p)
-		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-	_p->data = NULL;
-	_p->events = NULL;
-	// Overflow control
-	size = (int) size <= 0 ? 64 : size;
-	if (!(_p->events = malloc(sizeof(struct epoll_event) * size)))
+	struct xtSocketPoll *sp = malloc(sizeof(**p));
+	if (!sp)
 		goto error;
-	if (!(_p->data = malloc(sizeof(struct _xt_poll_data) * size)))
+	int epollfd = -1;
+	sp->data = NULL;
+	sp->events = NULL;
+	if (capacity == 0)
+		capacity = XT_SOCKET_POLL_CAPACITY_DEFAULT;
+	else if (capacity > INT_MAX)
+		capacity = INT_MAX;
+	if (!(sp->data = malloc(sizeof(*sp->data) * capacity)))
 		goto error;
-	int epollfd = epoll_create(size);
-	if (epollfd == -1)
+	if (!(sp->events = malloc(sizeof(*sp->events) * capacity)))
+		goto error;
+	if ((epollfd = epoll_create(capacity)) == -1)
 		goto error;
 	// Prepare the array for usage
-	for (unsigned i = 0; i < size; ++i) {
-		_p->data[i].fd = XT_SOCKET_INVALID_FD;
-		_p->data[i].data = NULL;
+	for (unsigned i = 0; i < capacity; ++i) {
+		sp->data[i].fd = XT_SOCKET_INVALID_FD;
+		sp->data[i].data = NULL;
 	}
-	_p->epollfd = epollfd;
-	_p->size = size;
-	_p->count = 0;
-	_p->socketsReady = 0;
-	*p = _p;
+	sp->epollfd = epollfd;
+	sp->capacity = capacity;
+	sp->count = 0;
+	sp->socketsReady = 0;
+	*p = sp;
 	return 0;
 error:
-	free(_p->data);
-	free(_p->events);
-	free(_p);
+	if (sp) {
+		if (epollfd != -1)
+			close(sp->epollfd);
+		free(sp->data);
+		free(sp->events);
+		free(sp);
+	}
+	*p = NULL;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
-void xtSocketPollDestroy(struct xtSocketPoll *p)
+void xtSocketPollDestroy(struct xtSocketPoll **p)
 {
-	if (!p)
+	struct xtSocketPoll *sp = *p;
+	if (!sp)
 		return;
-	close(p->epollfd);
+	close(sp->epollfd);
 	// Clean up possible sensitive data
-	for (unsigned i = 0; i < p->size; ++i) {
-		p->data[i].fd = XT_SOCKET_INVALID_FD;
-		p->data[i].data = NULL;
+	unsigned capacity = sp->capacity;
+	for (unsigned i = 0; i < capacity; ++i) {
+		sp->data[i].fd = XT_SOCKET_INVALID_FD;
+		sp->data[i].data = NULL;
 	}
-	free(p->data);
-	free(p->events);
-	free(p);
+	free(sp->data);
+	free(sp->events);
+	free(sp);
+	*p = NULL;
+}
+
+unsigned xtSocketPollGetCapacity(const struct xtSocketPoll *p)
+{
+	return p->capacity;
 }
 
 unsigned xtSocketPollGetCount(const struct xtSocketPoll *p)
@@ -613,11 +627,6 @@ enum xtSocketPollEvent xtSocketPollGetEvent(const struct xtSocketPoll *p, unsign
 	return _xtSocketPollEventSysToFlags(p->events[index].events);
 }
 
-unsigned xtSocketPollGetSize(const struct xtSocketPoll *p)
-{
-	return p->size;
-}
-
 xtSocket xtSocketPollGetSocket(const struct xtSocketPoll *p, unsigned index)
 {
 	return ((struct _xt_poll_data*) p->events[index].data.ptr)->fd;
@@ -628,7 +637,8 @@ int xtSocketPollMod(struct xtSocketPoll *p, xtSocket sock, enum xtSocketPollEven
 	struct epoll_event event;
 	memset(&event, 0, sizeof(event));
 	event.events = _xtSocketPollEventFixSysFlags(_xtSocketPollEventFlagsToSys(events));
-	for (unsigned i = 0; i < p->size; ++i) {
+	unsigned capacity = p->capacity;
+	for (unsigned i = 0; i < capacity; ++i) {
 		if (p->data[i].fd == sock) {
 			event.data.ptr = &p->data[i];
 			if (epoll_ctl(p->epollfd, EPOLL_CTL_MOD, sock, &event) == 0)
@@ -647,7 +657,8 @@ int xtSocketPollRemove(struct xtSocketPoll *p, xtSocket sock)
 	if (epoll_ctl(p->epollfd, EPOLL_CTL_DEL, sock, &event) != 0)
 		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 	// Clean up the data in the data array
-	for (unsigned i = 0; i < p->size; ++i) {
+	unsigned capacity = p->capacity;
+	for (unsigned i = 0; i < capacity; ++i) {
 		if (p->data[i].fd == sock) {
 			p->data[i].fd = XT_SOCKET_INVALID_FD;
 			p->data[i].data = NULL;
@@ -660,7 +671,8 @@ int xtSocketPollRemove(struct xtSocketPoll *p, xtSocket sock)
 
 int xtSocketPollSetEvent(struct xtSocketPoll *p, xtSocket sock, enum xtSocketPollEvent events)
 {
-	for (unsigned i = 0; i < p->socketsReady; ++i) {
+	unsigned socketsReady = p->socketsReady;
+	for (unsigned i = 0; i < socketsReady; ++i) {
 		if (((struct _xt_poll_data*) p->events[i].data.ptr)->fd == sock) {
 			p->events[i].events = _xtSocketPollEventFlagsToSys(events);
 			return 0;
@@ -671,7 +683,7 @@ int xtSocketPollSetEvent(struct xtSocketPoll *p, xtSocket sock, enum xtSocketPol
 
 int xtSocketPollWait(struct xtSocketPoll *p, int timeout, unsigned *socketsReady)
 {
-	int eventCount = epoll_wait(p->epollfd, p->events, p->size, timeout);
+	int eventCount = epoll_wait(p->epollfd, p->events, p->capacity, timeout);
 	if (eventCount == -1)
 		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 	p->socketsReady = eventCount;
