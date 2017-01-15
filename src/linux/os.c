@@ -217,7 +217,9 @@ void xtConsoleClear(void)
 
 int xtConsoleFillLine(const char *pattern)
 {
-	unsigned width;
+	// Only initializing it because otherwise GCC warns
+	// us if we use the -O3 option
+	unsigned width = 0;
 	int ret = xtConsoleGetSize(&width, NULL);
 	if (ret)
 		return ret;
