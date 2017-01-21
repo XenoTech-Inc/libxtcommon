@@ -48,9 +48,8 @@ int xtMutexCreate(xtMutex *m);
 /**
  * Destroys the mutex, all memory associated with the mutex is released.
  * Destroying a mutex which is still locked or is unintialized results in undefined behavior.
- * @return Zero if the mutex has been destroyed, otherwise an error code.
  */
-int xtMutexDestroy(xtMutex *m);
+void xtMutexDestroy(xtMutex *m);
 /**
  * Attempts to lock the mutex. If the mutex is already locked by another thread,
  * the thread waits for the mutex to become available. The thread that has locked a mutex becomes its

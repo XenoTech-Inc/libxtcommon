@@ -19,7 +19,7 @@ int xtMutexCreate(xtMutex *m)
 	int ret;
 	pthread_mutexattr_t attr;
 	ret = pthread_mutexattr_init(&attr);
-	if (ret != 0)
+	if (ret != 0) // Should be impossible to happen but still check it
 		return _xtTranslateSysError(ret);
 	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 	ret = pthread_mutex_init(m, &attr);
@@ -27,10 +27,11 @@ int xtMutexCreate(xtMutex *m)
 	return ret == 0 ? 0 : _xtTranslateSysError(ret);
 }
 
-int xtMutexDestroy(xtMutex *m)
+void xtMutexDestroy(xtMutex *m)
 {
-	int ret = pthread_mutex_destroy(m);
-	return ret == 0 ? 0 : _xtTranslateSysError(ret);
+	// Linux seems to have built-in destruction guards so that means
+	// that we don't have to do anything here
+	pthread_mutex_destroy(m);
 }
 
 int xtMutexLock(xtMutex *m)

@@ -18,10 +18,11 @@ int xtMutexCreate(xtMutex *m)
 	return 0;
 }
 
-int xtMutexDestroy(xtMutex *m)
+void xtMutexDestroy(xtMutex *m)
 {
+	// Windows seems to have builtin destruction guards so that means
+	// that we don't have to do anything here
 	RtlDeleteCriticalSection(m);
-	return 0;
 }
 
 int xtMutexLock(xtMutex *m)
