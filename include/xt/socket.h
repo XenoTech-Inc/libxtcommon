@@ -392,7 +392,7 @@ int xtSocketPollAdd(struct xtSocketPoll *p, xtSocket sock, void *data, enum xtSo
  * Initiates the poll structure for socket monitoring.
  * @param capacity - The amount of sockets that will fit into the structure.
  */
-int xtSocketPollCreate(struct xtSocketPoll **p, unsigned capacity);
+int xtSocketPollCreate(struct xtSocketPoll **p, size_t capacity);
 /**
  * Destroys the structure and cleans up all resources.
  * The structure is rendered unuseable after calling this function.
@@ -400,27 +400,27 @@ int xtSocketPollCreate(struct xtSocketPoll **p, unsigned capacity);
  */
 void xtSocketPollDestroy(struct xtSocketPoll **p);
 
-unsigned xtSocketPollGetCapacity(const struct xtSocketPoll *p);
+size_t xtSocketPollGetCapacity(const struct xtSocketPoll *p);
 
-unsigned xtSocketPollGetCount(const struct xtSocketPoll *p);
+size_t xtSocketPollGetCount(const struct xtSocketPoll *p);
 /**
  * Returns the data that is associated with the socket at \a index.
  * @remarks No bounds checking is performed. Specifying a too high index
  * results in undefined behavior.
  */
-void *xtSocketPollGetData(const struct xtSocketPoll *p, unsigned index);
+void *xtSocketPollGetReadyData(const struct xtSocketPoll *p, size_t index);
 /**
  * Returns the current event that is happening on the socket at \a index.
  * @remarks No bounds checking is performed. Specifying a too high index
  * results in undefined behavior.
  */
-enum xtSocketPollEvent xtSocketPollGetEvent(const struct xtSocketPoll *p, unsigned index);
+enum xtSocketPollEvent xtSocketPollGetReadyEvent(const struct xtSocketPoll *p, size_t index);
 /**
  * Returns the socket at \a index.
  * @remarks No bounds checking is performed. Specifying a too high index
  * results in undefined behavior.
  */
-xtSocket xtSocketPollGetSocket(const struct xtSocketPoll *p, unsigned index);
+xtSocket xtSocketPollGetReadySocket(const struct xtSocketPoll *p, size_t index);
 /**
  * Modifies the events for which a socket will be monitored. This will take effect
  * on the next call to xtSocketPollWait().
@@ -434,6 +434,8 @@ int xtSocketPollMod(struct xtSocketPoll *p, xtSocket sock, enum xtSocketPollEven
  * @returns Zero if the socket was found and is removed, otherwise an error code.
  */
 int xtSocketPollRemove(struct xtSocketPoll *p, xtSocket sock);
+
+int xtSocketPollRemoveByIndex(struct xtSocketPoll *p, size_t index);
 /**
  * Sets the current event(s) for a ready socket.
  */
@@ -452,7 +454,7 @@ int xtSocketPollSetEvent(struct xtSocketPoll *p, xtSocket sock, enum xtSocketPol
  * left untouched on error.
  * @return Zero is the function has executed successfully, otherwise an error code.
  */
-int xtSocketPollWait(struct xtSocketPoll *p, int timeout, unsigned *socketsReady);
+int xtSocketPollWait(struct xtSocketPoll *p, int timeout, size_t *socketsReady);
 
 #ifdef __cplusplus
 }
