@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 static void trim(void)
 {
@@ -130,8 +131,25 @@ static void end(void)
 	puts("Success");
 }
 
+static void formatSI(void)
+{
+	xtConsoleFillLine("-");
+	puts("-- FORMAT SI TEST");
+	char buf[256];
+	puts(" D B  Number                Value");
+	puts("----------------------------------------------");
+	for (unsigned i = 0; i < 16; ++i) {
+		size_t num = rand();
+		unsigned decimals = rand() % 4;
+		unsigned bin = rand() & 1;
+		xtFormatSI(buf, sizeof buf, num, decimals, bin);
+		printf("(%u,%u) %-20zu  %s\n", decimals, bin, num, buf);
+	}
+}
+
 int main(void)
 {
+	srand(time(NULL));
 	xtConsoleFillLine("-");
 	puts("-- STRING TEST");
 	start();
@@ -141,5 +159,6 @@ int main(void)
 	rot13();
 	trim();
 	trimWords();
+	formatSI();
 	return EXIT_SUCCESS;
 }

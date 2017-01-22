@@ -44,6 +44,36 @@ char *xtFormatCommasLL(long long v, char *buf, int sep)
 		return xtFormatCommasLLU(v, buf, sep);
 }
 
+unsigned xtFormatSI(char *buf, size_t buflen, uint64_t value, unsigned decimals, bool strictBinary)
+{
+	static const char *sibase = " KMGTPE";
+	const char *si = sibase;
+	size_t d = value;
+	unsigned npow = 0;
+	unsigned base = strictBinary ? 1024 : 1000;
+	while (d >= base) {
+		d /= base;
+		++si;
+		++npow;
+	}
+	if (!decimals || !npow) {
+		if (npow) {
+			const char *format = strictBinary ? "%zu%ciB" : "%zu%cB";
+			snprintf(buf, buflen, format, d, *si);
+		} else
+			snprintf(buf, buflen, "%zuB", d);
+	} else {
+		char sbuf[32];
+		const char *format = strictBinary ? "%%.0%ulf%%ciB" : "%%.0%ulf%%cB";
+		snprintf(sbuf, sizeof sbuf, format, decimals);
+		double v = value;
+		for (unsigned i = 0; i < npow; ++i)
+			v /= base;
+		snprintf(buf, buflen, sbuf, v, *si);
+	}
+	return (unsigned)(si - sibase);
+}
+
 void xtRot13(void *buf, size_t buflen)
 {
 	unsigned char *xbuf = buf;
