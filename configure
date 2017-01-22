@@ -48,9 +48,10 @@ cat <<EOF >src/generic/_buildopts.c
 const struct xtBuildOptions XT_BUILD_OPTIONS = {
 	"$CFLAGS",
 	"`date +'%Y-%m-%d'`",
-	"v" str(XT_VERSION_MAJOR) "." str(XT_VERSION_MINOR),
+	"v" str(XT_VERSION_MAJOR) "." str(XT_VERSION_MINOR) "." str(XT_VERSION_PATCH),
 	XT_VERSION_MAJOR,
-	XT_VERSION_MINOR
+	XT_VERSION_MINOR,
+	XT_VERSION_PATCH
 };
 EOF
 

@@ -15,6 +15,7 @@ extern "C" {
 
 #define XT_VERSION_MAJOR 0
 #define XT_VERSION_MINOR 7
+#define XT_VERSION_PATCH 0
 
 // STD headers
 #include <stdbool.h>
@@ -26,6 +27,7 @@ struct xtBuildOptions {
 	const char *version;
 	unsigned versionMajor;
 	unsigned versionMinor;
+	unsigned versionPatch;
 };
 /**
  * Contains information regarding how the library was compiled.
