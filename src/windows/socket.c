@@ -613,7 +613,12 @@ size_t xtSocketPollGetCount(const struct xtSocketPoll *p)
 	return p->count;
 }
 
-void *xtSocketPollGetReadyData(const struct xtSocketPoll *p, unsigned index)
+void *xtSocketPollGetData(const struct xtSocketPoll *p, size_t index)
+{
+	return p->data[index].data;
+}
+
+void *xtSocketPollGetReadyData(const struct xtSocketPoll *p, size_t index)
 {
 	return p->readyData[index].data;
 }
@@ -626,6 +631,11 @@ enum xtSocketPollEvent xtSocketPollGetReadyEvent(const struct xtSocketPoll *p, s
 xtSocket xtSocketPollGetReadySocket(const struct xtSocketPoll *p, size_t index)
 {
 	return p->readyData[index].fd;
+}
+
+xtSocket xtSocketPollGetSocket(const struct xtSocketPoll *p, size_t index)
+{
+	return p->data[index].fd;
 }
 
 int xtSocketPollMod(struct xtSocketPoll *p, xtSocket sock, enum xtSocketPollEvent events)

@@ -362,6 +362,10 @@ int xtSocketUDPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *
 #define XT_SOCKET_POLL_CAPACITY_DEFAULT 1024
 /**
  * @brief Declaration for an opaque pointer.
+ * 
+ * Any sockets which have events waiting on them, are referenced to as "ready sockets".
+ * These ready sockets are stored in seperate arrays, hence there are several other
+ * functions for them.
  */
 struct xtSocketPoll;
 /**
@@ -408,19 +412,31 @@ size_t xtSocketPollGetCount(const struct xtSocketPoll *p);
  * @remarks No bounds checking is performed. Specifying a too high index
  * results in undefined behavior.
  */
+void *xtSocketPollGetData(const struct xtSocketPoll *p, size_t index);
+/**
+ * Returns the data that is associated with the ready socket at \a index.
+ * @remarks No bounds checking is performed. Specifying a too high index
+ * results in undefined behavior.
+ */
 void *xtSocketPollGetReadyData(const struct xtSocketPoll *p, size_t index);
 /**
- * Returns the current event that is happening on the socket at \a index.
+ * Returns the current event that is happening on the ready socket at \a index.
  * @remarks No bounds checking is performed. Specifying a too high index
  * results in undefined behavior.
  */
 enum xtSocketPollEvent xtSocketPollGetReadyEvent(const struct xtSocketPoll *p, size_t index);
 /**
- * Returns the socket at \a index.
+ * Returns the ready socket at \a index.
  * @remarks No bounds checking is performed. Specifying a too high index
  * results in undefined behavior.
  */
 xtSocket xtSocketPollGetReadySocket(const struct xtSocketPoll *p, size_t index);
+/**
+ * Returns the socket at \a index.
+ * @remarks No bounds checking is performed. Specifying a too high index
+ * results in undefined behavior.
+ */
+xtSocket xtSocketPollGetSocket(const struct xtSocketPoll *p, size_t index);
 /**
  * Modifies the events for which a socket will be monitored. This will take effect
  * on the next call to xtSocketPollWait().
@@ -434,7 +450,10 @@ int xtSocketPollMod(struct xtSocketPoll *p, xtSocket sock, enum xtSocketPollEven
  * @returns Zero if the socket was found and is removed, otherwise an error code.
  */
 int xtSocketPollRemove(struct xtSocketPoll *p, xtSocket sock);
-
+/**
+ * Same as xtSocketPollRemove(), only then a bit faster because you already know the index
+ * of the socket. Bounds checking is performed.
+ */
 int xtSocketPollRemoveByIndex(struct xtSocketPoll *p, size_t index);
 /**
  * Sets the current event(s) for a ready socket.
