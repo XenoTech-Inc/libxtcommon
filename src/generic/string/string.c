@@ -49,15 +49,15 @@ char *xtFormatCommasLL(long long v, char *buf, size_t buflen, int sep)
 		return xtFormatCommasLLU(v, buf, buflen, sep);
 }
 
-unsigned xtFormatSI(char *buf, size_t buflen, uint64_t value, unsigned decimals, bool strictBinary)
+char *xtFormatSI(char *buf, size_t buflen, uint64_t value, unsigned decimals, bool strictBinary, unsigned *base)
 {
-	static const char *sibase = " KMGTPE";
-	const char *si = sibase;
+	const char *siBaseStr = " KMGTPE";
+	const char *si = siBaseStr;
 	size_t d = value;
 	unsigned npow = 0;
-	unsigned base = strictBinary ? 1024 : 1000;
-	while (d >= base) {
-		d /= base;
+	unsigned siBase = strictBinary ? 1024 : 1000;
+	while (d >= siBase) {
+		d /= siBase;
 		++si;
 		++npow;
 	}
@@ -73,10 +73,12 @@ unsigned xtFormatSI(char *buf, size_t buflen, uint64_t value, unsigned decimals,
 		snprintf(sbuf, sizeof sbuf, format, decimals);
 		double v = value;
 		for (unsigned i = 0; i < npow; ++i)
-			v /= base;
+			v /= siBase;
 		snprintf(buf, buflen, sbuf, v, *si);
 	}
-	return (unsigned)(si - sibase);
+	if (base)
+		*base = (unsigned) (si - siBaseStr);
+	return buf;
 }
 
 void xtRot13(void *buf, size_t buflen)

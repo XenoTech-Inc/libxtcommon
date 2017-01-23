@@ -36,14 +36,16 @@ char *xtFormatCommasLL(long long v, char *buf, size_t buflen, int sep);
 char *xtFormatCommasLLU(unsigned long long v, char *buf, size_t buflen, int sep);
 /**
  * Format number in SI metric system and return power of prefix.
- * E.g.: 0 is the number in bytes, 1 in kilobytes, 2 in megabytes etc.
  * @param buf - Will receive the formatted number. Bounds checking is performed.
  * @param buflen - Maximum buffer length.
  * @param value - The number to format in SI metric system.
  * @param decimals - Number of fractional decimals (0 disables fractions).
  * @param strictBinary - Use 1024 (e.g. KiB, MiB) rather than 1000 (e.g. KB, MB).
+ * @param base - An optional pointer which receives the base of the formatted time.
+ * E.g.: 0 is the number in bytes, 1 in kilobytes, 2 in megabytes etc.
+ * @returns A pointer to \a buf.
  */
-unsigned xtFormatSI(char *buf, size_t buflen, uint64_t value, unsigned decimals, bool strictBinary);
+char *xtFormatSI(char *buf, size_t buflen, uint64_t value, unsigned decimals, bool strictBinary, unsigned *base);
 /**
  * Converts an uint64_t to a string suitable for printing.
  */
