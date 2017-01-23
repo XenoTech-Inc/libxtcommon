@@ -280,12 +280,13 @@ int main(void)
 	printf(
 		"configured with: %s\n"
 		"built on %s\n"
-		"%s (%u.%u)\n",
+		"%s (%u.%u.%u)\n",
 		XT_BUILD_OPTIONS.configure,
 		XT_BUILD_OPTIONS.date,
 		XT_BUILD_OPTIONS.version,
 		XT_BUILD_OPTIONS.versionMajor,
-		XT_BUILD_OPTIONS.versionMinor
+		XT_BUILD_OPTIONS.versionMinor,
+		XT_BUILD_OPTIONS.versionPatch
 	);
 	xtConsoleFillLine("-");
 	puts("-- FILE TEST");
