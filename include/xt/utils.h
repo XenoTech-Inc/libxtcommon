@@ -18,6 +18,7 @@ extern "C" {
 
 // STD headers
 #include <stdbool.h>
+#include <stdint.h>
 
 struct xtBuildOptions {
 	/** Contains the CFLAGS options. */
@@ -41,6 +42,15 @@ void xtDie(const char *msg);
  * stderr is always flushed first.
  */
 void xtDieOn(bool cond, const char *msg);
+/**
+ * Returns a pseudo-random number in the range of 0 to UINT64_MAX.
+ */
+uint64_t xtRandLLU(void);
+/**
+ * Use this function to initialize the pseudo-random number generator functions.
+ */
+void xtSeedRand(unsigned seed);
+
 
 #ifdef __cplusplus
 }
