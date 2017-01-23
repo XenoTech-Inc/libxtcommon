@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *xtFormatCommasLLU(unsigned long long v, char *buf, int sep)
+char *xtFormatCommasLLU(unsigned long long v, char *buf, size_t buflen, int sep)
 {
 	int n = 3; // Format every thousand
 	char *p = buf;
@@ -21,6 +21,9 @@ char *xtFormatCommasLLU(unsigned long long v, char *buf, int sep)
 		}
 		i /= 10;
 	} while (i);
+	// overflow check
+	if (p + 1 > buf + buflen)
+		return NULL;
 	*p = '\0';
 	j = 0;
 	do {
@@ -34,14 +37,16 @@ char *xtFormatCommasLLU(unsigned long long v, char *buf, int sep)
 	return buf;
 }
 
-char *xtFormatCommasLL(long long v, char *buf, int sep)
+char *xtFormatCommasLL(long long v, char *buf, size_t buflen, int sep)
 {
+	if (!buflen)
+		return NULL;
 	if (v < 0) {
 		buf[0] = '-';
 		v = llabs(v);
-		return xtFormatCommasLLU(v, buf + 1, sep);
+		return xtFormatCommasLLU(v, buf + 1, buflen - 1, sep);
 	} else
-		return xtFormatCommasLLU(v, buf, sep);
+		return xtFormatCommasLLU(v, buf, buflen, sep);
 }
 
 unsigned xtFormatSI(char *buf, size_t buflen, uint64_t value, unsigned decimals, bool strictBinary)

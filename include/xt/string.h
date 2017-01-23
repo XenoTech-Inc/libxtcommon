@@ -28,12 +28,12 @@ char *xtInt64ToStr(int64_t value, char *buf, size_t buflen);
  * Formats every thousand in the number with the specified seperator.
  * \a buf will receive the final string. No bounds checking is performed.
  */
-char *xtFormatCommasLL(long long v, char *buf, int sep);
+char *xtFormatCommasLL(long long v, char *buf, size_t buflen, int sep);
 /**
  * Formats every thousand in the number with the specified seperator.
  * \a buf will receive the final string. No bounds checking is performed.
  */
-char *xtFormatCommasLLU(unsigned long long v, char *buf, int sep);
+char *xtFormatCommasLLU(unsigned long long v, char *buf, size_t buflen, int sep);
 /**
  * Format number in SI metric system and return power of prefix.
  * E.g.: 0 is the number in bytes, 1 in kilobytes, 2 in megabytes etc.
