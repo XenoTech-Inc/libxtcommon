@@ -32,17 +32,6 @@ int xtCalendarIsDST(bool *isDST)
 	return 0;
 }
 
-char *xtClockFormatTime(unsigned timestamp_secs, char *buf, size_t buflen)
-{
-	if (buflen == 0)
-		return NULL;
-	time_t t = timestamp_secs;
-	struct tm lt;
-	if (!gmtime_r(&t, &lt) || strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", &lt) == 0)
-		return NULL;
-	return buf;
-}
-
 unsigned long long xtClockGetCurrentTimeUS(void)
 {
 	unsigned long long now = xtClockGetRealtimeUS();
@@ -79,6 +68,17 @@ unsigned long long xtClockGetRealtimeUS(void)
 	}
 	// It should be impossible to get here, since all kernels should have CLOCK_REALTIME
 	return 0;
+}
+
+char *xtFormatTime(unsigned timestamp_secs, char *buf, size_t buflen)
+{
+	if (buflen == 0)
+		return NULL;
+	time_t t = timestamp_secs;
+	struct tm lt;
+	if (!gmtime_r(&t, &lt) || strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", &lt) == 0)
+		return NULL;
+	return buf;
 }
 
 unsigned xtGetUptime(void)

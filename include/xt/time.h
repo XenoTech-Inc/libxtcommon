@@ -46,15 +46,6 @@ int xtCalendarGetGMTOffset(int *offset);
  */
 int xtCalendarIsDST(bool *isDST);
 /**
- * Fills the buffer with the current time in the following format:
- * YYYY-mm-dd HH:MM:SS. The clock uses the 24 hour format.
- * This function MAY fail if the timestamp exceeds
- * the OS timer limits.
- * @param secs - Your timestamp in seconds.
- * @returns A pointer to the buffer. Null is returned on failure.
- */
-char *xtClockFormatTime(unsigned timestamp_secs, char *buf, size_t buflen);
-/**
  * Returns the true time that your device is reporting right now in
  * microseconds since UNIX time. This value is DST and GMT adjusted.
  * @return The time that your device is reporting, GMT and DST corrected.

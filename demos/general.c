@@ -176,9 +176,9 @@ static void timeTest(void)
 	char sbuf[256];
 	unsigned long long timeNow = xtClockGetRealtimeUS() / 1000;
 	printf("Time now in msecs: %llu\n", timeNow);
-	printf("Time now in msecs non-gmt corrected: %s\n", xtClockFormatTime(timeNow / 1000, sbuf, 255));
+	printf("Time now in msecs non-gmt corrected: %s\n", xtFormatTime(timeNow / 1000, sbuf, 255));
 	timeNow = xtClockGetCurrentTimeUS() / 1000; 
-	printf("Time now in msecs gmt (with any dst) corrected: %s\n", xtClockFormatTime(timeNow / 1000, sbuf, 255));
+	printf("Time now in msecs gmt (with any dst) corrected: %s\n", xtFormatTime(timeNow / 1000, sbuf, 255));
 	
 	const unsigned sleepTimeMS = 100;
 	timeNow = xtClockGetMonotimeUS();
@@ -262,6 +262,14 @@ static void stringTest(void)
 	puts("The following 2 numbers are supposed to be the same and equal 18446744073709551615");
 	printf("Max LLU value raw llu: %llu\n", ULLONG_MAX);
 	printf("Max LLU value uint64 to string : %s\n", xtUint64ToStr(ULLONG_MAX, nbuf, 32));
+	char buf[256];
+	const char *text = "The pope uses dope";
+	printf("Hexdump of \"%s\": ", text);
+	if (!xtFormatHex(buf, sizeof buf, text, strlen(text), ' ', false)) {
+		fputs("oops\n", stderr);
+		return;
+	}
+	puts(buf);
 }
 
 static void *threadTestSleep(struct xtThread *t, void *arg)

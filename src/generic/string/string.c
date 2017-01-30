@@ -6,6 +6,38 @@
 #include <stdlib.h>
 #include <string.h>
 
+char *xtFormatBytesSI(char *buf, size_t buflen, uint64_t value, unsigned decimals, bool strictBinary, unsigned *base)
+{
+	const char *siBaseStr = " KMGTPE";
+	const char *si = siBaseStr;
+	size_t d = value;
+	unsigned npow = 0;
+	unsigned siBase = strictBinary ? 1024 : 1000;
+	while (d >= siBase) {
+		d /= siBase;
+		++si;
+		++npow;
+	}
+	if (!decimals || !npow) {
+		if (npow) {
+			const char *format = strictBinary ? "%zu%ciB" : "%zu%cB";
+			snprintf(buf, buflen, format, d, *si);
+		} else
+			snprintf(buf, buflen, "%zuB", d);
+	} else {
+		char sbuf[32];
+		const char *format = strictBinary ? "%%.0%ulf%%ciB" : "%%.0%ulf%%cB";
+		snprintf(sbuf, sizeof sbuf, format, decimals);
+		double v = value;
+		for (unsigned i = 0; i < npow; ++i)
+			v /= siBase;
+		snprintf(buf, buflen, sbuf, v, *si);
+	}
+	if (base)
+		*base = (unsigned) (si - siBaseStr);
+	return buf;
+}
+
 char *xtFormatCommasLLU(unsigned long long v, char *buf, size_t buflen, int sep)
 {
 	int n = 3; // Format every thousand
@@ -49,35 +81,19 @@ char *xtFormatCommasLL(long long v, char *buf, size_t buflen, int sep)
 		return xtFormatCommasLLU(v, buf, buflen, sep);
 }
 
-char *xtFormatSI(char *buf, size_t buflen, uint64_t value, unsigned decimals, bool strictBinary, unsigned *base)
+char *xtFormatHex(char *buf, size_t buflen, const void *data, size_t datalen, int sep, bool uppercase)
 {
-	const char *siBaseStr = " KMGTPE";
-	const char *si = siBaseStr;
-	size_t d = value;
-	unsigned npow = 0;
-	unsigned siBase = strictBinary ? 1024 : 1000;
-	while (d >= siBase) {
-		d /= siBase;
-		++si;
-		++npow;
+	if (!buflen)
+		return NULL;
+	const char *hex = uppercase ? "0123456789ABCDEF" : "0123456789abcdef";
+	const char *ptr = data;
+	for (size_t i = 0, j = 0; i < buflen && j < datalen; i += 3, ++j) {
+		buf[i + 0] = hex[(ptr[j] >> 4) & 0xf];
+		buf[i + 1] = hex[ ptr[j]       & 0xf];
+		buf[i + 2] = sep;
 	}
-	if (!decimals || !npow) {
-		if (npow) {
-			const char *format = strictBinary ? "%zu%ciB" : "%zu%cB";
-			snprintf(buf, buflen, format, d, *si);
-		} else
-			snprintf(buf, buflen, "%zuB", d);
-	} else {
-		char sbuf[32];
-		const char *format = strictBinary ? "%%.0%ulf%%ciB" : "%%.0%ulf%%cB";
-		snprintf(sbuf, sizeof sbuf, format, decimals);
-		double v = value;
-		for (unsigned i = 0; i < npow; ++i)
-			v /= siBase;
-		snprintf(buf, buflen, sbuf, v, *si);
-	}
-	if (base)
-		*base = (unsigned) (si - siBaseStr);
+	size_t max = buflen - 1 > 3 * datalen ? 3 * datalen : buflen - 1;
+	buf[3 * (max / 3) - 1] = '\0';
 	return buf;
 }
 

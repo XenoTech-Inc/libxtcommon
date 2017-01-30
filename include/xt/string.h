@@ -25,16 +25,6 @@ int xtCharToDigit(char c);
  */
 char *xtInt64ToStr(int64_t value, char *buf, size_t buflen);
 /**
- * Formats every thousand in the number with the specified seperator.
- * \a buf will receive the final string. No bounds checking is performed.
- */
-char *xtFormatCommasLL(long long v, char *buf, size_t buflen, int sep);
-/**
- * Formats every thousand in the number with the specified seperator.
- * \a buf will receive the final string. No bounds checking is performed.
- */
-char *xtFormatCommasLLU(unsigned long long v, char *buf, size_t buflen, int sep);
-/**
  * Format number in SI metric system and return power of prefix.
  * @param buf - Will receive the formatted number. Bounds checking is performed.
  * @param buflen - Maximum buffer length.
@@ -45,7 +35,28 @@ char *xtFormatCommasLLU(unsigned long long v, char *buf, size_t buflen, int sep)
  * E.g.: 0 is the number in bytes, 1 in kilobytes, 2 in megabytes etc.
  * @returns A pointer to \a buf.
  */
-char *xtFormatSI(char *buf, size_t buflen, uint64_t value, unsigned decimals, bool strictBinary, unsigned *base);
+char *xtFormatBytesSI(char *buf, size_t buflen, uint64_t value, unsigned decimals, bool strictBinary, unsigned *base);
+/**
+ * Formats every thousand in the number with the specified seperator.
+ * \a buf will receive the final string. No bounds checking is performed.
+ */
+char *xtFormatCommasLL(long long v, char *buf, size_t buflen, int sep);
+/**
+ * Formats every thousand in the number with the specified seperator.
+ * \a buf will receive the final string. No bounds checking is performed.
+ */
+char *xtFormatCommasLLU(unsigned long long v, char *buf, size_t buflen, int sep);
+
+char *xtFormatHex(char *buf, size_t buflen, const void *data, size_t datalen, int sep, bool uppercase);
+/**
+ * Fills the buffer with the current time in the following format:
+ * YYYY-mm-dd HH:MM:SS. The clock uses the 24 hour format.
+ * This function MAY fail if the timestamp exceeds
+ * the OS timer limits.
+ * @param secs - Your timestamp in seconds.
+ * @returns A pointer to the buffer. Null is returned on failure.
+ */
+char *xtFormatTime(unsigned timestamp_secs, char *buf, size_t buflen);
 /**
  * Converts an uint64_t to a string suitable for printing.
  */

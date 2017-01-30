@@ -142,7 +142,8 @@ static void formatSI(void)
 		size_t num = rand();
 		unsigned decimals = rand() % 4;
 		unsigned bin = rand() & 1;
-		xtFormatSI(buf, sizeof buf, num, decimals, bin);
+		unsigned dummy;
+		xtFormatBytesSI(buf, sizeof buf, num, decimals, bin, &dummy);
 		printf("(%u,%u) %-20zu  %s\n", decimals, bin, num, buf);
 	}
 }

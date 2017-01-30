@@ -66,18 +66,6 @@ int xtCalendarIsDST(bool *isDST)
 	return 0;
 }
 
-char *xtClockFormatTime(unsigned timestamp_secs, char *buf, size_t buflen)
-{
-	if (buflen == 0)
-		return NULL;
-	time_t t = timestamp_secs;
-	// gmtime uses thread local storage by default on Windows, so this is safe
-	struct tm *lt = gmtime(&t);
-	if (!lt || strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", lt) == 0)
-		return NULL;
-	return buf;
-}
-
 unsigned long long xtClockGetCurrentTimeUS(void)
 {
 	unsigned long long now = xtClockGetRealtimeUS();
@@ -119,6 +107,18 @@ unsigned long long xtClockGetRealtimeUS(void)
 	ULONGLONG fileTimeNano100 = (((ULONGLONG) fileTime.dwHighDateTime) << 32) + fileTime.dwLowDateTime;
 	// To milliseconds and unix windows epoch offset removed
 	return fileTimeNano100 / 10 - 11644473600000LLU * 1000;
+}
+
+char *xtFormatTime(unsigned timestamp_secs, char *buf, size_t buflen)
+{
+	if (buflen == 0)
+		return NULL;
+	time_t t = timestamp_secs;
+	// gmtime uses thread local storage by default on Windows, so this is safe
+	struct tm *lt = gmtime(&t);
+	if (!lt || strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", lt) == 0)
+		return NULL;
+	return buf;
 }
 
 unsigned xtGetUptime(void)
