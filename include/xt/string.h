@@ -46,7 +46,16 @@ char *xtFormatCommasLL(long long v, char *buf, size_t buflen, int sep);
  * \a buf will receive the final string. No bounds checking is performed.
  */
 char *xtFormatCommasLLU(unsigned long long v, char *buf, size_t buflen, int sep);
-
+/**
+ * Format block of data as a hexadecimal string seperating each byte using \a sep.
+ * @param buf - Will receive the formatted buffer. Bounds checking is performed.
+ * @param buflen - Maximum buffer length.
+ * @param data - Block of data.
+ * @param datalen - Length of data block.
+ * @param sep - Separator character for each byte in \a data.
+ * @param uppercase - Whether to print each byte in uppercase or lowercase.
+ * @returns A pointer to \a buf.
+ */
 char *xtFormatHex(char *buf, size_t buflen, const void *data, size_t datalen, int sep, bool uppercase);
 /**
  * Fills the buffer with the current time in the following format:
