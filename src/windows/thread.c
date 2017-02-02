@@ -73,6 +73,8 @@ int xtThreadCreate(struct xtThread *t, void *(*func) (struct xtThread *t, void *
 	t->arg = arg;
 	t->exitEvent = NULL;
 	t->nativeThread = NULL;
+	if (xtMutexCreate(&t->suspendMutex) != 0)
+		goto error;
 	t->exitEvent = CreateEvent(NULL, true, false, NULL); // Set the object to non-signaled
 	if (t->exitEvent == NULL)
 		goto error;
@@ -83,8 +85,9 @@ int xtThreadCreate(struct xtThread *t, void *(*func) (struct xtThread *t, void *
 		goto error;
 	return 0;
 error:
-	CloseHandle(t->exitEvent);
 	CloseHandle(t->nativeThread);
+	CloseHandle(t->exitEvent);
+	xtMutexDestroy(&t->suspendMutex);
 	return _xtTranslateSysError(errno); // Yes, this time it's errno on Windows instead of GetLastError()
 }
 
@@ -107,11 +110,14 @@ bool xtThreadIsAlive(const struct xtThread *t)
 	return WaitForSingleObject(t->exitEvent, 0) != WAIT_OBJECT_0;
 }
 
-bool xtThreadJoin(struct xtThread *t)
+void xtThreadJoin(struct xtThread *t)
 {
-	// No need to check if the thread is alive. This check should always block until the thread has terminated, 
-	// and otherwise return immediately
-	return WaitForSingleObject(t->exitEvent, INFINITE) == WAIT_OBJECT_0;
+	// Block until the thread has terminated
+	WaitForSingleObject(t->exitEvent, INFINITE);
+	// Perform cleanup
+	CloseHandle(t->nativeThread);
+	CloseHandle(t->exitEvent);
+	xtMutexDestroy(&t->suspendMutex);
 }
 
 int xtThreadSuspend(struct xtThread *t)

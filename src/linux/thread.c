@@ -135,13 +135,13 @@ bool xtThreadIsAlive(const struct xtThread *t)
 	return pthread_kill(t->nativeThread, 0) != ESRCH;
 }
 
-bool xtThreadJoin(struct xtThread *t)
+void xtThreadJoin(struct xtThread *t)
 {
+	// Block until the thread has terminated
+	pthread_join(t->nativeThread, NULL);
+	// Perform cleanup
 	pthread_mutex_destroy(&t->suspendMutex);
 	pthread_cond_destroy(&t->suspendCond);
-	// No need to check if the thread is alive. This check should always block until the thread has terminated, 
-	// and otherwise return immediately
-	return pthread_join(t->nativeThread, NULL) == 0;
 }
 
 int xtThreadSuspend(struct xtThread *t)
