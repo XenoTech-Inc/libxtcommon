@@ -125,11 +125,10 @@ int xtThreadGetSuspendCount(const struct xtThread *t);
 bool xtThreadIsAlive(const struct xtThread *t);
 /**
  * Joins the specified thread. This operation blocks until the specified thread has terminated.
- * All of the thread's resources will then be cleaned up. A call to this function should ONLY be made once.
- * Once this function has executed, the specified thread becomes invalid and should NOT be used again for any purpose.
- * @returns True the join operation was successful, false otherwise.
+ * All of the thread's resources will be cleaned up. A second call to this function for an
+ * already joined thread will result in undefined behavior.
  */
-bool xtThreadJoin(struct xtThread *t);
+void xtThreadJoin(struct xtThread *t);
 /**
  * Increases the suspend count by one. If the suspend count is higher than zero, the thread will be suspended
  * on a call to this function. The thread will not be suspended when the suspend count is zero or lower.
