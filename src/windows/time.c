@@ -1,7 +1,7 @@
 // XT headers
 #include <xt/time.h>
 #include <xt/error.h>
- 
+
 // System headers
 #include <windows.h>
 
@@ -19,14 +19,14 @@ static SYSTEMTIME _xtGetSystemTimeDiff(const SYSTEMTIME *st1, const SYSTEMTIME *
 	v_ui.LowPart = v_ftime.dwLowDateTime;
 	v_ui.HighPart = v_ftime.dwHighDateTime;
 	v_right = v_ui.QuadPart;
-	
+
 	SystemTimeToFileTime(st2, &v_ftime);
 	v_ui.LowPart = v_ftime.dwLowDateTime;
 	v_ui.HighPart = v_ftime.dwHighDateTime;
 	v_left = v_ui.QuadPart;
-	
+
 	v_res = v_right - v_left;
-	
+
 	v_ui.QuadPart = v_res;
 	v_ftime.dwLowDateTime = v_ui.LowPart;
 	v_ftime.dwHighDateTime = v_ui.HighPart;
@@ -109,7 +109,7 @@ unsigned long long xtClockGetRealtimeUS(void)
 	return fileTimeNano100 / 10 - 11644473600000LLU * 1000;
 }
 
-char *xtFormatTime(unsigned timestamp_secs, char *buf, size_t buflen)
+char *xtFormatTime(char *buf, size_t buflen, unsigned timestamp_secs)
 {
 	if (buflen == 0)
 		return NULL;

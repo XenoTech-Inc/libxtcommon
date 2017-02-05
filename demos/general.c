@@ -20,7 +20,7 @@ static void fileTest(void)
 		snprintf(sbuf, sizeof(sbuf), "test_file");
 	}
 	printf("Executable path: %s\n", sbuf);
-	
+
 	bool result;
 	int ret;
 	unsigned long long size;
@@ -44,22 +44,22 @@ static void fileTest(void)
 	result = false;
 	ret = xtFileIsDir(sbuf, &result);
 	printf("Is file a directory?: %d - %s\n", ret, (result ? "Yes" : "No"));
-	
+
 	printf("Home dir: %s\n", xtFileGetHomeDir(sbuf2, sizeof(sbuf2)));
-	
+
 	ret = xtFileGetTempDir(sbuf2, sizeof(sbuf2));
 	printf("System temp dir: %d - %s\n", ret, sbuf2);
-	
+
 	ret = xtFileGetCWD(sbuf2, sizeof(sbuf2));
 	printf("CWD before: %d - %s\n", ret, sbuf2);
 	ret = xtFileSetCWD(sbuf2);
 	printf("CWD change: %d\n", ret);
 	ret = xtFileGetCWD(sbuf2, sizeof(sbuf2));
 	printf("CWD after : %d - %s\n", ret, sbuf2);
-	
+
 	printf("Creation of dir: %d\n", xtFileCreateDir("test_dir"));
 	printf("Removal of dir: %d\n", xtFileRemoveDir("test_dir"));
-	
+
 	FILE *tmpFile;
 	char tmpFilePath[1024];
 	printf("Creation of tmpfile: %d\n", xtFileTempFile(&tmpFile, tmpFilePath, sizeof(tmpFilePath)));
@@ -122,7 +122,7 @@ static void *t1Task(struct xtThread *t, void *arg)
 	ret = xtMutexTryLock(m);
 	if (ret == 0) {
 		printf("T1: I have obtained the lock to the mutex!\n");
-		xtSleepMS(50); // Sleep intentionally so that the other thread should have 
+		xtSleepMS(50); // Sleep intentionally so that the other thread should have
 		// already tried to lock it, and fail
 	} else
 		printf("T1: The other thread obtained the lock first\n");
@@ -141,7 +141,7 @@ static void *t2Task(struct xtThread *t, void *arg)
 	ret = xtMutexTryLock(m);
 	if (ret == 0) {
 		printf("T2: I have obtained the lock to the mutex!\n");
-		xtSleepMS(50); // Sleep intentionally so that the other thread should have 
+		xtSleepMS(50); // Sleep intentionally so that the other thread should have
 		// already tried to lock it, and fail
 	} else
 		printf("T2: The other thread obtained the lock first\n");
@@ -176,10 +176,10 @@ static void timeTest(void)
 	char sbuf[256];
 	unsigned long long timeNow = xtClockGetRealtimeUS() / 1000;
 	printf("Time now in msecs: %llu\n", timeNow);
-	printf("Time now in msecs non-gmt corrected: %s\n", xtFormatTime(timeNow / 1000, sbuf, 255));
-	timeNow = xtClockGetCurrentTimeUS() / 1000; 
-	printf("Time now in msecs gmt (with any dst) corrected: %s\n", xtFormatTime(timeNow / 1000, sbuf, 255));
-	
+	printf("Time now in msecs non-gmt corrected: %s\n", xtFormatTime(sbuf, 255, timeNow / 1000));
+	timeNow = xtClockGetCurrentTimeUS() / 1000;
+	printf("Time now in msecs gmt (with any dst) corrected: %s\n", xtFormatTime(sbuf, 255, timeNow / 1000));
+
 	const unsigned sleepTimeMS = 100;
 	timeNow = xtClockGetMonotimeUS();
 	printf("Time mono in usecs: %llu\n", timeNow);
@@ -198,7 +198,7 @@ static void *socketTestT2(struct xtThread *t, void *arg)
 	xtSocket s;
 	ret = xtSocketCreate(&s, XT_SOCKET_PROTO_TCP);
 	printf("Socket creation: %s\n", xtGetErrorStr(ret));
-	
+
 	xtSockaddrFromString(&sa, "127.0.0.1:25659", 0);
 	const int maxTries = 10;
 	for (int i = 0; i < maxTries; ++i) {
@@ -223,21 +223,21 @@ static void socketTest(void)
 	struct xtSockaddr sa;
 	xtSocket serverSock;
 	ret = xtSocketCreate(&serverSock, XT_SOCKET_PROTO_TCP);
-	
-	
+
+
 	struct xtThread t;
 	xtThreadCreate(&t, socketTestT2, NULL, 64);
-	
+
 	ret = xtSocketBindToAny(serverSock, 25659);
 	xtSocketGetLocalSocketAddress(serverSock, &sa);
 	printf("Socket bind to %s: %s\n", xtSockaddrToString(&sa, sbuf, sizeof(sbuf)), xtGetErrorStr(ret));
-	
+
 	ret = xtSocketListen(serverSock, 10);
 	printf("Socket listen: %s\n", xtGetErrorStr(ret));
-	
+
 	struct xtSockaddr peerAddr;
 	xtSocket peerSocket;
-	
+
 	const int maxTries = 10;
 	for (int i = 0; i < maxTries; ++i) {
 		printf("Accepting %d/%d\n", i + 1, maxTries);
@@ -251,7 +251,7 @@ static void socketTest(void)
 		}
 	}
 	xtSocketClose(&serverSock);
-	
+
 	xtThreadJoin(&t);
 	xtSocketDestruct();
 }

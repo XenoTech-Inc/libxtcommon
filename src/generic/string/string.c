@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *xtFormatBytesSI(char *buf, size_t buflen, uint64_t value, unsigned decimals, bool strictBinary, unsigned *base)
+char *xtFormatBytesSI(char *restrict buf, size_t buflen, uint64_t value, unsigned decimals, bool strictBinary, unsigned *restrict base)
 {
 	const char *siBaseStr = " KMGTPE";
 	const char *si = siBaseStr;
@@ -38,13 +38,13 @@ char *xtFormatBytesSI(char *buf, size_t buflen, uint64_t value, unsigned decimal
 	return buf;
 }
 
-char *xtFormatCommasLLU(unsigned long long v, char *buf, size_t buflen, int sep)
+char *xtFormatCommasLLU(char *buf, size_t buflen, unsigned long long value, int sep)
 {
 	int n = 3; // Format every thousand
 	char *p = buf;
 	uint64_t i;
 	int j = 0;
-	i = v;
+	i = value;
 	do {
 		++p;
 		if (++j == n && i > 10) {
@@ -59,29 +59,29 @@ char *xtFormatCommasLLU(unsigned long long v, char *buf, size_t buflen, int sep)
 	*p = '\0';
 	j = 0;
 	do {
-		*--p = '0' + (v % 10);
-		if (++j == n && v > 10) {
+		*--p = '0' + (value % 10);
+		if (++j == n && value > 10) {
 			j = 0;
 			*--p = sep;
 		}
-		v /= 10;
-	} while (v);
+		value /= 10;
+	} while (value);
 	return buf;
 }
 
-char *xtFormatCommasLL(long long v, char *buf, size_t buflen, int sep)
+char *xtFormatCommasLL(char *buf, size_t buflen, long long value, int sep)
 {
 	if (!buflen)
 		return NULL;
-	if (v < 0) {
+	if (value < 0) {
 		buf[0] = '-';
-		v = llabs(v);
-		return xtFormatCommasLLU(v, buf + 1, buflen - 1, sep);
+		value = llabs(value);
+		return xtFormatCommasLLU(buf + 1, buflen - 1, value, sep);
 	} else
-		return xtFormatCommasLLU(v, buf, buflen, sep);
+		return xtFormatCommasLLU(buf, buflen, value, sep);
 }
 
-char *xtFormatHex(char *buf, size_t buflen, const void *data, size_t datalen, int sep, bool uppercase)
+char *xtFormatHex(char *restrict buf, size_t buflen, const void *restrict data, size_t datalen, int sep, bool uppercase)
 {
 	if (!buflen)
 		return NULL;
@@ -128,7 +128,7 @@ bool xtStringContains(const char *restrict haystack, const char *restrict needle
 }
 
 
-bool xtStringEndsWith(const char *haystack, const char *needle)
+bool xtStringEndsWith(const char *restrict haystack, const char *restrict needle)
 {
 	size_t needleLen = strlen(needle), haystackLen = strlen(haystack);
 	if (needleLen > haystackLen)
@@ -171,7 +171,7 @@ char *xtStringReverse(char *str)
 	return xtStringReverseLen(str, strlen(str));
 }
 
-void xtStringSplit(char *str, const char *delim, char **tokens, unsigned *num)
+void xtStringSplit(char *restrict str, const char *restrict delim, char **restrict tokens, unsigned *restrict num)
 {
 #define strtok_s strtok_r
 	char *save_ptr, *token = strtok_r(str, delim, &save_ptr);
@@ -184,7 +184,7 @@ void xtStringSplit(char *str, const char *delim, char **tokens, unsigned *num)
 #undef strtok_r
 }
 
-bool xtStringStartsWith(const char *haystack, const char *needle)
+bool xtStringStartsWith(const char *restrict haystack, const char *restrict needle)
 {
 	return strncmp(haystack, needle, strlen(needle)) == 0;
 }
@@ -265,35 +265,3 @@ char *xtStringTrimWords(char *str)
 	*q = '\0';
 	return str;
 }
-
-#define NUM 16
-#define MASK (NUM-1)
-void fprinthex(const void *buf, FILE *f, char sep, size_t len)
-{
-	const char *hexbase = "0123456789abcdef";
-	const char *ptr = buf;
-	fputc(hexbase[(*ptr >> 4) & MASK], f);
-	fputc(hexbase[*ptr & MASK], f);
-	++ptr;
-	while (--len) {
-		fputc(sep, f);
-		fputc(hexbase[(*ptr >> 4) & MASK], f);
-		fputc(hexbase[(*ptr++) & MASK], f);
-	}
-}
-
-void printhex(const void *buf, char sep, size_t len)
-{
-	const char *hexbase = "0123456789abcdef";
-	const char *ptr = buf;
-	putchar(hexbase[(*ptr >> 4) & MASK]);
-	putchar(hexbase[*ptr & MASK]);
-	++ptr;
-	while (--len) {
-		putchar(sep);
-		putchar(hexbase[(*ptr >> 4) & MASK]);
-		putchar(hexbase[(*ptr++) & MASK]);
-	}
-}
-#undef MASK
-#undef NUM

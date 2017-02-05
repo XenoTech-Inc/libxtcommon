@@ -70,7 +70,7 @@ unsigned long long xtClockGetRealtimeUS(void)
 	return 0;
 }
 
-char *xtFormatTime(unsigned timestamp_secs, char *buf, size_t buflen)
+char *xtFormatTime(char *buf, size_t buflen, unsigned timestamp_secs)
 {
 	if (buflen == 0)
 		return NULL;
