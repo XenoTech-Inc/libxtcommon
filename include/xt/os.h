@@ -78,7 +78,7 @@ struct xtCPUInfo {
 /**
  * Dumps the processor information to the specified stream.
  */
-void xtCPUDump(const struct xtCPUInfo *cpuInfo, FILE *f);
+void xtCPUDump(const struct xtCPUInfo *restrict cpuInfo, FILE *restrict f);
 /**
  * Retrieves information about the processor. All fields will ALWAYS be filled with default values,
  * even although an error may occur while retrieving some info. This means that it is possible that not all
@@ -109,7 +109,7 @@ int xtConsoleFillLine(const char *pattern);
  * Both pointers are optional. They remain untouched on error.
  * @return Zero if property has been fetched, otherwise an error code.
  */
-int xtConsoleGetSize(unsigned *cols, unsigned *rows);
+int xtConsoleGetSize(unsigned *restrict cols, unsigned *restrict rows);
 /**
  * Returns if the program was launched from a console and thus if one is available.
  * If the program was launched by double-clicking, false should be returned.

@@ -57,7 +57,7 @@ int xtBatteryGetPowerLevel(void)
 	return -1;
 }
 
-void xtCPUDump(const struct xtCPUInfo *cpuInfo, FILE *f)
+void xtCPUDump(const struct xtCPUInfo *restrict cpuInfo, FILE *restrict f)
 {
 	fprintf(f, "CPU name: %s\n", cpuInfo->name);
 	char cpuArch[16];
@@ -88,7 +88,7 @@ bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo)
 	cpuInfo->L1Cache = 0;
 	cpuInfo->L2Cache = 0;
 	cpuInfo->L3Cache = 0;
-	
+
 	// Alternative code
 #if 0
 	char sbuf[1024]; // For the long flags line
@@ -233,7 +233,7 @@ int xtConsoleFillLine(const char *pattern)
 	return 0;
 }
 
-int xtConsoleGetSize(unsigned *cols, unsigned *rows)
+int xtConsoleGetSize(unsigned *restrict cols, unsigned *restrict rows)
 {
 	if (!xtConsoleIsAvailable())
 		return XT_EINVAL;

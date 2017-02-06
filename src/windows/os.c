@@ -47,7 +47,7 @@ int xtBatteryGetPowerLevel(void)
 	return status.BatteryLifePercent;
 }
 
-void xtCPUDump(const struct xtCPUInfo *cpuInfo, FILE *f)
+void xtCPUDump(const struct xtCPUInfo *restrict cpuInfo, FILE *restrict f)
 {
 	fprintf(f, "CPU name: %s\n", cpuInfo->name);
 	char cpuArch[16];
@@ -78,7 +78,7 @@ bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo)
 	cpuInfo->L1Cache = 0;
 	cpuInfo->L2Cache = 0;
 	cpuInfo->L3Cache = 0;
-	
+
 	// Fetch the CPU architecture
 	SYSTEM_INFO sysInfo;
 	GetNativeSystemInfo(&sysInfo); // Cannot fail
@@ -119,7 +119,7 @@ bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo)
 		SYSTEM_LOGICAL_PROCESSOR_INFORMATION * buffer = 0;
 		GetLogicalProcessorInformation(0, &buffer_size);
 		buffer = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *) malloc(buffer_size);
-		
+
 		int processorL1CacheCount = 0, processorL2CacheCount = 0, processorL3CacheCount = 0;
 		int processorL1CacheSize = 0, processorL2CacheSize = 0, processorL3CacheSize = 0;
 		if (buffer) {
@@ -215,7 +215,7 @@ int xtConsoleFillLine(const char *pattern)
 	return 0;
 }
 
-int xtConsoleGetSize(unsigned *cols, unsigned *rows)
+int xtConsoleGetSize(unsigned *restrict cols, unsigned *restrict rows)
 {
 	if (!xtConsoleIsAvailable())
 		return XT_EINVAL;
