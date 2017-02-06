@@ -10,7 +10,7 @@
 // STD headers
 #include <string.h>
 
-int xtFileCopy(const char *src, const char *dst)
+int xtFileCopy(const char *restrict src, const char *restrict dst)
 {
 	if (!src || !dst)
 		return XT_EINVAL;
@@ -28,7 +28,7 @@ int xtFileCopy(const char *src, const char *dst)
 	return ret;
 }
 
-int xtFileCopyByHandle(FILE *src, FILE *dst)
+int xtFileCopyByHandle(FILE *restrict src, FILE *restrict dst)
 {
 	if (!src || !dst)
 		return XT_EINVAL;
@@ -58,7 +58,7 @@ void xtFileExecute(const char *path)
 	ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOW);
 }
 
-int xtFileExists(const char *path, bool *exists)
+int xtFileExists(const char *restrict path, bool *restrict exists)
 {
 	if (!path)
 		return XT_EINVAL;
@@ -110,7 +110,7 @@ const char *xtFileGetExtension(const char *path)
 	return dotPlus != '\0' ? dotPlus : NULL;
 }
 
-int xtFileGetFiles(const char *path, struct xtListP *files)
+int xtFileGetFiles(const char *restrict path, struct xtListP *restrict files)
 {
 	int ret;
 	WIN32_FIND_DATA fdFile;
@@ -175,7 +175,7 @@ char *xtFileGetHomeDir(char *buf, size_t buflen)
 	return buf;
 }
 
-int xtFileGetRealPath(const char *path, char *buf, size_t buflen)
+int xtFileGetRealPath(char *restrict buf, size_t buflen, const char *restrict path)
 {
 	if (!_fullpath(buf, path, buflen))
 		return XT_EINVAL;
@@ -183,7 +183,7 @@ int xtFileGetRealPath(const char *path, char *buf, size_t buflen)
 	return 0;
 }
 
-int xtFileGetSizeByHandle(FILE *f, unsigned long long *size)
+int xtFileGetSizeByHandle(FILE *restrict f, unsigned long long *restrict size)
 {
 	if (!f)
 		return XT_EINVAL;
@@ -195,7 +195,7 @@ int xtFileGetSizeByHandle(FILE *f, unsigned long long *size)
 	return 0;
 }
 
-int xtFileGetSizeByName(const char *path, unsigned long long *size)
+int xtFileGetSizeByName(const char *restrict path, unsigned long long *restrict size)
 {
 	if (!path)
 		return XT_EINVAL;
@@ -219,7 +219,7 @@ int xtFileGetTempDir(char *buf, size_t buflen)
 	return 0;
 }
 
-int xtFileIsDir(const char *path, bool *isDirectory)
+int xtFileIsDir(const char *restrict path, bool *restrict isDirectory)
 {
 	WIN32_FILE_ATTRIBUTE_DATA f;
 	f.dwFileAttributes = 0;
@@ -230,7 +230,7 @@ int xtFileIsDir(const char *path, bool *isDirectory)
 	return 0;
 }
 
-int xtFileMove(const char *src, const char *dst)
+int xtFileMove(const char *restrict src, const char *restrict dst)
 {
 	return MoveFileEx(src, dst, MOVEFILE_COPY_ALLOWED) == TRUE ? 0 : _xtTranslateSysError(GetLastError());
 }
@@ -250,7 +250,7 @@ int xtFileSetCWD(const char *path)
 	return SetCurrentDirectory((LPCSTR) path) != 0 ? 0 : _xtTranslateSysError(GetLastError());
 }
 
-int xtFileTempFile(FILE **f, char *buf, size_t buflen)
+int xtFileTempFile(char *restrict buf, size_t buflen, FILE **restrict f)
 {
 	int ret;
 	char tmpdir[MAX_PATH];

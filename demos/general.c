@@ -37,7 +37,7 @@ static void fileTest(void)
 	ret = xtFileGetSizeByName(sbuf, &size);
 	printf("File size by path: %d - %llu\n", ret, size);
 	result = false;
-	ret = xtFileGetRealPath(sbuf, sbuf2, 256);
+	ret = xtFileGetRealPath(sbuf2, 256, sbuf);
 	printf("Absolute path of file: %d - %s\n", ret, sbuf2);
 	printf("Base name of file: %s\n", xtFileGetBaseName(sbuf2));
 	printf("File extension: %s\n", xtFileGetExtension(sbuf2));
@@ -62,7 +62,7 @@ static void fileTest(void)
 
 	FILE *tmpFile;
 	char tmpFilePath[1024];
-	printf("Creation of tmpfile: %d\n", xtFileTempFile(&tmpFile, tmpFilePath, sizeof(tmpFilePath)));
+	printf("Creation of tmpfile: %d\n", xtFileTempFile(tmpFilePath, sizeof(tmpFilePath), &tmpFile));
 	if (tmpFile) {
 		printf("Path of tmpfile: %s\n", tmpFilePath);
 		fputs("HEY!", tmpFile);
