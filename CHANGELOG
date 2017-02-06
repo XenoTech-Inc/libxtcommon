@@ -1,0 +1,56 @@
+-----------------------------------------------------------------
+                       VERSION HISTORY
+
+   Get the latest version at "https://www.xenotech.nl"
+-----------------------------------------------------------------
+
+0.7.1:
+------
+General stuff:
+- Lots of refactoring
+- xtFormatHex() documentation
+
+New stuff:
+- Added string demo
+- Added xtFormatBytesSI() for metric system numbers
+- Added xtList*Create() destruction guards
+- Added xtSeedRand() and xtRandLLU()
+- Major changes in Socket API
+  * Added xtSocketPollRemoveByIndex()
+  * Added functions to retrieve non-ready socket info
+
+API Changes:
+- Added buffer length parameter to xtFormatCommasLL() and xtFormatCommasLLU()
+- Changed many pointers parameters to restrict pointers
+- Changed xtMutexDestroy() to always succeed
+  Returning a bool is useless since it would segfault on failure
+- Changed return type from xtThreadJoin() to void
+- Major changes in Socket API
+  Changed return type from many functions from unsigned to size_t
+- Major changes with functions that take strings and buffer length
+- Renamed xtClockFormatTime() to xtFormatTime()
+
+Bugfixes:
+- Fixed segfault with mutexes
+- Fixed xtStringEndsWith() pointer offset underflow
+- Fixed xtStringTrim() off by one error
+- Fixed uninitialized data in xtConsoleFillLine()
+
+0.7.0:
+------
+
+New stuff:
+- Added Proc API
+- Added xtQueue collection
+- Created lots of new demos
+- Created xtConsoleFillLine()
+- Improved and extended xtHashmap & xtList
+
+Bugfixes:
+- Fixed xtStackPush*() resizing underflow
+- Fixed xtStringReadline() null termination
+
+0.6.0:
+------
+
+...
