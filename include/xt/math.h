@@ -37,7 +37,10 @@ extern "C" {
  * @remarks This macro has side effects.
  */
 #define XT_MATH_MIN(a, b) ((a) < (b) ? (a) : (b))
-
+/**
+ * Tells you whether \a value is a power of 2 or not.
+ */
+bool xtMathIsPow2(uint64_t value);
 /**
  * Used for splitting memory into chunks, this calculates how many chunks are necessary, and how large the last chunk will be.
  * @param len - The total length of the data that is to be split
@@ -45,17 +48,13 @@ extern "C" {
  * @param chunks - This pointer will receive how many chunks were created
  * @param lastChunkSize - This pointer will receive what the size of the last chunk is
  */
-void xtMathMemSplit(unsigned long long len, unsigned chunkSize, unsigned *chunks, unsigned *lastChunkSize);
-/**
- * Returns if a number is a power of 2.
- */
-bool xtMathIsPow2(uint64_t v);
+void xtMathMemSplit(unsigned long long len, unsigned chunkSize, unsigned *restrict chunks, unsigned *restrict lastChunkSize);
 /**
  * Returns the nearest power of 2 for the specified number.
  * If the number is already a power of 2, then the same number will be returned.
- * @remarks If zero is specified, one is returned.
+ * @remarks If zero is specified, 1 is returned.
  */
-uint64_t xtMathNextPow2(uint64_t v);
+uint64_t xtMathNextPow2(uint64_t value);
 
 #ifdef __cplusplus
 }

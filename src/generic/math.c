@@ -1,24 +1,12 @@
 // XT headers
 #include <xt/math.h>
 
-bool xtMathIsPow2(uint64_t v)
+bool xtMathIsPow2(uint64_t value)
 {
-	return v >= 2 && !(v & (v - 1));
+	return value >= 2 && !(value & (value - 1));
 }
 
-uint64_t xtMathNextPow2(uint64_t v)
-{
-	--v;
-	v |= v >> 1;
-	v |= v >> 2;
-	v |= v >> 4;
-	v |= v >> 8;
-	v |= v >> 16;
-	v |= v >> 32;
-	return ++v;
-}
-
-void xtMathMemSplit(unsigned long long len, unsigned chunkSize, unsigned *chunks, unsigned *lastChunkSize)
+void xtMathMemSplit(unsigned long long len, unsigned chunkSize, unsigned *restrict chunks, unsigned *restrict lastChunkSize)
 {
 	unsigned long long amountChunks = len / chunkSize;
 	// Whatever is left for the last chunk
@@ -30,4 +18,16 @@ void xtMathMemSplit(unsigned long long len, unsigned chunkSize, unsigned *chunks
 		*lastChunkSize = remainder;
 	if (chunks)
 		*chunks = amountChunks - 1;
+}
+
+uint64_t xtMathNextPow2(uint64_t value)
+{
+	--value;
+	value |= value >> 1;
+	value |= value >> 2;
+	value |= value >> 4;
+	value |= value >> 8;
+	value |= value >> 16;
+	value |= value >> 32;
+	return ++value;
 }
