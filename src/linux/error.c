@@ -71,7 +71,7 @@ const char *xtGetErrorStr(int errnum)
 	return errorMap[errnum].name;
 }
 
-void xtPerror(int errnum, const char *msg)
+void xtPerror(const char *msg, int errnum)
 {
 	if (msg && msg[0] != '\0') { // If the string is longer than zero characters also!
 		if (errnum >= XT_EMAXRANGE || errnum < 0)
@@ -86,7 +86,7 @@ void xtPerror(int errnum, const char *msg)
 	}
 }
 
-char *xtStrError(int errnum, char *buf, size_t buflen)
+char *xtStrError(char *buf, size_t buflen, int errnum)
 {
 	if (errnum >= XT_EMAXRANGE || errnum < 0)
 		snprintf(buf, buflen, "%s %d", xtGetErrorStr(errnum), errnum);
@@ -104,7 +104,7 @@ int _xtTranslateSysError(int syserrnum)
 	case EADDRNOTAVAIL:                  return XT_EADDRNOTAVAIL;
 	case EAFNOSUPPORT:                   return XT_EAFNOSUPPORT;
 	case EALREADY:                       return XT_EALREADY;
-	case EBADFD:                         
+	case EBADFD:
 	case EBADF:                          return XT_EBADF;
 	case EBUSY:                          return XT_EBUSY;
 	case EINTR:                          return XT_EINTR;
@@ -119,7 +119,7 @@ int _xtTranslateSysError(int syserrnum)
 	case EIO:                            return XT_EIO;
 	case EISCONN:                        return XT_EISCONN;
 	case ELOOP:                          return XT_ELOOP;
-	case ENFILE:                         
+	case ENFILE:
 	case EMFILE:                         return XT_EMFILE;
 	case EMSGSIZE:                       return XT_EMSGSIZE;
 	case ENAMETOOLONG:                   return XT_ENAMETOOLONG;
@@ -137,7 +137,7 @@ int _xtTranslateSysError(int syserrnum)
 	case EPIPE:                          return XT_EPIPE;
 	case EPERM:                          return XT_EPERM;
 	case EPROTONOSUPPORT:                return XT_EPROTONOSUPPORT;
-	case ETIME:                          
+	case ETIME:
 	case ETIMEDOUT:                      return XT_ETIMEDOUT;
 	case EXDEV:                          return XT_EXDEV;
 	case ENOTDIR:                        return XT_ENOTDIR;

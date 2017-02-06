@@ -168,7 +168,7 @@ static void threadTest(void)
 	xtMutexDestroy(&m);
 	return;
 err:
-	xtDie(xtStrError(ret, sbuf, sizeof(sbuf)));
+	xtDie(xtStrError(sbuf, sizeof(sbuf), ret));
 }
 
 static void timeTest(void)

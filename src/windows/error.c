@@ -78,7 +78,7 @@ const char *xtGetErrorStr(int errnum)
 	return errorMap[errnum].name;
 }
 
-void xtPerror(int errnum, const char *msg)
+void xtPerror(const char *msg, int errnum)
 {
 	if (msg && msg[0] != '\0') { // If the string is longer than zero characters also!
 		if (errnum >= XT_EMAXRANGE || errnum < 0)
@@ -93,7 +93,7 @@ void xtPerror(int errnum, const char *msg)
 	}
 }
 
-char *xtStrError(int errnum, char *buf, size_t buflen)
+char *xtStrError(char *buf, size_t buflen, int errnum)
 {
 	if (errnum >= XT_EMAXRANGE || errnum < 0)
 		snprintf(buf, buflen, "%s %d", xtGetErrorStr(errnum), errnum);
@@ -106,95 +106,95 @@ int _xtTranslateSysError(int syserrnum)
 {
 	switch (syserrnum) {
 	case 0:                                 return 0;
-	case ERROR_NOACCESS:                    
+	case ERROR_NOACCESS:
 	case WSAEACCES:                         return XT_EACCES;
-	case ERROR_ADDRESS_ALREADY_ASSOCIATED:  
+	case ERROR_ADDRESS_ALREADY_ASSOCIATED:
 	case WSAEADDRINUSE:                     return XT_EADDRINUSE;
 	case WSAEADDRNOTAVAIL:                  return XT_EADDRNOTAVAIL;
 	case WSAEAFNOSUPPORT:                   return XT_EAFNOSUPPORT;
 	case WSAEWOULDBLOCK:                    return XT_EAGAIN;
 	case WSAEALREADY:                       return XT_EALREADY;
-	case ERROR_INVALID_FLAGS:               
+	case ERROR_INVALID_FLAGS:
 	case ERROR_INVALID_HANDLE:              return XT_EBADF;
-	case ERROR_LOCK_VIOLATION:              
-	case ERROR_PIPE_BUSY:                   
+	case ERROR_LOCK_VIOLATION:
+	case ERROR_PIPE_BUSY:
 	case ERROR_SHARING_VIOLATION:           return XT_EBUSY;
-	case ERROR_OPERATION_ABORTED:           
+	case ERROR_OPERATION_ABORTED:
 	case WSAEINTR:                          return XT_EINTR;
-	case ERROR_CONNECTION_ABORTED:          
+	case ERROR_CONNECTION_ABORTED:
 	case WSAECONNABORTED:                   return XT_ECONNABORTED;
-	case ERROR_CONNECTION_REFUSED:          
+	case ERROR_CONNECTION_REFUSED:
 	case WSAECONNREFUSED:                   return XT_ECONNREFUSED;
-	case ERROR_NETNAME_DELETED:             
+	case ERROR_NETNAME_DELETED:
 	case WSAECONNRESET:                     return XT_ECONNRESET;
-	case ERROR_ALREADY_EXISTS:              
+	case ERROR_ALREADY_EXISTS:
 	case ERROR_FILE_EXISTS:                 return XT_EEXIST;
-	case ERROR_BUFFER_OVERFLOW:             
+	case ERROR_BUFFER_OVERFLOW:
 	case WSAEFAULT:                         return XT_EFAULT;
-	case ERROR_HOST_UNREACHABLE:            
+	case ERROR_HOST_UNREACHABLE:
 	case WSAEHOSTUNREACH:                   return XT_EHOSTUNREACH;
-	case ERROR_INSUFFICIENT_BUFFER:         
-	case ERROR_INVALID_DATA:                
-	case ERROR_INVALID_PARAMETER:           
+	case ERROR_INSUFFICIENT_BUFFER:
+	case ERROR_INVALID_DATA:
+	case ERROR_INVALID_PARAMETER:
 	case WSAEINVAL:                         return XT_EINVAL;
 	case WSAESOCKTNOSUPPORT:                return XT_ESOCKTNOSUPPORT;
-	case ERROR_BEGINNING_OF_MEDIA:          
-	case ERROR_BUS_RESET:                   
-	case ERROR_CRC:                         
-	case ERROR_DEVICE_DOOR_OPEN:            
-	case ERROR_DEVICE_REQUIRES_CLEANING:    
-	case ERROR_DISK_CORRUPT:                
-	case ERROR_EOM_OVERFLOW:                
-	case ERROR_FILEMARK_DETECTED:           
-	case ERROR_GEN_FAILURE:                 
-	case ERROR_INVALID_BLOCK_LENGTH:        
-	case ERROR_IO_DEVICE:                   
-	case ERROR_NO_DATA_DETECTED:            
-	case ERROR_NO_SIGNAL_SENT:              
-	case ERROR_OPEN_FAILED:                 
-	case ERROR_SETMARK_DETECTED:            
+	case ERROR_BEGINNING_OF_MEDIA:
+	case ERROR_BUS_RESET:
+	case ERROR_CRC:
+	case ERROR_DEVICE_DOOR_OPEN:
+	case ERROR_DEVICE_REQUIRES_CLEANING:
+	case ERROR_DISK_CORRUPT:
+	case ERROR_EOM_OVERFLOW:
+	case ERROR_FILEMARK_DETECTED:
+	case ERROR_GEN_FAILURE:
+	case ERROR_INVALID_BLOCK_LENGTH:
+	case ERROR_IO_DEVICE:
+	case ERROR_NO_DATA_DETECTED:
+	case ERROR_NO_SIGNAL_SENT:
+	case ERROR_OPEN_FAILED:
+	case ERROR_SETMARK_DETECTED:
 	case ERROR_SIGNAL_REFUSED:              return XT_EIO;
 	case WSAEISCONN:                        return XT_EISCONN;
 	case ERROR_CANT_RESOLVE_FILENAME:       return XT_ELOOP;
-	case ERROR_TOO_MANY_OPEN_FILES:         
+	case ERROR_TOO_MANY_OPEN_FILES:
 	case WSAEMFILE:                         return XT_EMFILE;
 	case WSAEMSGSIZE:                       return XT_EMSGSIZE;
 	case ERROR_FILENAME_EXCED_RANGE:        return XT_ENAMETOOLONG;
-	case ERROR_NETWORK_UNREACHABLE:         
+	case ERROR_NETWORK_UNREACHABLE:
 	case WSAENETUNREACH:                    return XT_ENETUNREACH;
 	case WSAENETDOWN:                       return XT_ENETDOWN;
 	case WSAENETRESET:                      return XT_ENETRESET;
 	case WSAENOBUFS:                        return XT_ENOBUFS;
-	case ERROR_BAD_PATHNAME:                
-	case ERROR_DIRECTORY:                   
-	case ERROR_FILE_NOT_FOUND:              
-	case ERROR_INVALID_NAME:                
-	case ERROR_INVALID_DRIVE:               
-	case ERROR_INVALID_REPARSE_DATA:        
-	case ERROR_MOD_NOT_FOUND:               
-	case ERROR_PATH_NOT_FOUND:              
-	case WSAHOST_NOT_FOUND:                 
+	case ERROR_BAD_PATHNAME:
+	case ERROR_DIRECTORY:
+	case ERROR_FILE_NOT_FOUND:
+	case ERROR_INVALID_NAME:
+	case ERROR_INVALID_DRIVE:
+	case ERROR_INVALID_REPARSE_DATA:
+	case ERROR_MOD_NOT_FOUND:
+	case ERROR_PATH_NOT_FOUND:
+	case WSAHOST_NOT_FOUND:
 	case WSANO_DATA:                        return XT_ENOENT;
-	case ERROR_NOT_ENOUGH_MEMORY:           
+	case ERROR_NOT_ENOUGH_MEMORY:
 	case ERROR_OUTOFMEMORY:                 return XT_ENOMEM;
-	case ERROR_CANNOT_MAKE:                 
-	case ERROR_DISK_FULL:                   
-	case ERROR_EA_TABLE_FULL:               
-	case ERROR_END_OF_MEDIA:                
+	case ERROR_CANNOT_MAKE:
+	case ERROR_DISK_FULL:
+	case ERROR_EA_TABLE_FULL:
+	case ERROR_END_OF_MEDIA:
 	case ERROR_HANDLE_DISK_FULL:            return XT_ENOSPC;
-	case ERROR_NOT_CONNECTED:               
+	case ERROR_NOT_CONNECTED:
 	case WSAENOTCONN:                       return XT_ENOTCONN;
 	case ERROR_DIR_NOT_EMPTY:               return XT_ENOTEMPTY;
 	case WSAENOTSOCK:                       return XT_ENOTSOCK;
 	case ERROR_NOT_SUPPORTED:               return XT_EOPNOTSUPP;
 	case ERROR_BROKEN_PIPE:                 return XT_EPIPE; // EOF?
-	case ERROR_ACCESS_DENIED:               
+	case ERROR_ACCESS_DENIED:
 	case ERROR_PRIVILEGE_NOT_HELD:          return XT_EPERM;
-	case ERROR_BAD_PIPE:                    
-	case ERROR_NO_DATA:                     
-	case ERROR_PIPE_NOT_CONNECTED:          
+	case ERROR_BAD_PIPE:
+	case ERROR_NO_DATA:
+	case ERROR_PIPE_NOT_CONNECTED:
 	case WSAEPROTONOSUPPORT:                return XT_EPROTONOSUPPORT;
-	case ERROR_SEM_TIMEOUT:                 
+	case ERROR_SEM_TIMEOUT:
 	case WSAETIMEDOUT:                      return XT_ETIMEDOUT;
 	case ERROR_NOT_SAME_DEVICE:             return XT_EXDEV;
 	case ERROR_INVALID_FUNCTION:            return XT_EISDIR;
