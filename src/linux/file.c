@@ -64,7 +64,9 @@ void xtFileExecute(const char *path)
 {
 	char buf[FILENAME_MAX];
 	snprintf(buf, FILENAME_MAX, "xdg-open \"%s\"", path);
-	system(buf);
+	// Fix hack for ./configure -ffast-math warning: ignoring return value of ‘system’, declared with attribute
+	int ignore = system(buf);
+	(void)ignore;
 }
 
 int xtFileExists(const char *restrict path, bool *restrict exists)
