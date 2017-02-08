@@ -14,7 +14,7 @@
 #include <string.h>
 
 /**
- * Only initializes the sin_family field in the address. This is VERY IMPORTANT!!! 
+ * Only initializes the sin_family field in the address. This is VERY IMPORTANT!!!
  * All other fields will be left untouched.
  */
 static void _xtSockaddrInit(struct xtSockaddr *sa)
@@ -22,14 +22,14 @@ static void _xtSockaddrInit(struct xtSockaddr *sa)
 	((struct sockaddr_in*) sa)->sin_family = AF_INET;
 }
 
-bool xtSockaddrEquals(const struct xtSockaddr *sa1, const struct xtSockaddr *sa2)
+bool xtSockaddrEquals(const struct xtSockaddr *sa1, const struct xtSockaddr * sa2)
 {
 	// DO NOT just check the full memory! It is possible that only the address and port match, which is what we want to check for.
-	return ((struct sockaddr_in*) sa1)->sin_addr.s_addr == ((struct sockaddr_in*) sa2)->sin_addr.s_addr && 
+	return ((struct sockaddr_in*) sa1)->sin_addr.s_addr == ((struct sockaddr_in*) sa2)->sin_addr.s_addr &&
 		((struct sockaddr_in*) sa1)->sin_port == ((struct sockaddr_in*) sa2)->sin_port;
 }
 
-bool xtSockaddrFromString(struct xtSockaddr *sa, const char *addr, uint16_t port)
+bool xtSockaddrFromString(struct xtSockaddr *restrict sa, const char *restrict addr, uint16_t port)
 {
 	char buf[32];
 	char *sep = strchr(addr, ':');
@@ -94,7 +94,7 @@ void xtSockaddrSetPort(struct xtSockaddr *sa, uint16_t port)
 	_xtSockaddrInit(sa); // Init this to be safe
 }
 
-char *xtSockaddrToString(const struct xtSockaddr *sa, char *buf, size_t buflen)
+char *xtSockaddrToString(const struct xtSockaddr *restrict sa, char *restrict buf, size_t buflen)
 {
 	char sbuf[32];
 	if (!inet_ntop(AF_INET, &((struct sockaddr_in*) sa)->sin_addr, sbuf, INET_ADDRSTRLEN))
@@ -123,7 +123,7 @@ static enum xtSocketProto _xtSocketNativeProtoToProto(int nativeProto)
  * Converts an xtSocketProto to the native representation.
  * @return True of the conversion was successful, false otherwise.
  */
-static bool _xtSocketProtoToNativeProto(enum xtSocketProto proto, int *nativeType, int *nativeProto)
+static bool _xtSocketProtoToNativeProto(enum xtSocketProto proto, int *restrict nativeType, int *restrict nativeProto)
 {
 	switch (proto) {
 	case XT_SOCKET_PROTO_TCP:
@@ -185,10 +185,10 @@ int xtSocketCreate(xtSocket *sock, enum xtSocketProto proto)
 	if (proto == XT_SOCKET_PROTO_UDP) {
 		// Taken from: https://stackoverflow.com/questions/10332630/connection-reset-on-receiving-packet-in-udp-server
 		// and: https://support.microsoft.com/en-us/kb/263823
-		// Black magic. This disables the stupid Windows behavior of reporting WSAECONNRESET when the destination is 
+		// Black magic. This disables the stupid Windows behavior of reporting WSAECONNRESET when the destination is
 		// actively reporting that it's not listening on the destination port.
-		// 
-		// This macro is defined with a magic value because the original M$ macro is not to be found in 
+		//
+		// This macro is defined with a magic value because the original M$ macro is not to be found in
 		// the headers that we use
 		#define _XT_SIO_UDP_CONNRESET -1744830452
 		DWORD dwBytesReturned = 0;
@@ -268,7 +268,7 @@ int xtSocketGetSoKeepAlive(const xtSocket sock, bool *flag)
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
-int xtSocketGetSoLinger(const xtSocket sock, bool *on, int *linger)
+int xtSocketGetSoLinger(const xtSocket sock, bool *restrict on, int *restrict linger)
 {
 	struct linger val;
 	socklen_t len = sizeof(val);
@@ -408,7 +408,7 @@ int xtSocketSetTCPNoDelay(xtSocket sock, bool flag)
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
-int xtSocketTCPAccept(xtSocket sock, xtSocket *peerSock, struct xtSockaddr *peerAddr)
+int xtSocketTCPAccept(xtSocket sock, xtSocket *restrict peerSock, struct xtSockaddr *restrict peerAddr)
 {
 	socklen_t dummyLen = sizeof(struct sockaddr_in);
 	// Something is happening!
@@ -420,7 +420,7 @@ int xtSocketTCPAccept(xtSocket sock, xtSocket *peerSock, struct xtSockaddr *peer
 	return 0;
 }
 
-int xtSocketTCPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRead)
+int xtSocketTCPRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead)
 {
 	ssize_t ret;
 	ret = recv(sock, buf, buflen, 0);
@@ -435,7 +435,7 @@ int xtSocketTCPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRe
 	return 0;
 }
 
-int xtSocketTCPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *bytesSent)
+int xtSocketTCPWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent)
 {
 	ssize_t ret;
 	ret = send(sock, (const char*) buf, buflen, 0);
@@ -447,14 +447,14 @@ int xtSocketTCPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *
 	return 0;
 }
 
-int xtSocketUDPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRead, struct xtSockaddr *sender)
+int xtSocketUDPRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead, struct xtSockaddr *restrict sender)
 {
 	socklen_t dummyLen = sizeof(struct sockaddr_in);
 	ssize_t ret;
 	ret = recvfrom(sock, buf, buflen, 0, (struct sockaddr*) sender, &dummyLen);
-	// When sending UDP packets on Windows, and they destination reports that it's not 
-	// listening on that port, Windows will report WSAECONNRESET. You should really just ignore it 
-	// because it's bullshit. And ignoring it here is exactly what we're doing. This Windows behavior 
+	// When sending UDP packets on Windows, and they destination reports that it's not
+	// listening on that port, Windows will report WSAECONNRESET. You should really just ignore it
+	// because it's bullshit. And ignoring it here is exactly what we're doing. This Windows behavior
 	// should be disabled when we're creating new sockets, but still I mention the problem here.
 	if (ret == -1) {
 		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
@@ -463,7 +463,7 @@ int xtSocketUDPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRe
 	return 0;
 }
 
-int xtSocketUDPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *bytesSent, const struct xtSockaddr *dest)
+int xtSocketUDPWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent, const struct xtSockaddr *restrict dest)
 {
 	ssize_t ret;
 	ret = sendto(sock, buf, buflen, 0, (const struct sockaddr*) dest, sizeof(struct sockaddr_in));
@@ -529,7 +529,7 @@ static enum xtSocketPollEvent _xtSocketPollEventSysToFlags(short sysevents)
 	return newEvents;
 }
 
-int xtSocketPollAdd(struct xtSocketPoll *p, xtSocket sock, void *data, enum xtSocketPollEvent events)
+int xtSocketPollAdd(struct xtSocketPoll *p, xtSocket sock, void *restrict data, enum xtSocketPollEvent events)
 {
 	int index = p->count;
 	if (index == (int) p->capacity)
@@ -709,7 +709,7 @@ int xtSocketPollSetEvent(struct xtSocketPoll *p, xtSocket sock, enum xtSocketPol
 	return XT_EINVAL;
 }
 
-int xtSocketPollWait(struct xtSocketPoll *p, int timeout, size_t *socketsReady)
+int xtSocketPollWait(struct xtSocketPoll *restrict p, int timeout, size_t *restrict socketsReady)
 {
 	int eventCount = WSAPoll(p->fds, p->count, timeout);
 	if (eventCount == -1) {
@@ -733,7 +733,7 @@ int xtSocketPollWait(struct xtSocketPoll *p, int timeout, size_t *socketsReady)
 			p->readyData[socketsHandled].fd = p->fds[i].fd;
 			p->readyData[socketsHandled].data = p->data[i].data;
 			p->readyData[socketsHandled].events = _xtSocketPollEventSysToFlags(p->fds[i].revents);
-			// Resetting it is for WSAPoll not necessary, but it is for us so that we 
+			// Resetting it is for WSAPoll not necessary, but it is for us so that we
 			// know if something new really happened
 			p->fds[i].revents = 0;
 			++socketsHandled;

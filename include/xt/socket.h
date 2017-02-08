@@ -68,7 +68,7 @@ bool xtSockaddrEquals(const struct xtSockaddr *sa1, const struct xtSockaddr *sa2
  * If the translation fails for whatever reason, then the address is left untouched.
  * String IP format : [IP address] OR [IP address]:[Port]
  */
-bool xtSockaddrFromString(struct xtSockaddr *sa, const char *addr, uint16_t port);
+bool xtSockaddrFromString(struct xtSockaddr *restrict sa, const char *restrict addr, uint16_t port);
 /**
  * Sets the address from an ipv4 address represented as decimals. The port is always set by \a port.
  */
@@ -101,7 +101,7 @@ void xtSockaddrSetPort(struct xtSockaddr *sa, uint16_t port);
  * Returns this address as a string formatted as : [IP]:[PORT].
  * A null pointer is returned on failure to translate the address.
  */
-char *xtSockaddrToString(const struct xtSockaddr *sa, char *buf, size_t buflen);
+char *xtSockaddrToString(const struct xtSockaddr *restrict sa, char *restrict buf, size_t buflen);
 /**
  * @brief All protocols that are supported by the xtSockets.
  */
@@ -214,7 +214,7 @@ int xtSocketGetSoKeepAlive(const xtSocket sock, bool *flag);
  * Tells you the current linger settings for the socket.
  * @return Zero if the properties have been fetched successfully, otherwise an error code.
  */
-int xtSocketGetSoLinger(const xtSocket sock, bool *on, int *linger);
+int xtSocketGetSoLinger(const xtSocket sock, bool *restrict on, int *restrict linger);
 /**
  * Tells you the current SO_RCVBUF size in bytes for the specified socket.
  * @return Zero if the property has been fetched successfully, otherwise an error code.
@@ -331,38 +331,38 @@ int xtSocketSetTCPNoDelay(xtSocket sock, bool flag);
  * @return Zero if a peer has connected successfully, otherwise an error code.
  * @remarks The socket must be in listen mode for this function to work.
  */
-int xtSocketTCPAccept(xtSocket sock, xtSocket *peerSock, struct xtSockaddr *peerAddr);
+int xtSocketTCPAccept(xtSocket sock, xtSocket *restrict peerSock, struct xtSockaddr *restrict peerAddr);
 /**
  * Blocks until "some" data has been read on the socket. This does not necessarily have to be the size of \a buflen.
  * @param bytesRead - Receives the amount of bytes that have been read.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
-int xtSocketTCPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRead);
+int xtSocketTCPRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead);
 /**
  * Writes the data in \a buf to the connected remote socket.
  * @param bytesSent - Receives the amount of bytes that have been sent.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
-int xtSocketTCPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *bytesSent);
+int xtSocketTCPWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent);
 /**
  * Blocks until "some" data has been read on the socket. This does not necessarily have to be the size of \a buflen.
  * @param bytesRead - Receives the amount of bytes that have been read.
  * @param sender - Receives the address of the sender.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
-int xtSocketUDPRead(xtSocket sock, void *buf, uint16_t buflen, uint16_t *bytesRead, struct xtSockaddr *sender);
+int xtSocketUDPRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead, struct xtSockaddr *restrict sender);
 /**
  * Writes the data in \a buf to the address of \a dest.
  * @param bytesSent - Receives the amount of bytes that have been sent.
  * @param dest - Contains the address of the destination. For a connected UDP socket, you can specify a null pointer.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
-int xtSocketUDPWrite(xtSocket sock, const void *buf, uint16_t buflen, uint16_t *bytesSent, const struct xtSockaddr *dest);
+int xtSocketUDPWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent, const struct xtSockaddr *restrict dest);
 
 #define XT_SOCKET_POLL_CAPACITY_DEFAULT 1024
 /**
  * @brief Declaration for an opaque pointer.
- * 
+ *
  * Any sockets which have events waiting on them, are referenced to as "ready sockets".
  * These ready sockets are stored in seperate arrays, hence there are several other
  * functions for them.
@@ -391,7 +391,7 @@ enum xtSocketPollEvent {
  * @param data - The data to associate with the socket.
  * @param events - The events which are to be monitored.
  */
-int xtSocketPollAdd(struct xtSocketPoll *p, xtSocket sock, void *data, enum xtSocketPollEvent events);
+int xtSocketPollAdd(struct xtSocketPoll *restrict p, xtSocket sock, void *restrict data, enum xtSocketPollEvent events);
 /**
  * Initiates the poll structure for socket monitoring.
  * @param capacity - The amount of sockets that will fit into the structure.
@@ -473,7 +473,7 @@ int xtSocketPollSetEvent(struct xtSocketPoll *p, xtSocket sock, enum xtSocketPol
  * left untouched on error.
  * @return Zero is the function has executed successfully, otherwise an error code.
  */
-int xtSocketPollWait(struct xtSocketPoll *p, int timeout, size_t *socketsReady);
+int xtSocketPollWait(struct xtSocketPoll *restrict p, int timeout, size_t *restrict socketsReady);
 
 #ifdef __cplusplus
 }
