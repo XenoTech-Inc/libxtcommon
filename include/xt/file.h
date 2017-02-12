@@ -30,12 +30,20 @@ extern "C" {
 enum xtFileType {
 	/** Unknown or unsupported file type. */
 	XT_FILE_UNKNOWN,
-	/** Regular file. */
-	XT_FILE_REG,
+	/* Block device. */
+	XT_FILE_BLK,
+	/* Character device. */
+	XT_FILE_CHR,
 	/** Directory. */
 	XT_FILE_DIR,
+	/* Named pipe. (FIFO) */
+	XT_FILE_FIFO,
 	/** Symbolic link or Hard link. */
-	XT_FILE_LNK
+	XT_FILE_LNK,
+	/** Regular file. */
+	XT_FILE_REG,
+	/* Unix domain socket. */
+	XT_FILE_SOCK
 };
 /**
  * @brief Holds some information about a certain file.

@@ -164,9 +164,13 @@ int xtFileGetFiles(const char *restrict path, struct xtListP *restrict files)
 		}
 		memcpy(file->path, namelist[i]->d_name, fileNameLen);
 		switch (namelist[i]->d_type) {
-		case DT_REG: file->type = XT_FILE_REG; break;
-		case DT_DIR: file->type = XT_FILE_DIR; break;
-		case DT_LNK: file->type = XT_FILE_LNK; break;
+		case DT_BLK:  file->type = XT_FILE_BLK; break;
+		case DT_CHR:  file->type = XT_FILE_CHR; break;
+		case DT_DIR:  file->type = XT_FILE_DIR; break;
+		case DT_FIFO: file->type = XT_FILE_FIFO; break;
+		case DT_LNK:  file->type = XT_FILE_LNK; break;
+		case DT_REG:  file->type = XT_FILE_REG; break;
+		case DT_SOCK: file->type = XT_FILE_SOCK; break;
 		default: file->type = XT_FILE_UNKNOWN; break;
 		}
 		if ((ret = xtListPAdd(files, file)) != 0)
