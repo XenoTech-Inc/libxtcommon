@@ -32,6 +32,27 @@ unsigned xtProcGetCurrentPID(void)
 	return getpid();
 }
 
+int xtProcGetPids(unsigned *restrict pids, unsigned *restrict pidCount)
+{
+	DIR *d;
+	struct dirent *dir;
+	if (!(d = opendir("/proc")))
+		return _xtTranslateSysError(errno);
+	unsigned currentPidCount = 0;
+	unsigned maxPidCount = *pidCount;
+	for (; currentPidCount < maxPidCount && (dir = readdir(d));) {
+		// If the map starts with a number, it's always a legit process
+		unsigned long pid = strtoul(dir->d_name, NULL, 10);
+		if (pid != 0) { // The init process will not be logged, but we have no real choice
+			pids[currentPidCount] = pid;
+			++currentPidCount;
+		}
+	}
+	closedir(d);
+	*pidCount = currentPidCount;
+	return 0;
+}
+
 unsigned xtProcGetProcessCount(void)
 {
 	DIR *d;
@@ -41,7 +62,7 @@ unsigned xtProcGetProcessCount(void)
 		return 0;
 	while ((dir = readdir(d))) {
 		// If the map starts with a number, it's always a legit process
-		if (strtoul(dir->d_name, NULL, 10) != 0)
+		if (strtoul(dir->d_name, NULL, 10) != 0) // The init process will not be logged, but we have no real choice
 			++count;
 	}
 	closedir(d);

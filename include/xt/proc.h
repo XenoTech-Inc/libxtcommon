@@ -40,6 +40,17 @@ enum xtProcSignal {
  */
 unsigned xtProcGetCurrentPID(void);
 /**
+ * Fetches the PID's of all running processes. The order of the PID's is
+ * random.
+ * @param pids - The buffer which will receive all PID's.
+ * @param pidCount - The amount of PID's that will fit into \a pids. On
+ * success, it shall be updated to contain the amount of PID's that have
+ * been retrieved.
+ * @return Zero if all running PID's have been retrieved, otherwise an
+ * error code.
+ */
+int xtProcGetPids(unsigned *restrict pids, unsigned *restrict pidCount);
+/**
  * Returns the amount of processes that are active on the system. Zero is
  * returned on error.
  */

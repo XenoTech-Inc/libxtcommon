@@ -15,6 +15,29 @@ unsigned xtProcGetCurrentPID(void)
 	return GetCurrentProcessId();
 }
 
+int xtProcGetPids(unsigned *restrict pids, unsigned *restrict pidCount)
+{
+	HANDLE hProcessSnap;
+	PROCESSENTRY32 pe32;
+	hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (hProcessSnap == INVALID_HANDLE_VALUE)
+		return _xtTranslateSysError(GetLastError());
+	pe32.dwSize = sizeof(PROCESSENTRY32);
+	if (!Process32First(hProcessSnap, &pe32)) {
+		CloseHandle(hProcessSnap);
+		return _xtTranslateSysError(GetLastError());
+	}
+	unsigned currentPidCount = 0;
+	unsigned maxPidCount = *pidCount;
+	while (currentPidCount < maxPidCount && Process32Next(hProcessSnap, &pe32)) {
+		pids[currentPidCount] = pe32.th32ProcessID;
+		++currentPidCount;
+	}
+	CloseHandle(hProcessSnap);
+	*pidCount = currentPidCount;
+	return 0;
+}
+
 unsigned xtProcGetProcessCount(void)
 {
 	HANDLE hProcessSnap;
@@ -28,7 +51,8 @@ unsigned xtProcGetProcessCount(void)
 		return 0;
 	}
 	unsigned processCount = 0;
-	while (Process32Next(hProcessSnap, &pe32)) ++processCount;
+	while (Process32Next(hProcessSnap, &pe32))
+		++processCount;
 	CloseHandle(hProcessSnap);
 	return processCount;
 }
