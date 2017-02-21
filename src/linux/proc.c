@@ -5,7 +5,9 @@
 // System headers
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
+#include <stdio.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -30,6 +32,27 @@ static int _xtProcSignalToSys(enum xtProcSignal signal)
 unsigned xtProcGetCurrentPID(void)
 {
 	return getpid();
+}
+
+int xtProcGetName(char *buf, size_t buflen, unsigned pid)
+{
+	char path[64];
+	snprintf(path, sizeof(path), "/proc/%u/cmdline", pid);
+	int fd = open(path, O_RDONLY);
+	if (fd == -1)
+		return _xtTranslateSysError(errno);
+	int ret = read(fd, buf, buflen);
+	if (ret == -1)
+		return _xtTranslateSysError(errno);
+	else if (ret == 0) {
+		// No bytes read, it's very likely that we don't
+		// have access to read. Process owned by root probably.
+		return XT_EPERM;
+	}
+	// Place a null terminator
+	buf[(unsigned) ret >= buflen ? buflen - 1 : (unsigned) ret] = '\0';
+	close(fd);
+	return 0;
 }
 
 int xtProcGetPids(unsigned *restrict pids, unsigned *restrict pidCount)

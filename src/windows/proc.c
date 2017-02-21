@@ -15,6 +15,32 @@ unsigned xtProcGetCurrentPID(void)
 	return GetCurrentProcessId();
 }
 
+int xtProcGetName(char *buf, size_t buflen, unsigned pid)
+{
+	int ret = XT_EINVAL;
+	HANDLE hProcessSnap;
+	PROCESSENTRY32 pe32;
+	hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (hProcessSnap == INVALID_HANDLE_VALUE)
+		return _xtTranslateSysError(GetLastError());
+	pe32.dwSize = sizeof(PROCESSENTRY32);
+	if (!Process32First(hProcessSnap, &pe32)) {
+		CloseHandle(hProcessSnap);
+		return _xtTranslateSysError(GetLastError());
+	}
+	while (Process32Next(hProcessSnap, &pe32)) {
+		if (pe32.th32ProcessID != pid)
+			continue;
+		strncpy(buf, pe32.szExeFile, buflen);
+		size_t len = strlen(pe32.szExeFile);
+		buf[len >= buflen ? buflen - 1 : len] = '\0';
+		ret = 0;
+		break;
+	}
+	CloseHandle(hProcessSnap);
+	return ret;
+}
+
 int xtProcGetPids(unsigned *restrict pids, unsigned *restrict pidCount)
 {
 	HANDLE hProcessSnap;

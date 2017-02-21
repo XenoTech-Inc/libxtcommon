@@ -16,6 +16,7 @@ extern "C" {
 
 // STD headers
 #include <stdbool.h>
+#include <stddef.h>
 
 enum xtProcSignal {
 	/** Hangup detected on controlling terminal or death of controlling process. */
@@ -39,6 +40,7 @@ enum xtProcSignal {
  * Returns the PID for the current process. This function will always succeed.
  */
 unsigned xtProcGetCurrentPID(void);
+int xtProcGetName(char *buf, size_t buflen, unsigned pid);
 /**
  * Fetches the PID's of all running processes. The order of the PID's is
  * random.
