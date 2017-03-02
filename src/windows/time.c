@@ -109,16 +109,11 @@ unsigned long long xtClockGetRealtimeUS(void)
 	return fileTimeNano100 / 10 - 11644473600000LLU * 1000;
 }
 
-char *xtFormatTime(char *buf, size_t buflen, unsigned timestamp_secs)
+struct tm *_xt_gmtime(time_t *t, struct tm *tm)
 {
-	if (buflen == 0)
-		return NULL;
-	time_t t = timestamp_secs;
-	// gmtime uses thread local storage by default on Windows, so this is safe
-	struct tm *lt = gmtime(&t);
-	if (!lt || strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", lt) == 0)
-		return NULL;
-	return buf;
+	struct tm *lt = gmtime(t);
+	if (lt) *tm = *lt;
+	return lt;
 }
 
 unsigned xtGetUptime(void)

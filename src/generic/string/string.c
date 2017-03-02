@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
+extern struct tm *_xt_gmtime(time_t *t, struct tm *tm);
 
 char *xtFormatBytesSI(char *restrict buf, size_t buflen, uint64_t value, unsigned decimals, bool strictBinary, unsigned *restrict base)
 {
@@ -264,4 +267,15 @@ char *xtStringTrimWords(char *str)
 	}
 	*q = '\0';
 	return str;
+}
+
+char *xtFormatTime(char *buf, size_t buflen, unsigned timestamp_secs)
+{
+	if (!buflen)
+		return NULL;
+	time_t t = timestamp_secs;
+	struct tm lt;
+	if (!_xt_gmtime(&t, &lt) || strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", &lt) == 0)
+		return NULL;
+	return buf;
 }
