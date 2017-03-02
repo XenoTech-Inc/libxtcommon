@@ -34,6 +34,14 @@ static SYSTEMTIME _xtGetSystemTimeDiff(const SYSTEMTIME *st1, const SYSTEMTIME *
 	return stDiff;
 }
 
+struct tm *_xtGMTime(time_t *t, struct tm *tm)
+{
+	struct tm *lt = gmtime(t);
+	if (lt) *tm = *lt;
+	return lt;
+}
+
+
 int xtCalendarGetGMTOffset(int *offset)
 {
 	SYSTEMTIME gmtSystemTime, utcSystemTime;
@@ -66,39 +74,31 @@ int xtCalendarIsDST(bool *isDST)
 	return 0;
 }
 
-unsigned long long xtClockGetCurrentTimeUS(void)
+unsigned xtGetUptime(void)
 {
-	unsigned long long now = xtClockGetRealtimeUS();
-	if (now == 0)
-		return 0;
-	int gmtOffset;
-	int retval = xtCalendarGetGMTOffset(&gmtOffset);
-	if (retval != 0)
-		return 0;
-	bool isDST;
-	if (xtCalendarIsDST(&isDST) != 0)
-		return 0;
-	if (isDST)
-		now += 3600000000000LLU; // Advance by 1 hour if we're in DST
-	now += gmtOffset / 60 * 3600000000LLU;
-	return now;
-}
-
-unsigned long long xtClockGetMonotimeUS(void)
-{
-	// Very unprecise... like 10-16 milliseconds off
-	// Multiply by 1000 just to convert to microseconds (US)
-	//return GetTickCount64() * 1000;
-	// -----------------------------------------------
-	// New code which is much more accurate!!
-	LARGE_INTEGER frequency, temp;
+	LARGE_INTEGER frequency, counter;
 	// These cannot fail if running on Windows XP or higher
 	QueryPerformanceFrequency(&frequency);
-	QueryPerformanceCounter(&temp);
-	return temp.QuadPart * 1000000 / frequency.QuadPart;
+	QueryPerformanceCounter(&counter);
+	return counter.QuadPart * 1000000 / frequency.QuadPart / 1000000; // Convert to secs
 }
 
-unsigned long long xtClockGetRealtimeUS(void)
+void xtSleepMS(unsigned msecs)
+{
+	Sleep(msecs);
+}
+
+void xtTimestampMono(struct xtTimestamp *timestamp)
+{
+	LARGE_INTEGER frequency, counter;
+	// These cannot fail if running on Windows XP or higher
+	QueryPerformanceFrequency(&frequency);
+	QueryPerformanceCounter(&counter);
+	timestamp->sec = counter.QuadPart / frequency.QuadPart;
+	timestamp->nsec = (counter.QuadPart * 1000000LLU / frequency.QuadPart * 1000LLU) % 1000000000LLU;
+}
+
+void xtTimestampReal(struct xtTimestamp *timestamp)
 {
 	FILETIME fileTime;
 	// Instead of first getting a SYSTEMTIME. This function cannot fail
@@ -106,26 +106,6 @@ unsigned long long xtClockGetRealtimeUS(void)
 	// Filetime in 100 nanosecond resolution
 	ULONGLONG fileTimeNano100 = (((ULONGLONG) fileTime.dwHighDateTime) << 32) + fileTime.dwLowDateTime;
 	// To milliseconds and unix windows epoch offset removed
-	return fileTimeNano100 / 10 - 11644473600000LLU * 1000;
-}
-
-struct tm *_xt_gmtime(time_t *t, struct tm *tm)
-{
-	struct tm *lt = gmtime(t);
-	if (lt) *tm = *lt;
-	return lt;
-}
-
-unsigned xtGetUptime(void)
-{
-	LARGE_INTEGER frequency, temp;
-	// These cannot fail if running on Windows XP or higher
-	QueryPerformanceFrequency(&frequency);
-	QueryPerformanceCounter(&temp);
-	return temp.QuadPart * 1000000 / frequency.QuadPart / 1000000; // Convert to secs
-}
-
-void xtSleepMS(unsigned msecs)
-{
-	Sleep(msecs);
+	timestamp->sec  = (fileTimeNano100 / 10 - 11644473600000000LLU) / 1000000LLU;
+	timestamp->nsec = fileTimeNano100 * 100LLU % 1000000000LLU;
 }

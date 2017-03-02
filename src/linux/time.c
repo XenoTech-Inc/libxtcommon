@@ -11,6 +11,11 @@
 #include <stdio.h>
 #include <time.h>
 
+struct tm *_xtGMTime(time_t *t, struct tm *tm)
+{
+	return gmtime_r(t, tm);
+}
+
 int xtCalendarGetGMTOffset(int *offset)
 {
 	time_t t = time(NULL);
@@ -32,49 +37,6 @@ int xtCalendarIsDST(bool *isDST)
 	return 0;
 }
 
-unsigned long long xtClockGetCurrentTimeUS(void)
-{
-	unsigned long long now = xtClockGetRealtimeUS();
-	if (now == 0)
-		return 0;
-	int gmtOffset;
-	int retval = xtCalendarGetGMTOffset(&gmtOffset);
-	if (retval != 0)
-		return 0;
-	bool isDST;
-	if (xtCalendarIsDST(&isDST) != 0)
-		return 0;
-	if (isDST)
-		now += 3600000000000LLU; // Advance by 1 hour if we're in DST
-	now += gmtOffset / 60 * 3600000000LLU;
-	return now;
-}
-
-unsigned long long xtClockGetMonotimeUS(void)
-{
-	struct timespec ts;
-	if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
-		return (ts.tv_sec * 1000000LLU) + (ts.tv_nsec / 1000LLU);
-	}
-	// It should be impossible to get here, since almost all kernels should have CLOCK_MONOTONIC
-	return 0;
-}
-
-unsigned long long xtClockGetRealtimeUS(void)
-{
-	struct timespec ts;
-	if (clock_gettime(CLOCK_REALTIME, &ts) == 0) {
-		return (ts.tv_sec * 1000000LLU) + (ts.tv_nsec / 1000LLU);
-	}
-	// It should be impossible to get here, since all kernels should have CLOCK_REALTIME
-	return 0;
-}
-
-struct tm *_xt_gmtime(time_t *t, struct tm *tm)
-{
-	return gmtime_r(t, tm);
-}
-
 unsigned xtGetUptime(void)
 {
 	struct sysinfo info;
@@ -85,4 +47,28 @@ unsigned xtGetUptime(void)
 void xtSleepMS(unsigned msecs)
 {
 	usleep(msecs * 1000);
+}
+
+void xtTimestampMono(struct xtTimestamp *timestamp)
+{
+	struct timespec ts;
+	if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
+		timestamp->sec = ts.tv_sec;
+		timestamp->nsec = ts.tv_nsec;
+		return;
+	}
+	timestamp->sec = 0;
+	timestamp->nsec = 0;
+}
+
+void xtTimestampReal(struct xtTimestamp *timestamp)
+{
+	struct timespec ts;
+	if (clock_gettime(CLOCK_REALTIME, &ts) == 0) {
+		timestamp->sec = ts.tv_sec;
+		timestamp->nsec = ts.tv_nsec;
+		return;
+	}
+	timestamp->sec = 0;
+	timestamp->nsec = 0;
 }

@@ -1,3 +1,6 @@
+// XT headers
+#include <xt/string.h>
+
 // STD headers
 #include <ctype.h>
 #include <inttypes.h>
@@ -5,9 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-
-extern struct tm *_xt_gmtime(time_t *t, struct tm *tm);
 
 char *xtFormatBytesSI(char *restrict buf, size_t buflen, uint64_t value, unsigned decimals, bool strictBinary, unsigned *restrict base)
 {
@@ -275,7 +275,22 @@ char *xtFormatTime(char *buf, size_t buflen, unsigned timestamp_secs)
 		return NULL;
 	time_t t = timestamp_secs;
 	struct tm lt;
-	if (!_xt_gmtime(&t, &lt) || strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", &lt) == 0)
+	if (!_xtGMTime(&t, &lt) || strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", &lt) == 0)
 		return NULL;
+	return buf;
+}
+
+char *xtFormatTimePrecise(char *buf, size_t buflen, struct xtTimestamp *timestamp)
+{
+	if (!xtFormatTime(buf, buflen, timestamp->sec))
+		return NULL;
+	char buf2[16];
+	unsigned long long nanos = timestamp->nsec;
+	snprintf(buf2, sizeof buf2, " %03llu:%03llu:%03llu", (nanos / 1000000LU) % 1000, (nanos / 1000LU) % 1000, nanos % 1000);
+	size_t n = strlen(buf);
+	if (n + 1 <= buflen) {
+		strncpy(buf + n, buf2, buflen - n - 1);
+		buf[buflen - 1] = '\0';
+	}
 	return buf;
 }

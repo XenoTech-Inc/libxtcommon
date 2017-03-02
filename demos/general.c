@@ -93,12 +93,16 @@ static void osTest(void)
 	printf("Console size retval=%d, size: w=%u, h=%u\n", ret, width, height);
 	xtConsoleFillLine("#");
 	puts("## CPU info");
-	unsigned long long end, start = xtClockGetMonotimeUS();
+	struct xtTimestamp end, start;
+	xtTimestampMono(&start);
 	struct xtCPUInfo info;
 	bool retval = xtCPUGetInfo(&info);
-	end = xtClockGetMonotimeUS();
+	xtTimestampMono(&end);
 	printf("All CPU info retrieved?: %s\n", (retval ? "Yes" : "No"));
-	printf("CPU info retrieval time taken : %llu usecs\n", end - start);
+	printf(
+		"CPU info retrieval time taken : %llu usecs\n",
+		xtTimestampToUS(&end) - xtTimestampToUS(&start)
+	);
 	xtCPUDump(&info, stdout);
 }
 
@@ -174,18 +178,22 @@ err:
 static void timeTest(void)
 {
 	char sbuf[256];
-	unsigned long long timeNow = xtClockGetRealtimeUS() / 1000;
-	printf("Time now in msecs: %llu\n", timeNow);
-	printf("Time now in msecs non-gmt corrected: %s\n", xtFormatTime(sbuf, 255, timeNow / 1000));
-	timeNow = xtClockGetCurrentTimeUS() / 1000;
-	printf("Time now in msecs gmt (with any dst) corrected: %s\n", xtFormatTime(sbuf, 255, timeNow / 1000));
+	struct xtTimestamp timeNow, timeLater;
+	xtTimestampReal(&timeNow);
+	printf("Time now in msecs: %llu\n", xtTimestampToMS(&timeNow));
+	printf("Time now in msecs non-gmt corrected: %s\n", xtFormatTimePrecise(sbuf, 255, &timeNow));
+	xtTimestampNow(&timeNow);
+	printf("Time now in msecs gmt (with any dst) corrected: %s\n", xtFormatTimePrecise(sbuf, 255, &timeNow));
 
 	const unsigned sleepTimeMS = 100;
-	timeNow = xtClockGetMonotimeUS();
-	printf("Time mono in usecs: %llu\n", timeNow);
+	xtTimestampNow(&timeNow);
+	printf("Time mono in usecs: %llu\n", xtTimestampToUS(&timeNow));
 	xtSleepMS(sleepTimeMS);
-	unsigned long long timeLater = xtClockGetMonotimeUS();
-	printf("Time mono diff %u msecs later (in usecs): %llu\n", sleepTimeMS, (timeLater - timeNow));
+	xtTimestampNow(&timeLater);
+	printf(
+		"Time mono diff %u msecs later (in usecs): %llu\n", sleepTimeMS,
+		xtTimestampToUS(&timeLater) - xtTimestampToUS(&timeNow)
+	);
 }
 
 static void *socketTestT2(struct xtThread *t, void *arg)

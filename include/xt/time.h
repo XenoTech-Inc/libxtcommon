@@ -1,9 +1,10 @@
 /**
  * @brief Provides very accurate timestamps and other time related functions.
  *
- * All functions in here should provide true microsecond precision, they
- * are also thread safe. On 32 bit systems (systems with 32 bit timers),
- * some functions will no longer work correctly after the year 2037.
+ * The accuracy of some functions may be different on your system
+ * depending on what the kernel implementation offers.
+ * On systems with 32 bit timers, some functions will no
+ * longer work correctly after the year 2037.
  * @file time.h
  * @author Tom Everaarts
  * @date 2016
@@ -20,51 +21,38 @@ extern "C" {
 // STD headers
 #include <stdbool.h>
 #include <stddef.h>
+#include <time.h>
 
 /**
+ * @brief High accuracy timestamp container.
+ *
+ * When a function works with this struct, you should assume that it has
+ * nanosecond accuracy, unless documented otherwise by the function.
+ */
+struct xtTimestamp {
+	unsigned long long sec;
+	unsigned nsec;
+};
+/**
  * Tells you the GMT offset in minutes. e.g If you get 60, this means
- * you are GMT +1. (60 mins in 1 hour). Do note that on Linux & Windows
- * it grabs the timezone information. If you have changed the time
- * "by hand", the wrong information will be returned. e.g If you set the
- * timezone to Amsterdam (GMT +1), and then advance the time by 10
- * minutes by hand, you will still get 60 minutes ahead of UTC instead
- * of 70. This should be a very rare occurrence nonetheless.\n
- * Daylight Saving Time is ignored. It will not be taken into account
- * by this function.\n
- * Errors:\n
- * XT_EOVERFLOW - The result cannot be represented.
+ * you are GMT +1. (60 mins in 1 hour). Do note that this function grabs
+ * the OS timezone information. If you have changed the time "by hand",
+ * the wrong information will be returned. e.g If you set the timezone to
+ * Amsterdam (GMT +1) and then advance the time by 10 minutes by hand,
+ * you will still get 60 minutes ahead of UTC instead of 70. This should
+ * be a very rare occurrence nonetheless. Daylight Saving Time is ignored.
+ * It will not be taken into account by this function.
  * @param offset - Receives the GMT offset in minutes.
  * This can be a negative value!
- * @return 0 for success. Otherwise an error code.
+ * @return 0 for success, otherwise an error code.
  */
 int xtCalendarGetGMTOffset(int *offset);
 /**
- * Tells you if DST is currently active for your timezone.\n
- * Errors: XT_EOVERFLOW if the result cannot be represented.
+ * Tells you if DST is currently active for your timezone.
  * @param isDST - Receives whether DST is active or not.
- * @return 0 for success. Otherwise an error code.
+ * @return 0 for success, otherwise an error code.
  */
 int xtCalendarIsDST(bool *isDST);
-/**
- * Returns the true time that your device is reporting right now in
- * microseconds since UNIX time. This value is DST and GMT adjusted.
- * @return The time that your device is reporting, GMT and DST corrected.
- * Zero is returned on failure.
- */
-unsigned long long xtClockGetCurrentTimeUS(void);
-/**
- * The time points of this clock cannot decrease as physical time moves forward.
- * This clock is not related to wall clock time (for example, it can be time
- * since last reboot), and is most suitable for measuring intervals.
- * @return The monotonic time in microseconds. Zero is returned on failure.
- */
-unsigned long long xtClockGetMonotimeUS(void);
-/**
- * Tells you the current time in microseconds, AKA the UNIX timestamp.
- * That is, the time elapsed since January 1, 1970 at 00:00:00 UTC.
- * @return The realtime in microseconds. Zero is returned on failure.
- */
-unsigned long long xtClockGetRealtimeUS(void);
 /**
  * Returns the uptime of the device in seconds.
  */
@@ -77,6 +65,45 @@ unsigned xtGetUptime(void);
  * up to 17 milliseconds.
  */
 void xtSleepMS(unsigned msecs);
+/**
+ * The time points of this clock cannot decrease as physical time moves forward.
+ * This clock is not related to wall clock time (for example, it can be time
+ * since last reboot), and is most suitable for measuring intervals.
+ * Accuracy: Linux: 1NS, Windows: 100NS.
+ * @param timestamp - Receives the monotonic time. On failure, the time will
+ * be zero.
+ */
+void xtTimestampMono(struct xtTimestamp *timestamp);
+/**
+ * Tells you the true time that your device is reporting right now since UNIX
+ * time. This value is DST and GMT adjusted.
+ * Accuracy: Linux: 1NS, Windows: 100NS.
+ * @param timestamp - The time that your device is reporting, GMT and DST
+ * corrected. On failure, the time will be zero.
+ */
+void xtTimestampNow(struct xtTimestamp *timestamp);
+/**
+ * Tells you the realtime AKA the UNIX timestamp.
+ * That is, the time elapsed since January 1, 1970 at 00:00:00 UTC.
+ * Accuracy: Linux: 1NS, Windows: 100NS.
+ * @param timestamp - Receives the realtime. On failure, the time will
+ * be zero.
+ */
+void xtTimestampReal(struct xtTimestamp *timestamp);
+/**
+ * Converts \a timestamp to milliseconds.
+ * @param timestamp - The timestamp in seconds and nanoseconds.
+ */
+unsigned long long xtTimestampToMS(struct xtTimestamp *timestamp);
+/**
+ * Converts \a timestamp to nanoseconds.
+ * @param timestamp - The timestamp in seconds and nanoseconds.
+ */
+unsigned long long xtTimestampToUS(struct xtTimestamp *timestamp);
+/**
+ * Cross platform call to gmtime(). Internal use only.
+ */
+struct tm *_xtGMTime(time_t *t, struct tm *tm);
 
 #ifdef __cplusplus
 }
