@@ -16,12 +16,13 @@ extern "C" {
 #endif
 
 // XT headers
-#include <xt/_base.h>
 #include <xt/os_macros.h>
 
 // System headers
 #if XT_IS_LINUX
 	#include <pthread.h>
+#elif XT_IS_WINDOWS
+	#include <windows.h>
 #endif
 
 // STD headers
