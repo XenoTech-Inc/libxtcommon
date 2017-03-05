@@ -74,6 +74,59 @@ int xtCalendarIsDST(bool *isDST)
 	return 0;
 }
 
+int xtClockGetRes(struct xtTimestamp *timestamp, enum xtClock clock)
+{
+	(void) clock;
+	LARGE_INTEGER frequency;
+	// Cannot fail if running on Windows XP or higher
+	QueryPerformanceFrequency(&frequency);
+	frequency.QuadPart *= 1024LLU;
+	timestamp->sec = 0;
+	if ((unsigned long long) frequency.QuadPart >= 1000000000)
+		timestamp->nsec = 1;
+	else if ((unsigned long long) frequency.QuadPart >= 1000000LLU)
+		timestamp->nsec = 1000;
+	else if ((unsigned long long) frequency.QuadPart >= 1000LLU)
+		timestamp->nsec = 1000000;
+	else
+		timestamp->nsec = 0;
+	return 0;
+}
+
+int xtClockGetTime(struct xtTimestamp *timestamp, enum xtClock clock)
+{
+	int _xtClockGetTimeNow(struct xtTimestamp *timestamp);
+	switch (clock) {
+	case XT_CLOCK_MONOTONIC:
+	case XT_CLOCK_MONOTONIC_COARSE:
+	case XT_CLOCK_MONOTONIC_RAW: {
+		LARGE_INTEGER frequency, counter;
+		// These cannot fail if running on Windows XP or higher
+		QueryPerformanceFrequency(&frequency);
+		QueryPerformanceCounter(&counter);
+		timestamp->sec = counter.QuadPart / frequency.QuadPart;
+		timestamp->nsec = (counter.QuadPart * 1000000LLU / frequency.QuadPart * 1000LLU) % 1000000000LLU;
+		return 0;
+	}
+	case XT_CLOCK_REALTIME:
+	case XT_CLOCK_REALTIME_COARSE: {
+		FILETIME fileTime;
+		// Instead of first getting a SYSTEMTIME. This function cannot fail
+		GetSystemTimeAsFileTime(&fileTime);
+		// Filetime in 100 nanosecond resolution
+		ULONGLONG fileTimeNano100 = (((ULONGLONG) fileTime.dwHighDateTime) << 32) + fileTime.dwLowDateTime;
+		// To milliseconds and unix windows epoch offset removed
+		timestamp->sec  = (fileTimeNano100 / 10 - 11644473600000000LLU) / 1000000LLU;
+		timestamp->nsec = fileTimeNano100 * 100LLU % 1000000000LLU;
+		return 0;
+	}
+	case XT_CLOCK_REALTIME_NOW: {
+		return _xtClockGetTimeNow(timestamp);
+	}
+	default: return XT_EINVAL;
+	}
+}
+
 unsigned xtGetUptime(void)
 {
 	LARGE_INTEGER frequency, counter;
@@ -86,26 +139,4 @@ unsigned xtGetUptime(void)
 void xtSleepMS(unsigned msecs)
 {
 	Sleep(msecs);
-}
-
-void xtTimestampMono(struct xtTimestamp *timestamp)
-{
-	LARGE_INTEGER frequency, counter;
-	// These cannot fail if running on Windows XP or higher
-	QueryPerformanceFrequency(&frequency);
-	QueryPerformanceCounter(&counter);
-	timestamp->sec = counter.QuadPart / frequency.QuadPart;
-	timestamp->nsec = (counter.QuadPart * 1000000LLU / frequency.QuadPart * 1000LLU) % 1000000000LLU;
-}
-
-void xtTimestampReal(struct xtTimestamp *timestamp)
-{
-	FILETIME fileTime;
-	// Instead of first getting a SYSTEMTIME. This function cannot fail
-	GetSystemTimeAsFileTime(&fileTime);
-	// Filetime in 100 nanosecond resolution
-	ULONGLONG fileTimeNano100 = (((ULONGLONG) fileTime.dwHighDateTime) << 32) + fileTime.dwLowDateTime;
-	// To milliseconds and unix windows epoch offset removed
-	timestamp->sec  = (fileTimeNano100 / 10 - 11644473600000000LLU) / 1000000LLU;
-	timestamp->nsec = fileTimeNano100 * 100LLU % 1000000000LLU;
 }

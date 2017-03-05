@@ -23,6 +23,26 @@ extern "C" {
 #include <stddef.h>
 #include <time.h>
 
+enum xtClock {
+	/**
+	 * Clock that represents monotonic time since some
+	 * unspecified starting point.
+	 */
+	XT_CLOCK_MONOTONIC,
+	/** A faster but less precise version of XT_CLOCK_MONOTONIC. */
+	XT_CLOCK_MONOTONIC_COARSE,
+	/**
+	 * Similar to XT_CLOCK_MONOTONIC, but provides access to a raw
+	 * hardware-based time that is not subject to NTP adjustments
+	 */
+	XT_CLOCK_MONOTONIC_RAW,
+	/** Wall clock time. */
+	XT_CLOCK_REALTIME,
+	/** A faster but less precise version of XT_CLOCK_REALTIME. */
+	XT_CLOCK_REALTIME_COARSE,
+	/** Wall clock time but GMT and DST corrected. */
+	XT_CLOCK_REALTIME_NOW
+};
 /**
  * @brief High accuracy timestamp container.
  *
@@ -54,6 +74,20 @@ int xtCalendarGetGMTOffset(int *offset);
  */
 int xtCalendarIsDST(bool *isDST);
 /**
+ * Finds the resolution (precision) of the specified clock \a clock.
+ * The resolution of clocks depends on the implementation.
+ * @remarks This function is rather meaningless on Windows. It shall
+ * always report the maximum precision that each clock offers on Windows
+ * even if your hardware would not support it. This is because Windows
+ * just does not offer a way to retrieve the clock accuracy.
+ */
+int xtClockGetRes(struct xtTimestamp *timestamp, enum xtClock clock);
+/**
+ * Retrieves the time for the specified clock \a clock.
+ * @return 0 for success, otherwise an error code.
+ */
+int xtClockGetTime(struct xtTimestamp *timestamp, enum xtClock clock);
+/**
  * Returns the uptime of the device in seconds.
  */
 unsigned xtGetUptime(void);
@@ -65,31 +99,6 @@ unsigned xtGetUptime(void);
  * up to 17 milliseconds.
  */
 void xtSleepMS(unsigned msecs);
-/**
- * The time points of this clock cannot decrease as physical time moves forward.
- * This clock is not related to wall clock time (for example, it can be time
- * since last reboot), and is most suitable for measuring intervals.
- * Accuracy: Linux: 1NS, Windows: 100NS.
- * @param timestamp - Receives the monotonic time. On failure, the time will
- * be zero.
- */
-void xtTimestampMono(struct xtTimestamp *timestamp);
-/**
- * Tells you the true time that your device is reporting right now since UNIX
- * time. This value is DST and GMT adjusted.
- * Accuracy: Linux: 1NS, Windows: 100NS.
- * @param timestamp - The time that your device is reporting, GMT and DST
- * corrected. On failure, the time will be zero.
- */
-void xtTimestampNow(struct xtTimestamp *timestamp);
-/**
- * Tells you the realtime AKA the UNIX timestamp.
- * That is, the time elapsed since January 1, 1970 at 00:00:00 UTC.
- * Accuracy: Linux: 1NS, Windows: 100NS.
- * @param timestamp - Receives the realtime. On failure, the time will
- * be zero.
- */
-void xtTimestampReal(struct xtTimestamp *timestamp);
 /**
  * Converts \a timestamp to milliseconds.
  * @param timestamp - The timestamp in seconds and nanoseconds.
