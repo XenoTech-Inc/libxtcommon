@@ -135,9 +135,9 @@ static void large(void)
 		arndu(a, n);
 		fprintf(stdout, "%s: ", names[i]);
 		fflush(stdout);
-		xtTimestampReal(&then);
+		xtClockGetTime(&then, XT_CLOCK_MONOTONIC);
 		xtSortU(a, n, types[i], 1);
-		xtTimestampReal(&now);
+		xtClockGetTime(&now, XT_CLOCK_MONOTONIC);
 		chklistu(a, n, 1);
 		unsigned long long diff = (now.nsec - then.nsec) / 1000LLU;
 		strtodt(buf, sizeof buf, diff, 3);

@@ -76,20 +76,15 @@ int xtCalendarIsDST(bool *isDST)
 
 int xtClockGetRes(struct xtTimestamp *timestamp, enum xtClock clock)
 {
-	(void) clock;
-	LARGE_INTEGER frequency;
-	// Cannot fail if running on Windows XP or higher
-	QueryPerformanceFrequency(&frequency);
-	frequency.QuadPart *= 1024LLU;
-	timestamp->sec = 0;
-	if ((unsigned long long) frequency.QuadPart >= 1000000000)
-		timestamp->nsec = 1;
-	else if ((unsigned long long) frequency.QuadPart >= 1000000LLU)
-		timestamp->nsec = 1000;
-	else if ((unsigned long long) frequency.QuadPart >= 1000LLU)
-		timestamp->nsec = 1000000;
-	else
-		timestamp->nsec = 0;
+	switch (clock) {
+	case XT_CLOCK_MONOTONIC:
+	case XT_CLOCK_MONOTONIC_COARSE:
+	case XT_CLOCK_MONOTONIC_RAW:    timestamp->sec = 0; timestamp->nsec = 1000; break;
+	case XT_CLOCK_REALTIME:
+	case XT_CLOCK_REALTIME_COARSE:
+	case XT_CLOCK_REALTIME_NOW:     timestamp->sec = 0; timestamp->nsec = 100; break;
+	default:                        return XT_EINVAL;
+	}
 	return 0;
 }
 
@@ -105,7 +100,7 @@ int xtClockGetTime(struct xtTimestamp *timestamp, enum xtClock clock)
 		QueryPerformanceFrequency(&frequency);
 		QueryPerformanceCounter(&counter);
 		timestamp->sec = counter.QuadPart / frequency.QuadPart;
-		timestamp->nsec = (counter.QuadPart * 1000000LLU / frequency.QuadPart * 1000LLU) % 1000000000LLU;
+		timestamp->nsec = (counter.QuadPart * 1000000000LLU / frequency.QuadPart) % 1000000000LLU;
 		return 0;
 	}
 	case XT_CLOCK_REALTIME:

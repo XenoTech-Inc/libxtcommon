@@ -94,10 +94,10 @@ static void osTest(void)
 	xtConsoleFillLine("#");
 	puts("## CPU info");
 	struct xtTimestamp end, start;
-	xtTimestampMono(&start);
+	xtClockGetTime(&start, XT_CLOCK_MONOTONIC);
 	struct xtCPUInfo info;
 	bool retval = xtCPUGetInfo(&info);
-	xtTimestampMono(&end);
+	xtClockGetTime(&end, XT_CLOCK_MONOTONIC);
 	printf("All CPU info retrieved?: %s\n", (retval ? "Yes" : "No"));
 	printf(
 		"CPU info retrieval time taken : %llu usecs\n",
@@ -179,17 +179,17 @@ static void timeTest(void)
 {
 	char sbuf[256];
 	struct xtTimestamp timeNow, timeLater;
-	xtTimestampReal(&timeNow);
-	printf("Time now in msecs: %llu\n", xtTimestampToMS(&timeNow));
+	xtClockGetTime(&timeNow, XT_CLOCK_REALTIME);
+	printf("Time now in msecs non-gmt corrected raw: %llu\n", xtTimestampToMS(&timeNow));
 	printf("Time now in msecs non-gmt corrected: %s\n", xtFormatTimePrecise(sbuf, 255, &timeNow));
-	xtTimestampNow(&timeNow);
+	xtClockGetTime(&timeNow, XT_CLOCK_REALTIME_NOW);
 	printf("Time now in msecs gmt (with any dst) corrected: %s\n", xtFormatTimePrecise(sbuf, 255, &timeNow));
 
 	const unsigned sleepTimeMS = 100;
-	xtTimestampNow(&timeNow);
+	xtClockGetTime(&timeNow, XT_CLOCK_MONOTONIC);
 	printf("Time mono in usecs: %llu\n", xtTimestampToUS(&timeNow));
 	xtSleepMS(sleepTimeMS);
-	xtTimestampNow(&timeLater);
+	xtClockGetTime(&timeLater, XT_CLOCK_MONOTONIC);
 	printf(
 		"Time mono diff %u msecs later (in usecs): %llu\n", sleepTimeMS,
 		xtTimestampToUS(&timeLater) - xtTimestampToUS(&timeNow)

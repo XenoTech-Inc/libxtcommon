@@ -75,7 +75,7 @@ int xtCalendarGetGMTOffset(int *offset);
 int xtCalendarIsDST(bool *isDST);
 /**
  * Finds the resolution (precision) of the specified clock \a clock.
- * The resolution of clocks depends on the implementation.
+ * The resolution of the available clocks depends on the implementation.
  * @remarks This function is rather meaningless on Windows. It shall
  * always report the maximum precision that each clock offers on Windows
  * even if your hardware would not support it. This is because Windows
