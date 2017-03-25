@@ -93,12 +93,16 @@ static void osTest(void)
 	printf("Console size retval=%d, size: w=%u, h=%u\n", ret, width, height);
 	xtConsoleFillLine("#");
 	puts("## CPU info");
-	unsigned long long end, start = xtClockGetMonotimeUS();
+	struct xtTimestamp end, start;
+	xtClockGetTime(&start, XT_CLOCK_MONOTONIC);
 	struct xtCPUInfo info;
 	bool retval = xtCPUGetInfo(&info);
-	end = xtClockGetMonotimeUS();
+	xtClockGetTime(&end, XT_CLOCK_MONOTONIC);
 	printf("All CPU info retrieved?: %s\n", (retval ? "Yes" : "No"));
-	printf("CPU info retrieval time taken : %llu usecs\n", end - start);
+	printf(
+		"CPU info retrieval time taken : %llu usecs\n",
+		xtTimestampToUS(&end) - xtTimestampToUS(&start)
+	);
 	xtCPUDump(&info, stdout);
 }
 
@@ -174,18 +178,37 @@ err:
 static void timeTest(void)
 {
 	char sbuf[256];
-	unsigned long long timeNow = xtClockGetRealtimeUS() / 1000;
-	printf("Time now in msecs: %llu\n", timeNow);
-	printf("Time now in msecs non-gmt corrected: %s\n", xtFormatTime(sbuf, 255, timeNow / 1000));
-	timeNow = xtClockGetCurrentTimeUS() / 1000;
-	printf("Time now in msecs gmt (with any dst) corrected: %s\n", xtFormatTime(sbuf, 255, timeNow / 1000));
+	struct xtTimestamp ts, timeNow, timeLater;
+	int ret;
+
+#define TEST_CLOCK(clockId, clockName)\
+	ret = xtClockGetRes(&ts, clockId);\
+	printf("%s res: %d - %uNS\n", clockName, ret, ts.nsec);\
+	ret = xtClockGetTime(&ts, clockId);\
+	printf("%s: %d - %s\n", clockName, ret, xtFormatTimePrecise(sbuf, 255, &ts));
+
+	TEST_CLOCK(XT_CLOCK_MONOTONIC, "Monotonic");
+	TEST_CLOCK(XT_CLOCK_MONOTONIC_COARSE, "Monotonic coarse");
+	TEST_CLOCK(XT_CLOCK_MONOTONIC_RAW, "Monotonic raw");
+	TEST_CLOCK(XT_CLOCK_REALTIME, "Realtime");
+	TEST_CLOCK(XT_CLOCK_REALTIME_COARSE, "Realtime coarse");
+	TEST_CLOCK(XT_CLOCK_REALTIME_NOW, "Realtime now");
+
+	xtClockGetTime(&timeNow, XT_CLOCK_REALTIME);
+	printf("Time now in msecs non-gmt corrected raw: %llu\n", xtTimestampToMS(&timeNow));
+	printf("Time now in msecs non-gmt corrected: %s\n", xtFormatTimePrecise(sbuf, 255, &timeNow));
+	xtClockGetTime(&timeNow, XT_CLOCK_REALTIME_NOW);
+	printf("Time now in msecs gmt (with any dst) corrected: %s\n", xtFormatTimePrecise(sbuf, 255, &timeNow));
 
 	const unsigned sleepTimeMS = 100;
-	timeNow = xtClockGetMonotimeUS();
-	printf("Time mono in usecs: %llu\n", timeNow);
+	xtClockGetTime(&timeNow, XT_CLOCK_MONOTONIC);
+	printf("Time mono in usecs: %llu\n", xtTimestampToUS(&timeNow));
 	xtSleepMS(sleepTimeMS);
-	unsigned long long timeLater = xtClockGetMonotimeUS();
-	printf("Time mono diff %u msecs later (in usecs): %llu\n", sleepTimeMS, (timeLater - timeNow));
+	xtClockGetTime(&timeLater, XT_CLOCK_MONOTONIC);
+	printf(
+		"Time mono diff %u msecs later (in usecs): %llu\n", sleepTimeMS,
+		xtTimestampToUS(&timeLater) - xtTimestampToUS(&timeNow)
+	);
 }
 
 static void *socketTestT2(struct xtThread *t, void *arg)

@@ -3,6 +3,7 @@
 #include <xt/error.h>
 
 // System headers
+#include <errno.h>
 #include <sys/sysinfo.h> // for the sysinfo function and struct
 #include <sys/time.h> // for some time thingies, like clock_gettime
 #include <unistd.h> // usleep
@@ -10,6 +11,11 @@
 // STD headers
 #include <stdio.h>
 #include <time.h>
+
+struct tm *_xtGMTime(time_t *t, struct tm *tm)
+{
+	return gmtime_r(t, tm);
+}
 
 int xtCalendarGetGMTOffset(int *offset)
 {
@@ -32,53 +38,45 @@ int xtCalendarIsDST(bool *isDST)
 	return 0;
 }
 
-unsigned long long xtClockGetCurrentTimeUS(void)
+int xtClockGetRes(struct xtTimestamp *timestamp, enum xtClock clock)
 {
-	unsigned long long now = xtClockGetRealtimeUS();
-	if (now == 0)
-		return 0;
-	int gmtOffset;
-	int retval = xtCalendarGetGMTOffset(&gmtOffset);
-	if (retval != 0)
-		return 0;
-	bool isDST;
-	if (xtCalendarIsDST(&isDST) != 0)
-		return 0;
-	if (isDST)
-		now += 3600000000000LLU; // Advance by 1 hour if we're in DST
-	now += gmtOffset / 60 * 3600000000LLU;
-	return now;
-}
-
-unsigned long long xtClockGetMonotimeUS(void)
-{
-	struct timespec ts;
-	if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
-		return (ts.tv_sec * 1000000LLU) + (ts.tv_nsec / 1000LLU);
+	clockid_t clockId;
+	switch (clock) {
+	case XT_CLOCK_MONOTONIC:        clockId = CLOCK_MONOTONIC; break;
+	case XT_CLOCK_MONOTONIC_COARSE: clockId = CLOCK_MONOTONIC_COARSE; break;
+	case XT_CLOCK_MONOTONIC_RAW:    clockId = CLOCK_MONOTONIC_RAW; break;
+	case XT_CLOCK_REALTIME:         clockId = CLOCK_REALTIME; break;
+	case XT_CLOCK_REALTIME_COARSE:  clockId = CLOCK_REALTIME_COARSE; break;
+	case XT_CLOCK_REALTIME_NOW:     clockId = CLOCK_REALTIME; break;
+	default:                        return XT_EINVAL;
 	}
-	// It should be impossible to get here, since almost all kernels should have CLOCK_MONOTONIC
+	struct timespec ts;
+	if (clock_getres(clockId, &ts) == -1)
+		return _xtTranslateSysError(errno);
+	timestamp->sec = ts.tv_sec;
+	timestamp->nsec = ts.tv_nsec;
 	return 0;
 }
 
-unsigned long long xtClockGetRealtimeUS(void)
+int xtClockGetTime(struct xtTimestamp *timestamp, enum xtClock clock)
 {
-	struct timespec ts;
-	if (clock_gettime(CLOCK_REALTIME, &ts) == 0) {
-		return (ts.tv_sec * 1000000LLU) + (ts.tv_nsec / 1000LLU);
+	int _xtClockGetTimeNow(struct xtTimestamp *timestamp);
+	clockid_t clockId;
+	switch (clock) {
+	case XT_CLOCK_MONOTONIC:        clockId = CLOCK_MONOTONIC; break;
+	case XT_CLOCK_MONOTONIC_COARSE: clockId = CLOCK_MONOTONIC_COARSE; break;
+	case XT_CLOCK_MONOTONIC_RAW:    clockId = CLOCK_MONOTONIC_RAW; break;
+	case XT_CLOCK_REALTIME:         clockId = CLOCK_REALTIME; break;
+	case XT_CLOCK_REALTIME_COARSE:  clockId = CLOCK_REALTIME_COARSE; break;
+	case XT_CLOCK_REALTIME_NOW:     return _xtClockGetTimeNow(timestamp);
+	default:                        return XT_EINVAL;
 	}
-	// It should be impossible to get here, since all kernels should have CLOCK_REALTIME
+	struct timespec ts;
+	if (clock_gettime(clockId, &ts) == -1)
+		return _xtTranslateSysError(errno);
+	timestamp->sec = ts.tv_sec;
+	timestamp->nsec = ts.tv_nsec;
 	return 0;
-}
-
-char *xtFormatTime(char *buf, size_t buflen, unsigned timestamp_secs)
-{
-	if (buflen == 0)
-		return NULL;
-	time_t t = timestamp_secs;
-	struct tm lt;
-	if (!gmtime_r(&t, &lt) || strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", &lt) == 0)
-		return NULL;
-	return buf;
 }
 
 unsigned xtGetUptime(void)

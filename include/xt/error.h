@@ -86,7 +86,7 @@ void xtPerror(const char *msg, int errnum);
  */
 char *xtStrError(char *buf, size_t buflen, int errnum);
 /**
- * Translates a system specific error to an XT error code.
+ * Translates a system specific error to an XT error code. Internal use only.
  */
 int _xtTranslateSysError(int syserrnum);
 

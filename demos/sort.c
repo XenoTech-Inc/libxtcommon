@@ -126,7 +126,7 @@ static void large(void)
 	size_t n = 1 << 16LLU;
 	unsigned *a = malloc(n * sizeof(unsigned));
 	if (!a) abort();
-	unsigned long long then, now;
+	struct xtTimestamp then, now;
 	char buf[32];
 	xtConsoleFillLine("-");
 	puts("-- LARGE SORT TEST");
@@ -135,12 +135,13 @@ static void large(void)
 		arndu(a, n);
 		fprintf(stdout, "%s: ", names[i]);
 		fflush(stdout);
-		then = xtClockGetRealtimeUS();
+		xtClockGetTime(&then, XT_CLOCK_MONOTONIC);
 		xtSortU(a, n, types[i], 1);
-		now = xtClockGetRealtimeUS();
+		xtClockGetTime(&now, XT_CLOCK_MONOTONIC);
 		chklistu(a, n, 1);
-		strtodt(buf, sizeof buf, now - then, 3);
-		printf("%s (%lluus)\n", buf, now - then);
+		unsigned long long diff = (now.nsec - then.nsec) / 1000LLU;
+		strtodt(buf, sizeof buf, diff, 3);
+		printf("%s (%lluus)\n", buf, diff);
 	}
 	free(a);
 }

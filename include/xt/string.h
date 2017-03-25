@@ -13,6 +13,9 @@
 extern "C" {
 #endif
 
+// XT headers
+#include <xt/time.h>
+
 // STD headers
 #include <stdbool.h>
 #include <stddef.h>
@@ -66,6 +69,15 @@ char *xtFormatHex(char *restrict buf, size_t buflen, const void *restrict data, 
  * @returns A pointer to the buffer. Null is returned on failure.
  */
 char *xtFormatTime(char *buf, size_t buflen, unsigned timestamp_secs);
+/**
+ * Fills the buffer with the current time in the following format:
+ * YYYY-mm-dd HH:MM:SS mmm:uuu:nnn. The clock uses the 24 hour format.
+ * This function MAY fail if the timestamp exceeds
+ * the OS timer limits.
+ * @param timestamp - Your timestamp.
+ * @returns A pointer to the buffer. Null is returned on failure.
+ */
+char *xtFormatTimePrecise(char *buf, size_t buflen, struct xtTimestamp *timestamp);
 /**
  * Converts an uint64_t to a string suitable for printing.
  */
