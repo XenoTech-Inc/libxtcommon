@@ -178,7 +178,22 @@ err:
 static void timeTest(void)
 {
 	char sbuf[256];
-	struct xtTimestamp timeNow, timeLater;
+	struct xtTimestamp ts, timeNow, timeLater;
+	int ret;
+
+#define TEST_CLOCK(clockId, clockName)\
+	ret = xtClockGetRes(&ts, clockId);\
+	printf("%s res: %d - %uNS\n", clockName, ret, ts.nsec);\
+	ret = xtClockGetTime(&ts, clockId);\
+	printf("%s: %d - %s\n", clockName, ret, xtFormatTimePrecise(sbuf, 255, &ts));
+
+	TEST_CLOCK(XT_CLOCK_MONOTONIC, "Monotonic");
+	TEST_CLOCK(XT_CLOCK_MONOTONIC_COARSE, "Monotonic coarse");
+	TEST_CLOCK(XT_CLOCK_MONOTONIC_RAW, "Monotonic raw");
+	TEST_CLOCK(XT_CLOCK_REALTIME, "Realtime");
+	TEST_CLOCK(XT_CLOCK_REALTIME_COARSE, "Realtime coarse");
+	TEST_CLOCK(XT_CLOCK_REALTIME_NOW, "Realtime now");
+
 	xtClockGetTime(&timeNow, XT_CLOCK_REALTIME);
 	printf("Time now in msecs non-gmt corrected raw: %llu\n", xtTimestampToMS(&timeNow));
 	printf("Time now in msecs non-gmt corrected: %s\n", xtFormatTimePrecise(sbuf, 255, &timeNow));
