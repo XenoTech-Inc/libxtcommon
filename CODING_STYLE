@@ -80,7 +80,7 @@ If you know that you need very large number for e.g a timestamp, use
 unsigned long long.
 ONLY use the types from stdint.h when you really need exactly the
 desired width. If you are creating a function which needs flags of some
-sort, you should put them in an enum. Enums should have their members 
+sort, you should put them in an enum. Enums should have their members
 specified in hexdecimals when they may be combined with binary logic.
 
 6. Header inclusion and macros
@@ -169,7 +169,7 @@ That is an important thing to mention!
 11. File permissions and encoding
 
 Files should always have 664 as their binary permission. Files that
-should be executable should have 775 as their binary permission.
+should be executable should have 755 as their binary permission.
 Files should ALWAYS use ASCII as encoding.
 You should consider UTF-8 (and it's family members) usage as prohibited.
 Also only use Linux line endings (LF) in all files.
