@@ -1,13 +1,26 @@
 // XT headers
+#include <xt/error.h>
 #include <xt/string.h>
 
 // STD headers
 #include <ctype.h>
+#include <errno.h>
 #include <inttypes.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef XT_PRINTF_DEBUG
+#define dbgf(f,...) printf(f, ## __VA_ARGS__)
+#define dbgs(s) puts(s)
+#else
+#define dbgf(f,...) ((void)0)
+#define dbgs(s) ((void)0)
+#endif
+
+extern int _xt_vsnprintf(char *str, size_t size, char *format, char *end, va_list args);
 
 char *xtFormatBytesSI(char *restrict buf, size_t buflen, uint64_t value, unsigned decimals, bool strictBinary, unsigned *restrict base)
 {
@@ -109,6 +122,235 @@ void xtRot13(void *buf, size_t buflen)
 		else if (xbuf[i] >= 'A' && xbuf[i] <= 'Z')
 			xbuf[i] = (xbuf[i] - 'A' + 13) % 26 + 'A';
 	}
+}
+
+int xtsnprintf(char *str, size_t size, const char *format, ...)
+{
+#define BUFSZ 4096
+	const char *fptr;
+	char sbuf[BUFSZ], *dbuf = NULL, *buf = sbuf, *ptr, *end;
+	size_t l;
+	int ret = 0;
+	va_list args;
+	va_start(args, format);
+	l = strlen(format);
+	if (l > BUFSZ - 1) {
+		dbuf = malloc(l + 1);
+		if (!dbuf)
+			goto fail;
+		buf = dbuf;
+		end = buf + l;
+	}
+	end = buf + BUFSZ;
+	// safe guard termination in case snprintf fucks up
+	// (*ahum* windoze *ahum*)
+	if (size)
+		str[0] = str[size - 1] = '\0';
+	for (ptr = buf, fptr = format; *fptr; ++fptr) {
+		switch (*fptr) {
+		case '%': {
+			const char *fstr = "#0- +'", *arg = fptr, *aptr = fptr + 1;
+			const char *lmod[] = {
+				"hh", "h", "l", "ll", "L", "q", "j", "z", "t",
+				// XXX consider s/I/N/
+				// 9    10     11     12
+				"I8", "I16", "I32", "I64",
+			};
+			const char *cspec[] = {
+				"d", "i",
+				"o", "u", "x", "X",
+				"e", "E",
+				"f", "F",
+				"g", "G",
+				"a", "A",
+				"c", "s",
+				"C",
+				"S",
+				"p",
+				"n",
+				"m",
+				"%",
+			};
+#define LMODSZ (sizeof(lmod)/sizeof(lmod[0]))
+#define CSPECSZ (sizeof(cspec)/sizeof(cspec[0]))
+			char *sub;
+			int ptype = -1, mod = -1, conv = -1;
+			unsigned flags = 0, prec = 0;
+			int fw = 0;
+			if (fptr[1] == 'M') {
+				const char *msg = xtGetErrorStr(errno);
+				size_t l = strlen(msg);
+				if (ptr + l >= end)
+					goto resize;
+				strcpy(ptr, msg);
+				ptr += l;
+				++fptr;
+				continue;
+			}
+			while (*aptr && (sub = strchr(fstr, *aptr))) {
+				flags |= 1 << (sub - fstr);
+				++aptr;
+			}
+			if (!*aptr)
+				goto stat;
+			if (*aptr == '-' || isdigit(*aptr)) {
+				sscanf(aptr, "%d", &fw);
+				if (*aptr == '-') ++aptr;
+				while (*aptr && isdigit(*aptr))
+					++aptr;
+			}
+			if (!*aptr)
+				goto stat;
+			if (*aptr == '.') {
+				ptype = 0;
+				if (!aptr[1])
+					goto stat;
+				if (*++aptr == '*') {
+					ptype = 1;
+					++aptr;
+				}
+				if (isdigit(*aptr)) {
+					++ptype;
+					dbgf("precision=%s\n", aptr - 1);
+					// spec requires int, but does not make sense
+					sscanf(aptr, "%u", &prec);
+					while (*aptr && isdigit(*aptr))
+						++aptr;
+				}
+			}
+			if (!*aptr)
+				goto stat;
+			for (unsigned i = 0; i < LMODSZ; ++i)
+				if (xtStringStartsWith(aptr, lmod[i])) {
+					mod = i;
+					aptr += strlen(lmod[i]);
+					break;
+				}
+			if (!*aptr)
+				goto stat;
+			for (unsigned i = 0; i < CSPECSZ; ++i)
+				if (xtStringStartsWith(aptr, cspec[i])) {
+					conv = i;
+					aptr += strlen(cspec[i]);
+					break;
+				}
+			// interpret (u)int*_t variants
+			switch (mod) {
+			case 9: {
+				const char *rep = PRId8;
+				size_t l;
+				switch (conv) {
+				case 0: rep = PRId8; break;
+				case 1: rep = PRIi8; break;
+				case 2: rep = PRIo8; break;
+				case 3: rep = PRIu8; break;
+				case 4: rep = PRIx8; break;
+				case 5: rep = PRIX8; break;
+				}
+				dbgf("arglen=%zu\n", (size_t)(aptr - arg));
+				l = strlen(rep);
+				dbgf("replen=%zu (%%%s)\n", l, rep);
+				dbgs("int8_t");
+				if (ptr + l + 1 >= end)
+					goto resize;
+				fptr = aptr - 1;
+				*ptr++ = '%';
+				strcpy(ptr, rep);
+				ptr += l;
+			}
+				continue;
+			case 10: {
+				const char *rep = PRId16;
+				size_t l;
+				switch (conv) {
+				case 0: rep = PRId16; break;
+				case 1: rep = PRIi16; break;
+				case 2: rep = PRIo16; break;
+				case 3: rep = PRIu16; break;
+				case 4: rep = PRIx16; break;
+				case 5: rep = PRIX16; break;
+				}
+				dbgf("arglen=%zu\n", (size_t)(aptr - arg));
+				l = strlen(rep);
+				dbgf("replen=%zu (%%%s)\n", l, rep);
+				dbgs("int16_t");
+				if (ptr + l + 1 >= end)
+					goto resize;
+				fptr = aptr - 1;
+				*ptr++ = '%';
+				strcpy(ptr, rep);
+				ptr += l;
+			}
+				continue;
+			case 11: {
+				const char *rep = PRId32;
+				size_t l;
+				switch (conv) {
+				case 0: rep = PRId32; break;
+				case 1: rep = PRIi32; break;
+				case 2: rep = PRIo32; break;
+				case 3: rep = PRIu32; break;
+				case 4: rep = PRIx32; break;
+				case 5: rep = PRIX32; break;
+				}
+				dbgf("arglen=%zu\n", (size_t)(aptr - arg));
+				l = strlen(rep);
+				dbgf("replen=%zu (%%%s)\n", l, rep);
+				dbgs("int32_t");
+				if (ptr + l + 1 >= end)
+					goto resize;
+				fptr = aptr - 1;
+				*ptr++ = '%';
+				strcpy(ptr, rep);
+				ptr += l;
+			}
+				continue;
+			case 12: {
+				const char *rep = PRId64;
+				size_t l;
+				switch (conv) {
+				case 0: rep = PRId64; break;
+				case 1: rep = PRIi64; break;
+				case 2: rep = PRIo64; break;
+				case 3: rep = PRIu64; break;
+				case 4: rep = PRIx64; break;
+				case 5: rep = PRIX64; break;
+				}
+				dbgf("arglen=%zu\n", (size_t)(aptr - arg));
+				l = strlen(rep);
+				dbgf("replen=%zu (%%%s)\n", l, rep);
+				dbgs("int64_t");
+				if (ptr + l + 1 >= end)
+					goto resize;
+				fptr = aptr - 1;
+				*ptr++ = '%';
+				strcpy(ptr, rep);
+				ptr += l;
+			}
+				continue;
+			}
+stat:
+			dbgf("flags=%u,fw=%d,prec=(%d,%u),mod=%d,conv=%d\n", flags, fw, ptype, prec, mod, conv);
+		}
+			goto put;
+put:
+		default:
+			if (ptr >= end)
+				goto resize;
+			*ptr++ = *fptr;
+			break;
+		}
+	}
+	*ptr = '\0';
+	dbgf("format=%s\n", buf);
+	ret = _xt_vsnprintf(str, size, buf, end, args);
+resize:
+	// FIXME try resize for all goto statements to this label
+fail:
+	va_end(args);
+	if (dbuf)
+		free(dbuf);
+	return ret;
 }
 
 bool xtStringContainsLen(const char *restrict haystack, const char *restrict needle, size_t haystackLen)

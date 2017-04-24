@@ -1,8 +1,9 @@
 /**
  * @brief Functions to manipulate strings with ease.
  * @file string.h
+ * @author Folkert van Verseveld
  * @author Tom Everaarts
- * @date 2016
+ * @date 2017
  * @copyright XT-License.
  */
 
@@ -93,6 +94,11 @@ int xtGetch(void);
  * Performs the ROT13 swapping on the specified data up to \a buflen bytes.
  */
 void xtRot13(void *buf, size_t buflen);
+/**
+ * Formatted output conversion to buffer.
+ * @returns Number of written characters. Zero or negative on failure.
+ */
+int xtsnprintf(char *str, size_t size, const char *format, ...);
 /**
  * Checks if the haystack contains the needle somewhere in it.
  * @param needle - A pointer to a null terminated string that serves as needle.

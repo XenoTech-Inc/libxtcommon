@@ -3,6 +3,7 @@
 #include <xt/os.h>
 
 #include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -148,6 +149,35 @@ static void formatSI(void)
 	}
 }
 
+static void printFormat(void)
+{
+	xtConsoleFillLine("-");
+	puts("-- PRINT FORMAT TEST");
+	char buf[256];
+	xtsnprintf(buf, sizeof buf, "%s normal & simple %10s", "perfectly", "format");
+	puts(buf);
+	long lnum = 3419803901L;
+	unsigned unum = 30;
+	size_t znum = ~0xcafebabe;
+	xtsnprintf(buf, sizeof buf, "wide test: %ld %04u %20zu", lnum, unum, znum);
+	puts(buf);
+	xtsnprintf(buf, sizeof buf, "float test: %+.2f %g %lf", .42f, -4e3 + 1.0, 0.0001);
+	puts(buf);
+	xtsnprintf(buf, sizeof buf, "int_t variants:"
+		"%I8d %I8u\n"
+		"%I16d %I16o\n"
+		"%I32d %I32x\n"
+		"%I64d %I64u",
+		INT8_MIN, INT8_MAX,
+		INT16_MIN, INT16_MAX,
+		INT32_MIN, INT32_MAX,
+		INT64_MIN, INT64_MAX
+	);
+	puts(buf);
+	xtsnprintf(buf, sizeof buf, "Custom error format: message=%M, code=%d", errno);
+	puts(buf);
+}
+
 int main(void)
 {
 	srand(time(NULL));
@@ -160,6 +190,7 @@ int main(void)
 	rot13();
 	trim();
 	trimWords();
+	printFormat();
 	formatSI();
 	return EXIT_SUCCESS;
 }
