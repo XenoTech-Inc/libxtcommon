@@ -100,6 +100,13 @@ unsigned xtGetUptime(void);
  */
 void xtSleepMS(unsigned msecs);
 /**
+ * Compute the difference between \a start and \a end.
+ * @param dest - Destination timestamp.
+ * @param start - Start timestamp.
+ * @param end - End timestamp.
+ */
+void xtTimestampDiff(struct xtTimestamp *dest, const struct xtTimestamp *start, const struct xtTimestamp *end);
+/**
  * Converts \a timestamp to milliseconds.
  * @param timestamp - The timestamp in seconds and nanoseconds.
  */

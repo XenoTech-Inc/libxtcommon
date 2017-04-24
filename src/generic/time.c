@@ -1,6 +1,17 @@
 // XT headers
 #include <xt/time.h>
 
+void xtTimestampDiff(struct xtTimestamp *dest, const struct xtTimestamp *start, const struct xtTimestamp *end)
+{
+	if (start->nsec <= end->nsec) {
+		dest->sec  = end->sec  - start->sec;
+		dest->nsec = end->nsec - start->nsec;
+	} else {
+		dest->sec  = end->sec - start->sec - 1;
+		dest->nsec = 1000000000LLU - (start->nsec - end->nsec);
+	}
+}
+
 unsigned long long xtTimestampToMS(struct xtTimestamp *timestamp)
 {
 	return timestamp->sec * 1000LLU + timestamp->nsec / 1000000LLU;

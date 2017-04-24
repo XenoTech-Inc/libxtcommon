@@ -294,3 +294,160 @@ char *xtFormatTimePrecise(char *buf, size_t buflen, struct xtTimestamp *timestam
 	}
 	return buf;
 }
+
+unsigned xtFormatTimeDuration(char *buf, size_t buflen, const char *format, struct xtTimestamp *start, struct xtTimestamp *end)
+{
+	struct xtTimestamp diff;
+	xtTimestampDiff(&diff, start, end);
+	return xtFormatTimestamp(buf, buflen, format, &diff);
+}
+
+unsigned xtFormatTimestamp(char *buf, size_t buflen, const char *format, const struct xtTimestamp *time)
+{
+	char abuf[32], *g;
+	unsigned mag = 0;
+	char *bufend = buf + buflen, *ptr = buf;
+	unsigned n = 0, rn; int nn;
+	unsigned weeks, days, hours, mins, secs;
+	unsigned msec, usec, nsec;
+	struct xtTimestamp t = *time;
+	if (t.sec) {
+		if (t.sec >= 604800U)
+			mag = 7;
+		else if (t.sec >= 86400U)
+			mag = 6;
+		else if (t.sec >= 3600U)
+			mag = 5;
+		else if (t.sec >= 60U)
+			mag = 4;
+		else
+			mag = 3;
+	} else {
+		if (t.nsec >= 1000000LLU)
+			mag = 2;
+		else if (t.nsec >= 1000LLU)
+			mag = 1;
+	}
+	weeks = t.sec / 604800U; t.sec %= 604800U;
+	days  = t.sec /  86400U; t.sec %=  86400U;
+	hours = t.sec /   3600U; t.sec %=   3600U;
+	mins  = t.sec /     60U; t.sec %=     60U;
+	secs  = t.sec;
+	msec = t.nsec / 1000000LLU; t.nsec %= 1000000LLU;
+	usec = t.nsec /    1000LLU; t.nsec %=    1000LLU;
+	nsec = t.nsec;
+	for (const char *fptr = format; *fptr; ++fptr) {
+		switch (*fptr) {
+		case '%':
+			if (fptr[1] == '%') {
+				++fptr;
+				goto put;
+			}
+			nn = 0;
+			switch (fptr[1]) {
+			case 'g': {
+				// tricky case, because it calls itself
+				const char *ftbl[] = {
+					"%n",
+					"%u %n",
+					"%t %u %n",
+					"%s %t %u %n",
+					"%m %s %t %u %n",
+					"%h %m %s %t %u %n",
+					"%d %h %m %s %t %u %n",
+					"%w %d %h %m %s %t %u %n"
+				};
+				rn = xtFormatTimestamp(ptr, (size_t)(bufend - ptr), ftbl[mag], time);
+				ptr += rn;
+				n += rn;
+				++fptr;
+			}
+				break;
+			case 'G':
+				g = abuf;
+				if (weeks) { strcpy(g, "%w "); g += 3; }
+				if (days ) { strcpy(g, "%d "); g += 3; }
+				if (hours) { strcpy(g, "%h "); g += 3; }
+				if (mins ) { strcpy(g, "%m "); g += 3; }
+				if (secs ) { strcpy(g, "%s "); g += 3; }
+				if (msec ) { strcpy(g, "%t "); g += 3; }
+				if (usec ) { strcpy(g, "%u "); g += 3; }
+				if (nsec ) { strcpy(g, "%n "); g += 3; }
+				*g = '\0';
+				rn = xtFormatTimestamp(ptr, (size_t)(bufend - ptr), abuf, time);
+				ptr += rn;
+				n += rn;
+				++fptr;
+				break;
+			case 'W':
+				nn = snprintf(abuf, sizeof abuf, "%u", weeks);
+				goto append;
+			case 'w':
+				nn = snprintf(abuf, sizeof abuf, "%u %s", weeks, weeks == 1 ? "week" : "weeks");
+				goto append;
+			case 'D':
+				nn = snprintf(abuf, sizeof abuf, "%u", days);
+				goto append;
+			case 'd':
+				nn = snprintf(abuf, sizeof abuf, "%u %s", days, days == 1 ? "day" : "days");
+				goto append;
+			case 'H':
+				nn = snprintf(abuf, sizeof abuf, "%u", hours);
+				goto append;
+			case 'h':
+				nn = snprintf(abuf, sizeof abuf, "%u %s", hours, hours == 1 ? "hour" : "hours");
+				goto append;
+			case 'M':
+				nn = snprintf(abuf, sizeof abuf, "%u", mins);
+				goto append;
+			case 'm':
+				nn = snprintf(abuf, sizeof abuf, "%u %s", mins, mins == 1 ? "minute" : "minutes");
+				goto append;
+			case 'S':
+				nn = snprintf(abuf, sizeof abuf, "%u", secs);
+				goto append;
+			case 's':
+				nn = snprintf(abuf, sizeof abuf, "%u %s", secs, secs == 1 ? "second" : "seconds");
+				goto append;
+			case 'T':
+				nn = snprintf(abuf, sizeof abuf, "%u", msec);
+				goto append;
+			case 't':
+				nn = snprintf(abuf, sizeof abuf, "%u %s", msec, msec == 1 ? "millisecond" : "milliseconds");
+				goto append;
+			case 'U':
+				nn = snprintf(abuf, sizeof abuf, "%u", usec);
+				goto append;
+			case 'u':
+				nn = snprintf(abuf, sizeof abuf, "%u %s", usec, usec == 1 ? "microsecond" : "microseconds");
+				goto append;
+			case 'N':
+				nn = snprintf(abuf, sizeof abuf, "%u", nsec);
+				goto append;
+			case 'n':
+				nn = snprintf(abuf, sizeof abuf, "%u %s", nsec, nsec == 1 ? "nanosecond" : "nanoseconds");
+				goto append;
+			}
+			break;
+append:
+			if (nn < 0 || ptr + nn >= bufend)
+				goto end;
+			strcpy(ptr, abuf);
+			ptr += nn;
+			n += nn;
+			++fptr;
+			break;
+		default:
+put:
+			if (ptr >= bufend)
+				goto end;
+			++n;
+			*ptr++ = *fptr;
+			break;
+		}
+	}
+end:
+	if (n)
+		buf[n] = '\0';
+	return n;
+}
