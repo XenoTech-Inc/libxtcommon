@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define XT_PRINTF_BUFSZ 4096
+
 #ifdef XT_PRINTF_DEBUG
 #define dbgf(f,...) printf(f, ## __VA_ARGS__)
 #define dbgs(s) puts(s)
@@ -124,24 +126,79 @@ void xtRot13(void *buf, size_t buflen)
 	}
 }
 
-int xtsnprintf(char *str, size_t size, const char *format, ...)
+int xtprintf(const char *format, ...)
 {
-#define BUFSZ 4096
-	const char *fptr;
-	char sbuf[BUFSZ], *dbuf = NULL, *buf = sbuf, *ptr, *end;
-	size_t l;
 	int ret = 0;
 	va_list args;
 	va_start(args, format);
+	ret = xtvfprintf(stdout, format, args);
+	va_end(args);
+	return ret;
+}
+
+int xtvprintf(const char *format, va_list args)
+{
+	return xtvfprintf(stdout, format, args);
+}
+
+int xtfprintf(FILE *stream, const char *format, ...)
+{
+	int ret = 0;
+	va_list args;
+	va_start(args, format);
+	ret = xtvfprintf(stream, format, args);
+	va_end(args);
+	return ret;
+}
+
+int xtvfprintf(FILE *stream, const char *format, va_list args)
+{
+	char sbuf[XT_PRINTF_BUFSZ], *dbuf = NULL, *buf = sbuf;
+	size_t l;
+	int ret = 0;
 	l = strlen(format);
-	if (l > BUFSZ - 1) {
+	if (l > XT_PRINTF_BUFSZ - 1) {
+		dbuf = malloc(l + 1);
+		if (!dbuf)
+			goto fail;
+		buf = dbuf;
+	} else
+		l = XT_PRINTF_BUFSZ;
+	ret = xtvsnprintf(buf, l + 1, format, args);
+fail:
+	if (dbuf)
+		free(dbuf);
+	if (ret)
+		fputs(buf, stream);
+	return ret;
+}
+
+int xtsnprintf(char *str, size_t size, const char *format, ...)
+{
+	int ret = 0;
+	va_list args;
+	va_start(args, format);
+	ret = xtvsnprintf(str, size, format, args);
+	va_end(args);
+	return ret;
+}
+
+int xtvsnprintf(char *str, size_t size, const char *format, va_list args)
+{
+	const char *fptr;
+	char sbuf[XT_PRINTF_BUFSZ], *dbuf = NULL, *buf = sbuf, *ptr, *end;
+	size_t l;
+	int ret = 0;
+	l = strlen(format);
+	if (l > XT_PRINTF_BUFSZ - 1) {
 		dbuf = malloc(l + 1);
 		if (!dbuf)
 			goto fail;
 		buf = dbuf;
 		end = buf + l;
-	}
-	end = buf + BUFSZ;
+	} else
+		l = XT_PRINTF_BUFSZ;
+	end = buf + XT_PRINTF_BUFSZ;
 	// safe guard termination in case snprintf fucks up
 	// (*ahum* windoze *ahum*)
 	if (size)
@@ -149,7 +206,10 @@ int xtsnprintf(char *str, size_t size, const char *format, ...)
 	for (ptr = buf, fptr = format; *fptr; ++fptr) {
 		switch (*fptr) {
 		case '%': {
-			const char *fstr = "#0- +'", *arg = fptr, *aptr = fptr + 1;
+			const char *fstr = "#0- +'", *aptr = fptr + 1;
+#ifdef XT_PRINTF_DEBUG
+			const char *arg = fptr;
+#endif
 			const char *lmod[] = {
 				"hh", "h", "l", "ll", "L", "q", "j", "z", "t",
 				// XXX consider s/I/N/
@@ -347,7 +407,6 @@ put:
 resize:
 	// FIXME try resize for all goto statements to this label
 fail:
-	va_end(args);
 	if (dbuf)
 		free(dbuf);
 	return ret;

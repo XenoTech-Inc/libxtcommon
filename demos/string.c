@@ -168,14 +168,13 @@ static void printFormat(void)
 		"%I16d %I16o\n"
 		"%I32d %I32x\n"
 		"%I64d %I64u",
-		INT8_MIN, INT8_MAX,
+		INT8_MIN, UINT8_MAX,
 		INT16_MIN, INT16_MAX,
 		INT32_MIN, INT32_MAX,
-		INT64_MIN, INT64_MAX
+		INT64_MIN, UINT64_MAX
 	);
 	puts(buf);
-	xtsnprintf(buf, sizeof buf, "Custom error format: message=%M, code=%d", errno);
-	puts(buf);
+	xtprintf("Custom error format: message=%M, code=%d\n", errno);
 }
 
 int main(void)
