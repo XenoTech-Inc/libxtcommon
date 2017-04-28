@@ -185,7 +185,7 @@ int xtsnprintf(char *str, size_t size, const char *format, ...)
 
 int xtvsnprintf(char *str, size_t size, const char *format, va_list args)
 {
-	const char *fptr;
+	const char *fptr, *rep;
 	char sbuf[XT_PRINTF_BUFSZ], *dbuf = NULL, *buf = sbuf, *ptr, *end;
 	size_t l;
 	int ret = 0;
@@ -233,6 +233,18 @@ int xtvsnprintf(char *str, size_t size, const char *format, va_list args)
 			};
 #define LMODSZ (sizeof(lmod)/sizeof(lmod[0]))
 #define CSPECSZ (sizeof(cspec)/sizeof(cspec[0]))
+			const char *i8tbl[] = {
+				PRId8, PRIi8, PRIo8, PRIu8, PRIx8, PRIX8
+			};
+			const char *i16tbl[] = {
+				PRId16, PRIi16, PRIo16, PRIu16, PRIx16, PRIX16
+			};
+			const char *i32tbl[] = {
+				PRId32, PRIi32, PRIo32, PRIu32, PRIx32, PRIX32
+			};
+			const char *i64tbl[] = {
+				PRId64, PRIi64, PRIo64, PRIu64, PRIx64, PRIX64
+			};
 			char *sub;
 			int ptype = -1, mod = -1, conv = -1;
 			unsigned flags = 0, prec = 0;
@@ -296,97 +308,34 @@ int xtvsnprintf(char *str, size_t size, const char *format, va_list args)
 				}
 			// interpret (u)int*_t variants
 			switch (mod) {
-			case 9: {
-				const char *rep = PRId8;
-				size_t l;
-				switch (conv) {
-				case 0: rep = PRId8; break;
-				case 1: rep = PRIi8; break;
-				case 2: rep = PRIo8; break;
-				case 3: rep = PRIu8; break;
-				case 4: rep = PRIx8; break;
-				case 5: rep = PRIX8; break;
-				}
-				dbgf("arglen=%zu\n", (size_t)(aptr - arg));
-				l = strlen(rep);
-				dbgf("replen=%zu (%%%s)\n", l, rep);
+			case 9:
+				rep = i8tbl[conv];
 				dbgs("int8_t");
-				if (ptr + l + 1 >= end)
-					goto resize;
-				fptr = aptr - 1;
-				*ptr++ = '%';
-				strcpy(ptr, rep);
-				ptr += l;
-			}
-				continue;
-			case 10: {
-				const char *rep = PRId16;
-				size_t l;
-				switch (conv) {
-				case 0: rep = PRId16; break;
-				case 1: rep = PRIi16; break;
-				case 2: rep = PRIo16; break;
-				case 3: rep = PRIu16; break;
-				case 4: rep = PRIx16; break;
-				case 5: rep = PRIX16; break;
-				}
-				dbgf("arglen=%zu\n", (size_t)(aptr - arg));
-				l = strlen(rep);
-				dbgf("replen=%zu (%%%s)\n", l, rep);
+				goto custom_put;
+			case 10:
+				rep = i16tbl[conv];
 				dbgs("int16_t");
-				if (ptr + l + 1 >= end)
-					goto resize;
-				fptr = aptr - 1;
-				*ptr++ = '%';
-				strcpy(ptr, rep);
-				ptr += l;
-			}
-				continue;
-			case 11: {
-				const char *rep = PRId32;
-				size_t l;
-				switch (conv) {
-				case 0: rep = PRId32; break;
-				case 1: rep = PRIi32; break;
-				case 2: rep = PRIo32; break;
-				case 3: rep = PRIu32; break;
-				case 4: rep = PRIx32; break;
-				case 5: rep = PRIX32; break;
-				}
-				dbgf("arglen=%zu\n", (size_t)(aptr - arg));
-				l = strlen(rep);
-				dbgf("replen=%zu (%%%s)\n", l, rep);
+				goto custom_put;
+			case 11:
+				rep = i32tbl[conv];
 				dbgs("int32_t");
-				if (ptr + l + 1 >= end)
-					goto resize;
-				fptr = aptr - 1;
-				*ptr++ = '%';
-				strcpy(ptr, rep);
-				ptr += l;
-			}
-				continue;
-			case 12: {
-				const char *rep = PRId64;
-				size_t l;
-				switch (conv) {
-				case 0: rep = PRId64; break;
-				case 1: rep = PRIi64; break;
-				case 2: rep = PRIo64; break;
-				case 3: rep = PRIu64; break;
-				case 4: rep = PRIx64; break;
-				case 5: rep = PRIX64; break;
-				}
+				goto custom_put;
+			case 12:
+				rep = i64tbl[conv];
+				dbgs("int64_t");
+				goto custom_put;
+			default:
+				break;
+custom_put:
 				dbgf("arglen=%zu\n", (size_t)(aptr - arg));
 				l = strlen(rep);
 				dbgf("replen=%zu (%%%s)\n", l, rep);
-				dbgs("int64_t");
 				if (ptr + l + 1 >= end)
 					goto resize;
 				fptr = aptr - 1;
 				*ptr++ = '%';
 				strcpy(ptr, rep);
 				ptr += l;
-			}
 				continue;
 			}
 stat:
