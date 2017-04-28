@@ -312,29 +312,29 @@ unsigned xtFormatTimestamp(char *buf, size_t buflen, const char *format, const s
 	unsigned msec, usec, nsec;
 	struct xtTimestamp t = *time;
 	if (t.sec) {
-		if (t.sec >= 604800U)
+		if (t.sec >= XT_DATE_WEEK)
 			mag = 7;
-		else if (t.sec >= 86400U)
+		else if (t.sec >= XT_DATE_DAY)
 			mag = 6;
-		else if (t.sec >= 3600U)
+		else if (t.sec >= XT_DATE_HOUR)
 			mag = 5;
-		else if (t.sec >= 60U)
+		else if (t.sec >= XT_DATE_MIN)
 			mag = 4;
 		else
 			mag = 3;
 	} else {
-		if (t.nsec >= 1000000LLU)
+		if (t.nsec >= XT_DATE_MSEC)
 			mag = 2;
-		else if (t.nsec >= 1000LLU)
+		else if (t.nsec >= XT_DATE_USEC)
 			mag = 1;
 	}
-	weeks = t.sec / 604800U; t.sec %= 604800U;
-	days  = t.sec /  86400U; t.sec %=  86400U;
-	hours = t.sec /   3600U; t.sec %=   3600U;
-	mins  = t.sec /     60U; t.sec %=     60U;
+	weeks = t.sec / XT_DATE_WEEK; t.sec %= XT_DATE_WEEK;
+	days  = t.sec / XT_DATE_DAY ; t.sec %= XT_DATE_DAY ;
+	hours = t.sec / XT_DATE_HOUR; t.sec %= XT_DATE_HOUR;
+	mins  = t.sec / XT_DATE_MIN ; t.sec %= XT_DATE_MIN ;
 	secs  = t.sec;
-	msec = t.nsec / 1000000LLU; t.nsec %= 1000000LLU;
-	usec = t.nsec /    1000LLU; t.nsec %=    1000LLU;
+	msec = t.nsec / XT_DATE_MSEC; t.nsec %= XT_DATE_MSEC;
+	usec = t.nsec / XT_DATE_USEC; t.nsec %= XT_DATE_USEC;
 	nsec = t.nsec;
 	for (const char *fptr = format; *fptr; ++fptr) {
 		switch (*fptr) {
