@@ -1,12 +1,12 @@
 // XT headers
 #include <xt/time.h>
 
-unsigned long long xtTimestampToMS(struct xtTimestamp *timestamp)
+unsigned long long xtTimestampToMS(const struct xtTimestamp *timestamp)
 {
 	return timestamp->sec * 1000LLU + timestamp->nsec / 1000000LLU;
 }
 
-unsigned long long xtTimestampToUS(struct xtTimestamp *timestamp)
+unsigned long long xtTimestampToUS(const struct xtTimestamp *timestamp)
 {
 	return timestamp->sec * 1000000LLU + timestamp->nsec / 1000LLU;
 }
