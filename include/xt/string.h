@@ -87,7 +87,7 @@ char *xtFormatTimePrecise(char *buf, size_t buflen, struct xtTimestamp *timestam
  * @param strip - Whether to strip preceding units if they are zero.
  * @returns Number of written characters to buffer. Zero is returned on failure.
  */
-unsigned xtFormatTimeDuration(char *buf, size_t buflen, const char *format, struct xtTimestamp *start, struct xtTimestamp *end);
+unsigned xtFormatTimeDuration(char *buf, size_t buflen, const char *format, const struct xtTimestamp *start, const struct xtTimestamp *end);
 unsigned xtFormatTimestamp(char *buf, size_t buflen, const char *format, const struct xtTimestamp *time);
 /**
  * Converts an uint64_t to a string suitable for printing.

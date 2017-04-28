@@ -295,7 +295,7 @@ char *xtFormatTimePrecise(char *buf, size_t buflen, struct xtTimestamp *timestam
 	return buf;
 }
 
-unsigned xtFormatTimeDuration(char *buf, size_t buflen, const char *format, struct xtTimestamp *start, struct xtTimestamp *end)
+unsigned xtFormatTimeDuration(char *buf, size_t buflen, const char *format, const struct xtTimestamp *start, const struct xtTimestamp *end)
 {
 	struct xtTimestamp diff;
 	xtTimestampDiff(&diff, start, end);
@@ -392,37 +392,37 @@ unsigned xtFormatTimestamp(char *buf, size_t buflen, const char *format, const s
 				nn = snprintf(abuf, sizeof abuf, "%u %s", days, days == 1 ? "day" : "days");
 				goto append;
 			case 'H':
-				nn = snprintf(abuf, sizeof abuf, "%u", hours);
+				nn = snprintf(abuf, sizeof abuf, "%02u", hours);
 				goto append;
 			case 'h':
 				nn = snprintf(abuf, sizeof abuf, "%u %s", hours, hours == 1 ? "hour" : "hours");
 				goto append;
 			case 'M':
-				nn = snprintf(abuf, sizeof abuf, "%u", mins);
+				nn = snprintf(abuf, sizeof abuf, "%02u", mins);
 				goto append;
 			case 'm':
 				nn = snprintf(abuf, sizeof abuf, "%u %s", mins, mins == 1 ? "minute" : "minutes");
 				goto append;
 			case 'S':
-				nn = snprintf(abuf, sizeof abuf, "%u", secs);
+				nn = snprintf(abuf, sizeof abuf, "%02u", secs);
 				goto append;
 			case 's':
 				nn = snprintf(abuf, sizeof abuf, "%u %s", secs, secs == 1 ? "second" : "seconds");
 				goto append;
 			case 'T':
-				nn = snprintf(abuf, sizeof abuf, "%u", msec);
+				nn = snprintf(abuf, sizeof abuf, "%03u", msec);
 				goto append;
 			case 't':
 				nn = snprintf(abuf, sizeof abuf, "%u %s", msec, msec == 1 ? "millisecond" : "milliseconds");
 				goto append;
 			case 'U':
-				nn = snprintf(abuf, sizeof abuf, "%u", usec);
+				nn = snprintf(abuf, sizeof abuf, "%03u", usec);
 				goto append;
 			case 'u':
 				nn = snprintf(abuf, sizeof abuf, "%u %s", usec, usec == 1 ? "microsecond" : "microseconds");
 				goto append;
 			case 'N':
-				nn = snprintf(abuf, sizeof abuf, "%u", nsec);
+				nn = snprintf(abuf, sizeof abuf, "%03u", nsec);
 				goto append;
 			case 'n':
 				nn = snprintf(abuf, sizeof abuf, "%u %s", nsec, nsec == 1 ? "nanosecond" : "nanoseconds");
