@@ -203,22 +203,6 @@ char *xtFileGetHomeDir(char *buf, size_t buflen)
 	return buf;
 }
 
-#if 0
-int xtFileGetPathFromFilePointer(char *restrict buf, size_t buflen, FILE *restrict f)
-{
-	if (!f)
-		return XT_EINVAL;
-	char cmd[256];
-	int fd = fileno(f);
-	sprintf(cmd, "/proc/self/fd/%d", fd);
-	ssize_t len = readlink(cmd, buf, buflen);
-	if (len == -1)
-		return _xtTranslateSysError(errno);
-	buf[len] = '\0';
-	return 0;
-}
-#endif
-
 int xtFileGetRealPath(char *restrict buf, size_t buflen, const char *restrict path)
 {
 	(void) buflen; // Future use hopefully
