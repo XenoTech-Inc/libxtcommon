@@ -75,7 +75,7 @@ int _xt_vsnprintf(char *str, size_t size, char *format, char *end, va_list args)
 #define CSPECSZ (sizeof(cspec)/sizeof(cspec[0]))
 			char *sub;
 			int ptype = -1, mod = -1, conv = -1;
-			unsigned flags = 0, prec = 0;
+			unsigned flags = 0, prec = 0, cfw = 0;
 			int fw = 0;
 			while (*aptr && (sub = strchr(fstr, *aptr))) {
 				flags |= 1 << (sub - fstr);
@@ -140,28 +140,56 @@ custom_put:
 				dbgf("arglen=%u\n", (unsigned)(aptr - arg));
 				l = strlen(rep);
 				dbgf("replen=%u (%%%s)\n", (unsigned)l, rep);
-				if (ptr + l + 1 >= end) {
-					dbgs("custom_put");
-						goto resize;
+				// reconstruct flags
+				char argf[16], *argfp = argf;
+				unsigned argfn = 0;
+				argf[0] = '\0';
+				for (unsigned i = flags, j = 0; i; i >>= 1, ++j)
+					if (i & 1) {
+						*argfp++ = fstr[j];
+						++argfn;
+					}
+				argf[argfn] = '\0';
+				dbgf("argf=%s (%u): flags=%u\n", argf, argfn, flags);
+				char argfw[32];
+				unsigned argfwn = 0;
+				argfw[0] = '\0';
+				if (cfw) {
+					// reconstruct field width
+					sprintf(argfw, "%d", fw);
+					argfwn = strlen(argfw);
 				}
+				dbgf("argfw=%s (%u)\n", argfw, argfwn);
+				unsigned argsn = argfn + argfwn;
+				if (ptr + l + argsn + 1 >= end)
+					goto resize;
+				argfw[argfwn] = '\0';
 				// move format if replacement is longer OR shorter
 				int diff = 0;
-				if (l >= aptr - fptr) {
-					diff = l - (aptr - fptr) + 1;
+				unsigned arglen = aptr - fptr + argsn;
+				if (l >= arglen) {
+					diff = l - arglen + 1;
 					size_t n = end - aptr - 1;
 					dbgf("move: %d,%u\n", diff, (unsigned)n);
-					memmove(aptr + diff, aptr, n);
+					memmove((void*)(aptr + diff), (const void*)aptr, n);
 				}
 				dbgf("diff: %d\n", diff);
 				fptr = aptr + diff - 1;
-					*ptr++ = '%';
+				*ptr++ = '%';
+				if (argfn) {
+					memcpy(ptr, argf, argfn);
+					ptr += argfn;
+				}
+				if (argfwn) {
+					memcpy(ptr, argfw, argfwn);
+					ptr += argfwn;
+				}
 				memcpy(ptr, rep, l);
-					ptr += l;
+				ptr += l;
 				dbgf("fptr=%s\n", fptr);
-				dbgf("buf=%s\n", buf);
 				dbgf("format=%s\n", format);
-					dbgf("flags=%u,fw=%d,prec=(%d,%u),mod=%d,conv=%d\n", flags, fw, ptype, prec, mod, conv);
-					continue;
+				dbgf("flags=%u,fw=%d,prec=(%d,%u),mod=%d,conv=%d\n", flags, fw, ptype, prec, mod, conv);
+				continue;
 			}
 stat:
 			dbgf("flags=%u,fw=%d,prec=(%d,%u),mod=%d,conv=%d\n", flags, fw, ptype, prec, mod, conv);

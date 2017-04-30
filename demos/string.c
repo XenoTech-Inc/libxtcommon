@@ -164,10 +164,10 @@ static void printFormat(void)
 	xtsnprintf(buf, sizeof buf, "float test: %+.2f %g %lf", .42f, -4e3 + 1.0, 0.0001);
 	puts(buf);
 	xtsnprintf(buf, sizeof buf, "int_t variants:"
-		"%I8d %I8u\n"
-		"%I16d %I16o\n"
-		"%I32d %I32x\n"
-		"%I64d %I64u",
+		"% +6I8d %I8u\n"
+		"%I16d %08I16o\n"
+		"%I32d %#-I32x\n"
+		"%30I64d %I64u",
 		INT8_MIN, UINT8_MAX,
 		INT16_MIN, INT16_MAX,
 		INT32_MIN, INT32_MAX,
