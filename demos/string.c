@@ -141,11 +141,11 @@ static void formatSI(void)
 	puts("----------------------------------------------");
 	for (unsigned i = 0; i < 16; ++i) {
 		size_t num = rand();
-		unsigned decimals = rand() % 4;
+		unsigned decimals = 1 + (rand() % 3);
 		unsigned bin = rand() & 1;
 		unsigned dummy;
 		xtFormatBytesSI(buf, sizeof buf, num, decimals, bin, &dummy);
-		printf("(%u,%u) %-20zu  %s\n", decimals, bin, num, buf);
+		xtprintf("(%u,%u) %-20zu  %s\n", decimals, bin, num, buf);
 	}
 }
 
@@ -156,10 +156,10 @@ static void printFormat(void)
 	char buf[256];
 	xtsnprintf(buf, sizeof buf, "%s normal & simple %10s", "perfectly", "format");
 	puts(buf);
-	long lnum = 3419803901L;
+	long long lnum = 3419803901L;
 	unsigned unum = 30;
 	size_t znum = ~0xcafebabe;
-	xtsnprintf(buf, sizeof buf, "wide test: %ld %04u %20zu", lnum, unum, znum);
+	xtsnprintf(buf, sizeof buf, "wide test: %lld %04u %20zu", lnum, unum, znum);
 	puts(buf);
 	xtsnprintf(buf, sizeof buf, "float test: %+.2f %g %lf", .42f, -4e3 + 1.0, 0.0001);
 	puts(buf);

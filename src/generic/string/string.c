@@ -1,4 +1,5 @@
 // XT headers
+#include <xt/os_macros.h>
 #include <xt/error.h>
 #include <xt/string.h>
 
@@ -39,17 +40,17 @@ char *xtFormatBytesSI(char *restrict buf, size_t buflen, uint64_t value, unsigne
 	if (!decimals || !npow) {
 		if (npow) {
 			const char *format = strictBinary ? "%zu%ciB" : "%zu%cB";
-			snprintf(buf, buflen, format, d, *si);
+			xtsnprintf(buf, buflen, format, d, *si);
 		} else
-			snprintf(buf, buflen, "%zuB", d);
+			xtsnprintf(buf, buflen, "%zuB", d);
 	} else {
 		char sbuf[32];
 		const char *format = strictBinary ? "%%.0%ulf%%ciB" : "%%.0%ulf%%cB";
-		snprintf(sbuf, sizeof sbuf, format, decimals);
+		xtsnprintf(sbuf, sizeof sbuf, format, decimals);
 		double v = value;
 		for (unsigned i = 0; i < npow; ++i)
 			v /= siBase;
-		snprintf(buf, buflen, sbuf, v, *si);
+		xtsnprintf(buf, buflen, sbuf, v, *si);
 	}
 	if (base)
 		*base = (unsigned) (si - siBaseStr);
@@ -206,12 +207,16 @@ int xtvsnprintf(char *str, size_t size, const char *format, va_list args)
 	for (ptr = buf, fptr = format; *fptr; ++fptr) {
 		switch (*fptr) {
 		case '%': {
+			char *sub;
+			int ptype = -1, mod = -1, conv = -1;
+			unsigned flags = 0, prec = 0;
+			int fw = 0;
 			const char *fstr = "#0- +'", *aptr = fptr + 1;
 #ifdef XT_PRINTF_DEBUG
 			const char *arg = fptr;
 #endif
 			const char *lmod[] = {
-				"hh", "h", "l", "ll", "L", "q", "j", "z", "t",
+				"hh", "h", "ll", "l", "L", "q", "j", "z", "t",
 				// XXX consider s/I/N/
 				// 9    10     11     12
 				"I8", "I16", "I32", "I64",
@@ -245,10 +250,6 @@ int xtvsnprintf(char *str, size_t size, const char *format, va_list args)
 			const char *i64tbl[] = {
 				PRId64, PRIi64, PRIo64, PRIu64, PRIx64, PRIX64
 			};
-			char *sub;
-			int ptype = -1, mod = -1, conv = -1;
-			unsigned flags = 0, prec = 0;
-			int fw = 0;
 			if (fptr[1] == 'M') {
 				const char *msg = xtGetErrorStr(errno);
 				size_t l = strlen(msg);
@@ -266,11 +267,13 @@ int xtvsnprintf(char *str, size_t size, const char *format, va_list args)
 			if (!*aptr)
 				goto stat;
 			if (*aptr == '-' || isdigit(*aptr)) {
+				dbgf("aptr=%s\n", aptr);
 				sscanf(aptr, "%d", &fw);
 				if (*aptr == '-') ++aptr;
 				while (*aptr && isdigit(*aptr))
 					++aptr;
 			}
+			dbgf("aptr=%s\n", aptr);
 			if (!*aptr)
 				goto stat;
 			if (*aptr == '.') {
@@ -327,15 +330,28 @@ int xtvsnprintf(char *str, size_t size, const char *format, va_list args)
 			default:
 				break;
 custom_put:
-				dbgf("arglen=%zu\n", (size_t)(aptr - arg));
+				dbgf("arglen=%u\n", (unsigned)(aptr - arg));
 				l = strlen(rep);
-				dbgf("replen=%zu (%%%s)\n", l, rep);
+				dbgf("replen=%u (%%%s)\n", (unsigned)l, rep);
 				if (ptr + l + 1 >= end)
 					goto resize;
-				fptr = aptr - 1;
-				*ptr++ = '%';
-				strcpy(ptr, rep);
-				ptr += l;
+				// move format if replacement is longer OR shorter
+				int diff = 0;
+				if (l >= aptr - fptr) {
+					diff = l - (aptr - fptr) + 1;
+					size_t n = end - aptr - 1;
+					dbgf("move: %d,%u\n", diff, (unsigned)n);
+					memmove(aptr + diff, aptr, n);
+				}
+				dbgf("diff: %d\n", diff);
+				fptr = aptr + diff - 1;
+					*ptr++ = '%';
+				memcpy(ptr, rep, l);
+					ptr += l;
+				dbgf("fptr=%s\n", fptr);
+				dbgf("buf=%s\n", buf);
+				dbgf("format=%s\n", format);
+				dbgf("flags=%u,fw=%d,prec=(%d,%u),mod=%d,conv=%d\n", flags, fw, ptype, prec, mod, conv);
 				continue;
 			}
 stat:
@@ -426,7 +442,11 @@ char *xtStringReverse(char *str)
 
 void xtStringSplit(char *restrict str, const char *restrict delim, char **restrict tokens, unsigned *restrict num)
 {
+#if XT_IS_LINUX
 #define strtok_s strtok_r
+#else
+#define strtok_r strtok_s
+#endif
 	char *save_ptr, *token = strtok_r(str, delim, &save_ptr);
 	unsigned i = 0;
 	for (; i < *num && token; ++i) {
@@ -434,7 +454,11 @@ void xtStringSplit(char *restrict str, const char *restrict delim, char **restri
 		token = strtok_r(save_ptr, delim, &save_ptr);
 	}
 	*num = i;
+#if XT_IS_LINUX
+#undef strtok_s
+#else
 #undef strtok_r
+#endif
 }
 
 bool xtStringStartsWith(const char *restrict haystack, const char *restrict needle)

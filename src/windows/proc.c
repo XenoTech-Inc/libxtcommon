@@ -3,8 +3,8 @@
 #include <xt/error.h>
 
 // System headers
-#include <Windows.h> // Include windows.h before TlHelp32.h, otherwise we get problems
-#include <TlHelp32.h> // For CreateToolhelp32Snapshot
+#include <windows.h> // Include windows.h before TlHelp32.h, otherwise we get problems
+#include <tlhelp32.h> // For CreateToolhelp32Snapshot
 
 // STD headers
 #include <stdbool.h>

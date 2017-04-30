@@ -5,8 +5,8 @@
 #include <xt/string.h>
 
 // System headers
-#include <Windows.h> // Include windows.h before TlHelp32.h, otherwise we get problems
-#include <TlHelp32.h> // For CreateToolhelp32Snapshot
+#include <windows.h> // Include windows.h before TlHelp32.h, otherwise we get problems
+#include <tlhelp32.h> // For CreateToolhelp32Snapshot
 #if XT_IS_X64
 	#include <intrin.h> // For the cpuid function, only available on 64 bit...
 #endif
