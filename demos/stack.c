@@ -1,6 +1,7 @@
 #include <xt/stack.h>
 #include <xt/error.h>
 #include <xt/os.h>
+#include <xt/string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -87,23 +88,23 @@ int push(void)
 	puts("Pushing random data");
 	for (unsigned i = 0; i < LISTSZ; ++i) {
 		if (xtStackHDPush(&sthd, listhd[i])) {
-			fprintf(stderr, "Failed to push %hd to StackHD\n", listhd[i]);
+			xtfprintf(stderr, "Failed to push %hd to StackHD\n", listhd[i]);
 			goto fail;
 		}
 		if (xtStackDPush(&std, listd[i])) {
-			fprintf(stderr, "Failed to push %d to StackD\n", listd[i]);
+			xtfprintf(stderr, "Failed to push %d to StackD\n", listd[i]);
 			goto fail;
 		}
 		if (xtStackUPush(&stu, listu[i])) {
-			fprintf(stderr, "Failed to push %u to StackU\n", listu[i]);
+			xtfprintf(stderr, "Failed to push %u to StackU\n", listu[i]);
 			goto fail;
 		}
 		if (xtStackLUPush(&stlu, listlu[i])) {
-			fprintf(stderr, "Failed to push %lu to StackLU\n", listlu[i]);
+			xtfprintf(stderr, "Failed to push %lu to StackLU\n", listlu[i]);
 			goto fail;
 		}
 		if (xtStackZUPush(&stzu, listzu[i])) {
-			fprintf(stderr, "Failed to push %zu to StackZU\n", listzu[i]);
+			xtfprintf(stderr, "Failed to push %zu to StackZU\n", listzu[i]);
 			goto fail;
 		}
 	}
@@ -120,7 +121,7 @@ int push(void)
 		}
 		if (hd != listhd[LISTSZ - i - 1]) {
 			fputs("StackHD is corrupted\n", stderr);
-			fprintf(stderr, "Got %hd but expected %hd\n", hd, listhd[i]);
+			xtfprintf(stderr, "Got %hd but expected %hd\n", hd, listhd[i]);
 			goto fail;
 		}
 		if (!xtStackDPop(&std, &d)) {
@@ -129,7 +130,7 @@ int push(void)
 		}
 		if (d != listd[LISTSZ - i - 1]) {
 			fputs("StackD is corrupted\n", stderr);
-			fprintf(stderr, "Got %d but expected %d\n", d, listd[i]);
+			xtfprintf(stderr, "Got %d but expected %d\n", d, listd[i]);
 			goto fail;
 		}
 		if (!xtStackUPop(&stu, &u)) {
@@ -138,7 +139,7 @@ int push(void)
 		}
 		if (u != listu[LISTSZ - i - 1]) {
 			fputs("StackU is corrupted\n", stderr);
-			fprintf(stderr, "got %u but expected %u\n", u, listu[i]);
+			xtfprintf(stderr, "got %u but expected %u\n", u, listu[i]);
 			goto fail;
 		}
 		if (!xtStackLUPop(&stlu, &lu)) {
@@ -147,7 +148,7 @@ int push(void)
 		}
 		if (lu != listlu[LISTSZ - i - 1]) {
 			fputs("StackLU is corrupted\n", stderr);
-			fprintf(stderr, "got %lu but expected %lu\n", lu, listlu[i]);
+			xtfprintf(stderr, "got %lu but expected %lu\n", lu, listlu[i]);
 			goto fail;
 		}
 		if (!xtStackZUPop(&stzu, &zu)) {
@@ -156,7 +157,7 @@ int push(void)
 		}
 		if (zu != listzu[LISTSZ - i - 1]) {
 			fputs("StackZU is corrupted\n", stderr);
-			fprintf(stderr, "got %zu but expected %zu\n", zu, listzu[i]);
+			xtfprintf(stderr, "got %zu but expected %zu\n", zu, listzu[i]);
 			goto fail;
 		}
 	}

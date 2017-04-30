@@ -1,6 +1,7 @@
 #include <xt/error.h>
 #include <xt/hashmap.h>
 #include <xt/os.h>
+#include <xt/string.h>
 #include <xt/time.h>
 #include <assert.h>
 #include <stdio.h>
@@ -33,7 +34,7 @@ int main(void)
 	xtHashmapSetFlags(&map, XT_HASHMAP_FREE_KEY);
 	size_t j = 0;
 	void *key, *val;
-	printf("Adding %d items\n", TEST_SIZE);
+	xtprintf("Adding %d items\n", TEST_SIZE);
 	for (size_t i = 0; i < TEST_SIZE; ++i) {
 		size_t *v = malloc(sizeof(size_t));
 		if (!v) {
@@ -43,39 +44,39 @@ int main(void)
 		*v = i;
 		int ret;
 		if ((ret = xtHashmapAdd(&map, v, NULL))  != 0) {
-			fprintf(stderr, "Failed to add `%zu': %s\n", i, xtGetErrorStr(ret));
+			xtfprintf(stderr, "Failed to add `%zu': %s\n", i, xtGetErrorStr(ret));
 			goto fail;
 		}
 		if (i > HASHMAP_SIZE) {
 			if (i == HASHMAP_SIZE + 1)
 				puts("Iterating hashmap while adding new data");
 			if (!xtHashmapForeach(&map, &key, &val)) {
-				fprintf(stderr, "Broken iterator state: (%p,%p)\n", key, val);
+				xtfprintf(stderr, "Broken iterator state: (%p,%p)\n", key, val);
 				goto fail;
 			}
 			++j;
 			if (*(size_t*)key != j) {
-				fprintf(stderr, "Value: %zu, (expected: %zu)\n", *(size_t*)key, j);
+				xtfprintf(stderr, "Value: %zu, (expected: %zu)\n", *(size_t*)key, j);
 				goto fail;
 			}
 		}
 		if ((i + 1) != xtHashmapGetCount(&map)) {
-			fprintf(stderr, "Wrong size: %zu (expected: %zu)\n", xtHashmapGetCount(&map), i + 1);
+			xtfprintf(stderr, "Wrong size: %zu (expected: %zu)\n", xtHashmapGetCount(&map), i + 1);
 			goto fail;
 		}
 	}
 	puts("Done adding items");
-	printf("Count: %zu\n", xtHashmapGetCount(&map));
+	xtprintf("Count: %zu\n", xtHashmapGetCount(&map));
 	xtHashmapForeachEnd(&map);
 	xtConsoleFillLine("-");
 	puts("-- LOOP TEST");
 	for (j = 0; xtHashmapForeach(&map, &key, &val); ++j)
 		if (j != *(size_t*)key) {
-			fprintf(stderr, "Value: %zu, (expected: %zu)\n", *(size_t*)key, j);
+			xtfprintf(stderr, "Value: %zu, (expected: %zu)\n", *(size_t*)key, j);
 			goto fail;
 		}
 	if (j != TEST_SIZE) {
-		fprintf(stderr, "Wrong size: %zu (expected: %d)\n", j, TEST_SIZE);
+		xtfprintf(stderr, "Wrong size: %zu (expected: %d)\n", j, TEST_SIZE);
 		goto fail;
 	}
 	puts("Looping is OK");
