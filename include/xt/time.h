@@ -125,6 +125,7 @@ void xtSleepMS(unsigned msecs);
  */
 void xtTimestampDiff(struct xtTimestamp *dest, const struct xtTimestamp *start, const struct xtTimestamp *end);
 void xtTimestampToDate(struct xtDate *date, const struct xtTimestamp *timestamp);
+void xtDateToTimestamp(struct xtTimestamp *timestamp, const struct xtDate *date);
 /**
  * Converts \a timestamp to milliseconds.
  * @param timestamp - The timestamp in seconds and nanoseconds.
