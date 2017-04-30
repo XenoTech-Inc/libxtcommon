@@ -81,10 +81,29 @@ char *xtFormatTimePrecise(char *buf, size_t buflen, struct xtTimestamp *timestam
 /**
  * Fills the buffer with the elapsed time in the specified format.
  * If \a end is a timestamp before \a start, the result is unspecified.
+ * The following arguments are supported:
+ * * %W - Weeks in numbers
+ * * %w - Number of weeks
+ * * %D - Days in numbers (0-6)
+ * * %d - number of days (0-6 days)
+ * * %H - Hours in 2 decimal numbers (00-23)
+ * * %h - Number of hours
+ * * %M - Minutes in 2 decimal numbers (00-59)
+ * * %m - Number of minutes
+ * * %S - Seconds in 2 decimal numbers (00-59)
+ * * %s - Number of seconds
+ * * %T - Milliseconds in 3 decimal numbers (000-999)
+ * * %t - Number of milliseconds
+ * * %U - Microseconds in 3 decimal numbers (000-999)
+ * * %u - Number of microseconds
+ * * %N - Nanoseconds in 3 decimal numbers (000-999)
+ * * %n - Number of nanoseconds
+ * These special arguments are also supported:
+ * * %g - Full format starting with most significant unit
+ * * %G - Full format starting with most significant unit skipping units that are zero.
  * @param format - The format string.
  * @param start - Start timestamp.
  * @param end - End timestamp.
- * @param strip - Whether to strip preceding units if they are zero.
  * @returns Number of written characters to buffer. Zero is returned on failure.
  */
 unsigned xtFormatTimeDuration(char *buf, size_t buflen, const char *format, const struct xtTimestamp *start, const struct xtTimestamp *end);
