@@ -1,25 +1,29 @@
 This is the size, in bytes, of all primitive types on different OS's:
 
 Linux x64
-int:		4
-long:		8
-long long:	8
-void*:		8
+int:        4
+long:       8
+long long:  8
+size_t:     8
+void*:      8
 
 Linux x86
-int:		4
-long:		4
-long long:	8
-void*:		4
+int:        4
+long:       4
+long long:  8
+size_t:     4
+void*:      4
 
 Windows x64
-int:		4
-long:		4
-long long:	8
-void*:		8
+int:        4
+long:       4
+long long:  8
+size_t:     8
+void*:      8
 
 Windows x86
-int:		4
-long:		4
-long long:	8
-void*:		4
+int:        4
+long:       4
+long long:  8
+size_t:     4
+void*:      4
