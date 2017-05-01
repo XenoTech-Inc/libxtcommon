@@ -25,6 +25,11 @@
 
 extern int _xt_vsnprintf(char *str, size_t size, char *format, char *end, va_list args);
 
+int xtCharToDigit(char c)
+{
+	return ((c >= '0' && c <= '9') ? c - '0' : 10);
+}
+
 char *xtFormatBytesSI(char *restrict buf, size_t buflen, uint64_t value, unsigned decimals, bool strictBinary, unsigned *restrict base)
 {
 	const char *siBaseStr = " KMGTPE";
@@ -606,7 +611,7 @@ char *xtFormatTimePrecise(char *buf, size_t buflen, struct xtTimestamp *timestam
 		return NULL;
 	char buf2[16];
 	unsigned long long nanos = timestamp->nsec;
-	snprintf(buf2, sizeof buf2, " %03llu:%03llu:%03llu", (nanos / 1000000LU) % 1000, (nanos / 1000LU) % 1000, nanos % 1000);
+	xtsnprintf(buf2, sizeof buf2, " %03llu:%03llu:%03llu", (nanos / 1000000LU) % 1000, (nanos / 1000LU) % 1000, nanos % 1000);
 	size_t n = strlen(buf);
 	if (n + 1 <= buflen) {
 		strncpy(buf + n, buf2, buflen - n - 1);

@@ -26,10 +26,6 @@ extern "C" {
 
 int xtCharToDigit(char c);
 /**
- * Converts an int64_t to a string suitable for printing.
- */
-char *xtInt64ToStr(int64_t value, char *buf, size_t buflen);
-/**
  * Format number in SI metric system and return power of prefix.
  * @param buf - Will receive the formatted number. Bounds checking is performed.
  * @param buflen - Maximum buffer length.
@@ -110,11 +106,6 @@ char *xtFormatTimePrecise(char *buf, size_t buflen, struct xtTimestamp *timestam
  */
 unsigned xtFormatTimeDuration(char *buf, size_t buflen, const char *format, const struct xtTimestamp *start, const struct xtTimestamp *end);
 unsigned xtFormatTimestamp(char *buf, size_t buflen, const char *format, const struct xtTimestamp *time);
-/**
- * Converts an uint64_t to a string suitable for printing.
- */
-char *xtUint64ToStr(uint64_t value, char *buf, size_t buflen);
-char *xtSizetToStr(size_t value, char *buf, size_t buflen);
 /**
  * Reads a single character from the console without the need to press the ENTER key.
  * @remarks This function is kind of expensive since it needs to change the terminal settings on each call on Linux.

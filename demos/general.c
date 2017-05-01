@@ -108,10 +108,9 @@ static void osTest(void)
 
 static void tMainTask(struct xtThread *restrict t1, struct xtThread *restrict t2)
 {
-	char nbuf[32];
 	xtprintf("TMain: Does T1 equal T2?: %s\n", (xtThreadGetID(t1) == xtThreadGetID(t2) ? "Yes" : "No"));
-	xtprintf("TMain: ID of T1: %s\n", xtSizetToStr(xtThreadGetID(t1), nbuf, 32));
-	xtprintf("TMain: ID of T2: %s\n", xtSizetToStr(xtThreadGetID(t2), nbuf, 32));
+	xtprintf("TMain: ID of T1: %zu\n", xtThreadGetID(t1));
+	xtprintf("TMain: ID of T2: %zu\n", xtThreadGetID(t2));
 	xtprintf("TMain: Is T1 alive?: %s\n", (xtThreadIsAlive(t1) ? "Yes" : "No"));
 	xtprintf("TMain: Is T2 alive?: %s\n", (xtThreadIsAlive(t2) ? "Yes" : "No"));
 }
@@ -120,9 +119,8 @@ static void *t1Task(struct xtThread *t, void *arg)
 {
 	(void) t;
 	int ret;
-	char nbuf[32];
 	xtMutex *m = arg;
-	xtprintf("T1: My ID is %s\n", xtSizetToStr(xtThreadGetID(NULL), nbuf, 32));
+	xtprintf("T1: My ID is %zu\n", xtThreadGetID(NULL));
 	ret = xtMutexTryLock(m);
 	if (ret == 0) {
 		xtprintf("T1: I have obtained the lock to the mutex!\n");
@@ -139,9 +137,8 @@ static void *t2Task(struct xtThread *t, void *arg)
 {
 	(void) t;
 	int ret;
-	char nbuf[32];
 	xtMutex *m = arg;
-	xtprintf("T2: My ID is %s\n", xtSizetToStr(xtThreadGetID(NULL), nbuf, 32));
+	xtprintf("T2: My ID is %zu\n", xtThreadGetID(NULL));
 	ret = xtMutexTryLock(m);
 	if (ret == 0) {
 		xtprintf("T2: I have obtained the lock to the mutex!\n");
@@ -281,10 +278,9 @@ static void socketTest(void)
 
 static void stringTest(void)
 {
-	char nbuf[32];
 	puts("The following 2 numbers are supposed to be the same and equal 18446744073709551615");
 	xtprintf("Max LLU value raw llu: %llu\n", ULLONG_MAX);
-	xtprintf("Max LLU value uint64 to string : %s\n", xtUint64ToStr(ULLONG_MAX, nbuf, 32));
+	xtprintf("Max LLU value uint64 to string : %I64u\n", (uint64_t)(ULLONG_MAX));
 	char buf[256];
 	const char *text = "The pope uses dope";
 	xtprintf("Hexdump of \"%s\": ", text);
