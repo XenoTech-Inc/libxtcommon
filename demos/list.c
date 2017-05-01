@@ -1,7 +1,9 @@
+// os_macros.h must be first in order to make it work
+#include <xt/os_macros.h>
 #include <xt/file.h>
 #include <xt/list.h>
 #include <xt/os.h>
-#include <xt/os_macros.h>
+#include <xt/string.h>
 
 #include <assert.h>
 #include <stdio.h>
@@ -62,7 +64,11 @@ void add(unsigned times)
 		arrayZU[i] = valZU;
 	}
 	for (unsigned i = 0; i < times; ++i, ++cntP) {
-		void *valP = (void*) (PTR_CAST) rand();
+		// Suppress compiler warning for casting scalar
+		// type of different size to void pointer.
+		PTR_CAST v = rand();
+		PTR_CAST *vp = &v;
+		void *valP = vp;
 		assert(xtListPAdd(&listP, valP) == 0);
 		arrayP[i] = valP;
 	}

@@ -1,6 +1,7 @@
 #include <xt/queue.h>
 #include <xt/error.h>
 #include <xt/os.h>
+#include <xt/string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -87,23 +88,23 @@ int push(void)
 	puts("Pushing random data");
 	for (unsigned i = 0; i < LISTSZ; ++i) {
 		if (xtQueueHDPush(&qhd, listhd[i])) {
-			fprintf(stderr, "Failed to push %hd to QueueHD\n", listhd[i]);
+			xtfprintf(stderr, "Failed to push %hd to QueueHD\n", listhd[i]);
 			goto fail;
 		}
 		if (xtQueueDPush(&qd, listd[i])) {
-			fprintf(stderr, "Failed to push %d to QueueD\n", listd[i]);
+			xtfprintf(stderr, "Failed to push %d to QueueD\n", listd[i]);
 			goto fail;
 		}
 		if (xtQueueUPush(&qu, listu[i])) {
-			fprintf(stderr, "Failed to push %u to QueueU\n", listu[i]);
+			xtfprintf(stderr, "Failed to push %u to QueueU\n", listu[i]);
 			goto fail;
 		}
 		if (xtQueueLUPush(&qlu, listlu[i])) {
-			fprintf(stderr, "Failed to push %lu to QueueLU\n", listlu[i]);
+			xtfprintf(stderr, "Failed to push %lu to QueueLU\n", listlu[i]);
 			goto fail;
 		}
 		if (xtQueueZUPush(&qzu, listzu[i])) {
-			fprintf(stderr, "Failed to push %zu to QueueZU\n", listzu[i]);
+			xtfprintf(stderr, "Failed to push %zu to QueueZU\n", listzu[i]);
 			goto fail;
 		}
 	}
@@ -120,7 +121,7 @@ int push(void)
 		}
 		if (hd != listhd[i]) {
 			fputs("QueueHD is corrupted\n", stderr);
-			fprintf(stderr, "Got %hd but expected %hd\n", hd, listhd[i]);
+			xtfprintf(stderr, "Got %hd but expected %hd\n", hd, listhd[i]);
 			goto fail;
 		}
 		if (!xtQueueDPop(&qd, &d)) {
@@ -129,7 +130,7 @@ int push(void)
 		}
 		if (d != listd[i]) {
 			fputs("QueueD is corrupted\n", stderr);
-			fprintf(stderr, "Got %d but expected %d\n", d, listd[i]);
+			xtfprintf(stderr, "Got %d but expected %d\n", d, listd[i]);
 			goto fail;
 		}
 		if (!xtQueueUPop(&qu, &u)) {
@@ -138,7 +139,7 @@ int push(void)
 		}
 		if (u != listu[i]) {
 			fputs("QueueU is corrupted\n", stderr);
-			fprintf(stderr, "got %u but expected %u\n", u, listu[i]);
+			xtfprintf(stderr, "got %u but expected %u\n", u, listu[i]);
 			goto fail;
 		}
 		if (!xtQueueLUPop(&qlu, &lu)) {
@@ -147,7 +148,7 @@ int push(void)
 		}
 		if (lu != listlu[i]) {
 			fputs("QueueLU is corrupted\n", stderr);
-			fprintf(stderr, "got %lu but expected %lu\n", lu, listlu[i]);
+			xtfprintf(stderr, "got %lu but expected %lu\n", lu, listlu[i]);
 			goto fail;
 		}
 		if (!xtQueueZUPop(&qzu, &zu)) {
@@ -156,7 +157,7 @@ int push(void)
 		}
 		if (zu != listzu[i]) {
 			fputs("QueueZU is corrupted\n", stderr);
-			fprintf(stderr, "got %zu but expected %zu\n", zu, listzu[i]);
+			xtfprintf(stderr, "got %zu but expected %zu\n", zu, listzu[i]);
 			goto fail;
 		}
 	}

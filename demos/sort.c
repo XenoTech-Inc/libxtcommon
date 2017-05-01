@@ -1,6 +1,7 @@
 #include <xt/sort.h>
 #include <xt/time.h>
 #include <xt/os.h>
+#include <xt/string.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,11 +21,11 @@ static unsigned strtodt(char *str, size_t n, size_t num, unsigned fnum)
 		++si;
 	}
 	if (!fnum || si == sibase)
-		snprintf(str, n, "%u%s", (unsigned)d, *si);
+		xtsnprintf(str, n, "%u%s", (unsigned)d, *si);
 	else {
 		char sbuf[32];
-		snprintf(sbuf, sizeof sbuf, "%%u.%%0%du%%s", fnum);
-		snprintf(str, n, sbuf, (unsigned)d, (unsigned)(rem / 1.0f), *si);
+		xtsnprintf(sbuf, sizeof sbuf, "%%u.%%0%du%%s", fnum);
+		xtsnprintf(str, n, sbuf, (unsigned)d, (unsigned)(rem / 1.0f), *si);
 	}
 	return (unsigned)(si - sibase);
 }
@@ -82,7 +83,7 @@ const char *names[] = {
 static void sortu(void)
 {
 	unsigned a[ASZ];
-	printf("Sort ascending %u unsigned ints", ASZ);
+	xtprintf("Sort ascending %u unsigned ints", ASZ);
 	for (unsigned i = 0; i < NTYPE; ++i) {
 		arndu(a, ASZ);
 		assert(!xtSortU(a, ASZ, types[i], 1));
@@ -90,7 +91,7 @@ static void sortu(void)
 		putchar('.');
 	}
 	putchar('\n');
-	printf("Sort descending %u unsigned ints", ASZ);
+	xtprintf("Sort descending %u unsigned ints", ASZ);
 	for (unsigned i = 0; i < NTYPE; ++i) {
 		arndu(a, ASZ);
 		assert(!xtSortU(a, ASZ, types[i], 0));
@@ -103,7 +104,7 @@ static void sortu(void)
 static void sortd(void)
 {
 	int a[ASZ];
-	printf("Sort ascending %u unsigned ints", ASZ);
+	xtprintf("Sort ascending %u unsigned ints", ASZ);
 	for (unsigned i = 0; i < NTYPE; ++i) {
 		arndd(a, ASZ);
 		assert(!xtSortD(a, ASZ, types[i], 1));
@@ -111,7 +112,7 @@ static void sortd(void)
 		putchar('.');
 	}
 	putchar('\n');
-	printf("Sort descending %u unsigned ints", ASZ);
+	xtprintf("Sort descending %u unsigned ints", ASZ);
 	for (unsigned i = 0; i < NTYPE; ++i) {
 		arndd(a, ASZ);
 		assert(!xtSortD(a, ASZ, types[i], 0));
@@ -130,10 +131,10 @@ static void large(void)
 	char buf[32];
 	xtConsoleFillLine("-");
 	puts("-- LARGE SORT TEST");
-	printf("Sort ascending %zu unsigned ints\n", n);
+	xtprintf("Sort ascending %zu unsigned ints\n", n);
 	for (unsigned i = 0; i < NTYPE; ++i) {
 		arndu(a, n);
-		fprintf(stdout, "%s: ", names[i]);
+		xtfprintf(stdout, "%s: ", names[i]);
 		fflush(stdout);
 		xtClockGetTime(&then, XT_CLOCK_MONOTONIC);
 		xtSortU(a, n, types[i], 1);
@@ -141,7 +142,7 @@ static void large(void)
 		chklistu(a, n, 1);
 		unsigned long long diff = (now.nsec - then.nsec) / 1000LLU;
 		strtodt(buf, sizeof buf, diff, 3);
-		printf("%s (%lluus)\n", buf, diff);
+		xtprintf("%s (%lluus)\n", buf, diff);
 	}
 	free(a);
 }
@@ -153,7 +154,7 @@ int main(void)
 	puts("-- SORT TEST");
 	fputs("Algorithms:", stdout);
 	for (unsigned i = 0; i < NTYPE; ++i)
-		printf(" %s", names[i]);
+		xtprintf(" %s", names[i]);
 	putchar('\n');
 	sortu();
 	sortd();

@@ -1,8 +1,9 @@
 /**
  * @brief Functions to manipulate strings with ease.
  * @file string.h
+ * @author Folkert van Verseveld
  * @author Tom Everaarts
- * @date 2016
+ * @date 2017
  * @copyright XT-License.
  */
 
@@ -17,6 +18,7 @@ extern "C" {
 #include <xt/time.h>
 
 // STD headers
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -93,6 +95,36 @@ int xtGetch(void);
  * Performs the ROT13 swapping on the specified data up to \a buflen bytes.
  */
 void xtRot13(void *buf, size_t buflen);
+/**
+ * Formatted output conversion to stdout. It is similar to printf but, with
+ * extensions for (u)int(8|16|32|64)_t: You can specify %I(8|16|32|64)[diouxX]
+ * as argument if you want to use these.
+ * It also fixes NULL termination problems on Windows because their broken libc
+ * implementation does not guarantee NULL termination if it does not fit.
+ * @returns Number of written characters. Zero or negative on failure.
+ */
+int xtprintf(const char *format, ...);
+int xtvprintf(const char *format, va_list args);
+/**
+ * Formatted output conversion to file. It is similar to fprintf but, with
+ * extensions for (u)int(8|16|32|64)_t: You can specify %I(8|16|32|64)[diouxX]
+ * as argument if you want to use these.
+ * It also fixes NULL termination problems on Windows because their broken libc
+ * implementation does not guarantee NULL termination if it does not fit.
+ * @returns Number of written characters. Zero or negative on failure.
+ */
+int xtfprintf(FILE *stream, const char *format, ...);
+int xtvfprintf(FILE *stream, const char *format, va_list args);
+/**
+ * Formatted output conversion to buffer. It is similar to snprintf but, with
+ * extensions for (u)int(8|16|32|64)_t: You can specify %I(8|16|32|64)[diouxX]
+ * as argument if you want to use these.
+ * It also fixes NULL termination problems on Windows because their broken libc
+ * implementation does not guarantee NULL termination if it does not fit.
+ * @returns Number of written characters. Zero or negative on failure.
+ */
+int xtsnprintf(char *str, size_t size, const char *format, ...);
+int xtvsnprintf(char *str, size_t size, const char *format, va_list args);
 /**
  * Checks if the haystack contains the needle somewhere in it.
  * @param needle - A pointer to a null terminated string that serves as needle.

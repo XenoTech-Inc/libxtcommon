@@ -3,6 +3,7 @@
 #include <xt/os.h>
 
 #include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -140,12 +141,40 @@ static void formatSI(void)
 	puts("----------------------------------------------");
 	for (unsigned i = 0; i < 16; ++i) {
 		size_t num = rand();
-		unsigned decimals = rand() % 4;
+		unsigned decimals = 1 + (rand() % 3);
 		unsigned bin = rand() & 1;
 		unsigned dummy;
 		xtFormatBytesSI(buf, sizeof buf, num, decimals, bin, &dummy);
-		printf("(%u,%u) %-20zu  %s\n", decimals, bin, num, buf);
+		xtprintf("(%u,%u) %-20zu  %s\n", decimals, bin, num, buf);
 	}
+}
+
+static void printFormat(void)
+{
+	xtConsoleFillLine("-");
+	puts("-- PRINT FORMAT TEST");
+	char buf[256];
+	xtsnprintf(buf, sizeof buf, "%s normal & simple %10s", "perfectly", "format");
+	puts(buf);
+	long long lnum = 3419803901L;
+	unsigned unum = 30;
+	size_t znum = ~0xcafebabe;
+	xtsnprintf(buf, sizeof buf, "wide test: %lld %04u %20zu", lnum, unum, znum);
+	puts(buf);
+	xtsnprintf(buf, sizeof buf, "float test: %+.2f %g %lf", .42f, -4e3 + 1.0, 0.0001);
+	puts(buf);
+	xtsnprintf(buf, sizeof buf, "int_t variants:"
+		"% +6I8d %I8u\n"
+		"%I16d %08I16o\n"
+		"%I32d %#-I32x\n"
+		"%30I64d %I64u",
+		INT8_MIN, UINT8_MAX,
+		INT16_MIN, INT16_MAX,
+		INT32_MIN, INT32_MAX,
+		INT64_MIN, UINT64_MAX
+	);
+	puts(buf);
+	xtprintf("Custom error format: message=%M, code=%d\n", errno);
 }
 
 int main(void)
@@ -160,6 +189,7 @@ int main(void)
 	rot13();
 	trim();
 	trimWords();
+	printFormat();
 	formatSI();
 	return EXIT_SUCCESS;
 }
