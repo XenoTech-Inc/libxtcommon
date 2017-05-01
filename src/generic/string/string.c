@@ -286,7 +286,7 @@ char *xtFormatTimePrecise(char *buf, size_t buflen, struct xtTimestamp *timestam
 		return NULL;
 	char buf2[16];
 	unsigned long long nanos = timestamp->nsec;
-	xtsnprintf(buf2, sizeof buf2, " %03llu:%03llu:%03llu", (nanos / 1000000LU) % 1000, (nanos / 1000LU) % 1000, nanos % 1000);
+	snprintf(buf2, sizeof buf2, " %03llu:%03llu:%03llu", (nanos / 1000000LU) % 1000, (nanos / 1000LU) % 1000, nanos % 1000);
 	size_t n = strlen(buf);
 	if (n + 1 <= buflen) {
 		strncpy(buf + n, buf2, buflen - n - 1);
