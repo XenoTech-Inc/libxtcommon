@@ -493,11 +493,6 @@ char *xtStringReverse(char *str)
 
 void xtStringSplit(char *restrict str, const char *restrict delim, char **restrict tokens, unsigned *restrict num)
 {
-#if XT_IS_LINUX
-#define strtok_s strtok_r
-#else
-#define strtok_r strtok_s
-#endif
 	char *save_ptr, *token = strtok_r(str, delim, &save_ptr);
 	unsigned i = 0;
 	for (; i < *num && token; ++i) {
@@ -505,11 +500,6 @@ void xtStringSplit(char *restrict str, const char *restrict delim, char **restri
 		token = strtok_r(save_ptr, delim, &save_ptr);
 	}
 	*num = i;
-#if XT_IS_LINUX
-#undef strtok_s
-#else
-#undef strtok_r
-#endif
 }
 
 bool xtStringStartsWith(const char *restrict haystack, const char *restrict needle)
