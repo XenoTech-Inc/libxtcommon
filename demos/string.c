@@ -1,6 +1,8 @@
 #include <xt/error.h>
 #include <xt/string.h>
+#include <xt/time.h>
 #include <xt/os.h>
+#include <xt/utils.h>
 
 #include <ctype.h>
 #include <errno.h>
@@ -177,6 +179,32 @@ static void printFormat(void)
 	xtprintf("Custom error format: message=%M, code=%d\n", errno);
 }
 
+static void formatTime(void)
+{
+	xtConsoleFillLine("-");
+	puts("-- FORMAT TIME TEST");
+	char buf[1024];
+	struct xtTimestamp start, end;
+	start.sec  = 432840;
+	start.nsec = 37942808LLU;
+	end.sec    = 723480;
+	end.nsec   = 347298107LLU;
+	xtFormatTimeDuration(buf, sizeof buf, "diff.sec : %w %d %h %m %s", &start, &end);
+	puts(buf);
+	xtFormatTimeDuration(buf, sizeof buf, "diff.nsec: %t.%u.%n", &start, &end);
+	puts(buf);
+	xtFormatTimeDuration(buf, sizeof buf, "diff     : %g", &start, &end);
+	puts(buf);
+	xtFormatTimeDuration(buf, sizeof buf, "DIFF     : %G", &start, &end);
+	puts(buf);
+	end.sec  = xtRandLLU() % (604800U * 52);
+	end.nsec = xtRandLLU() % 1000000000LLU;
+	xtFormatTimeDuration(buf, sizeof buf, "random   : %G", &start, &end);
+	puts(buf);
+	xtFormatTimeDuration(buf, sizeof buf, "random   : %W-%D %H:%M:%S %T.%U.%N", &start, &end);
+	puts(buf);
+}
+
 int main(void)
 {
 	srand(time(NULL));
@@ -191,5 +219,6 @@ int main(void)
 	trimWords();
 	printFormat();
 	formatSI();
+	formatTime();
 	return EXIT_SUCCESS;
 }
