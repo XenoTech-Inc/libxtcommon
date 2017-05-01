@@ -37,12 +37,12 @@ void xtDateToTimestamp(struct xtTimestamp *timestamp, const struct xtDate *date)
 		+ XT_DATE_WEEK * date->week;
 }
 
-unsigned long long xtTimestampToMS(struct xtTimestamp *timestamp)
+unsigned long long xtTimestampToMS(const struct xtTimestamp *timestamp)
 {
 	return timestamp->sec * 1000LLU + timestamp->nsec / 1000000LLU;
 }
 
-unsigned long long xtTimestampToUS(struct xtTimestamp *timestamp)
+unsigned long long xtTimestampToUS(const struct xtTimestamp *timestamp)
 {
 	return timestamp->sec * 1000000LLU + timestamp->nsec / 1000LLU;
 }

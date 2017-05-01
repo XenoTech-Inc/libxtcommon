@@ -130,12 +130,12 @@ void xtDateToTimestamp(struct xtTimestamp *timestamp, const struct xtDate *date)
  * Converts \a timestamp to milliseconds.
  * @param timestamp - The timestamp in seconds and nanoseconds.
  */
-unsigned long long xtTimestampToMS(struct xtTimestamp *timestamp);
+unsigned long long xtTimestampToMS(const struct xtTimestamp *timestamp);
 /**
  * Converts \a timestamp to nanoseconds.
  * @param timestamp - The timestamp in seconds and nanoseconds.
  */
-unsigned long long xtTimestampToUS(struct xtTimestamp *timestamp);
+unsigned long long xtTimestampToUS(const struct xtTimestamp *timestamp);
 /**
  * Cross platform call to gmtime(). Internal use only.
  */
