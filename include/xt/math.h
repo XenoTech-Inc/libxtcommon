@@ -4,7 +4,7 @@
  * None of these functions actually require the C standard header math.h
  * @file math.h
  * @author Tom Everaarts
- * @date 2016
+ * @date 2017
  * @copyright XT-License.
  */
 

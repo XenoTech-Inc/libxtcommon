@@ -2,7 +2,7 @@
  * @brief Contains various sorting algorithms.
  * @file sort.h
  * @author Folkert van Verseveld
- * @date 2016
+ * @date 2017
  * @copyright XT-License
  */
 #ifndef _XT_SORT_H

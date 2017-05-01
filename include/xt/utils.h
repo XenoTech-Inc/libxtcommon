@@ -2,7 +2,7 @@
  * @brief Various functions which can come in handy.
  * @file utils.h
  * @author Tom Everaarts
- * @date 2016
+ * @date 2017
  * @copyright XT-License.
  */
 

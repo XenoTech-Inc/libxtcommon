@@ -4,7 +4,7 @@
  * It should be noted that these functions are only supported on Little-endian platforms.
  * @file hash.h
  * @author Tom Everaarts
- * @date 2016
+ * @date 2017
  * @copyright XT-License.
  */
 

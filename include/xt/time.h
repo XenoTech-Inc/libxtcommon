@@ -7,7 +7,7 @@
  * longer work correctly after the year 2037.
  * @file time.h
  * @author Tom Everaarts
- * @date 2016
+ * @date 2017
  * @copyright XT-License.
  */
 

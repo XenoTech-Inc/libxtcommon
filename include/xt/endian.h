@@ -6,7 +6,7 @@
  * This code will work in C89, but then it will require some work by hand.
  * @file endian.h
  * @author Tom Everaarts
- * @date 2016
+ * @date 2017
  * @copyright XT-License.
  */
 

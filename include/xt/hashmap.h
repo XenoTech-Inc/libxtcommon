@@ -8,7 +8,7 @@
  *
  * @file hashmap.h
  * @author Folkert van Verseveld and Tom Everaarts
- * @date 2016
+ * @date 2017
  * @copyright XT-License.
  */
 

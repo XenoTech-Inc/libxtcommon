@@ -6,7 +6,7 @@
  * since all other types (xtQueueU, etc.) are exactly the same.
  * @file queue.h
  * @author Folkert van Verseveld
- * @date 2016
+ * @date 2017
  * @copyright XT-License.
  */
 

@@ -5,7 +5,7 @@
  * since all other types (xtStackU, etc.) are exactly the same.
  * @file stack.h
  * @author Folkert van Verseveld
- * @date 2016
+ * @date 2017
  * @copyright XT-License.
  */
 

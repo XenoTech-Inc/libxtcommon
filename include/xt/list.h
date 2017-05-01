@@ -6,7 +6,7 @@
  *
  * @file list.h
  * @author Tom Everaarts
- * @date 2016
+ * @date 2017
  * @copyright XT-License.
  */
 

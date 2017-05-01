@@ -4,7 +4,7 @@
  * Lightweight threads with all the functionality that you need!
  * @file thread.h
  * @author Tom Everaarts
- * @date 2016
+ * @date 2017
  * @copyright XT-License.
  */
 
