@@ -53,6 +53,24 @@ struct xtTimestamp {
 	unsigned long long sec;
 	unsigned nsec;
 };
+
+#define XT_DATE_WEEK 604800U
+#define XT_DATE_DAY   86400U
+#define XT_DATE_HOUR   3600U
+#define XT_DATE_MIN      60U
+#define XT_DATE_MSEC 1000000LLU
+#define XT_DATE_USEC    1000LLU
+
+struct xtDate {
+	unsigned week;
+	unsigned day;
+	unsigned hour;
+	unsigned min;
+	unsigned sec;
+	unsigned msec;
+	unsigned usec;
+	unsigned nsec;
+};
 /**
  * Tells you the GMT offset in minutes. e.g If you get 60, this means
  * you are GMT +1. (60 mins in 1 hour). Do note that this function grabs
@@ -106,6 +124,8 @@ void xtSleepMS(unsigned msecs);
  * @param end - End timestamp.
  */
 void xtTimestampDiff(struct xtTimestamp *dest, const struct xtTimestamp *start, const struct xtTimestamp *end);
+void xtTimestampToDate(struct xtDate *date, const struct xtTimestamp *timestamp);
+void xtDateToTimestamp(struct xtTimestamp *timestamp, const struct xtDate *date);
 /**
  * Converts \a timestamp to milliseconds.
  * @param timestamp - The timestamp in seconds and nanoseconds.
