@@ -1,15 +1,44 @@
 -----------------------------------------------------------------
                        VERSION HISTORY
 
-   Get the latest version at "https://www.xenotech.nl"
+   Get the latest version at "https://xenotech.nl"
 -----------------------------------------------------------------
+
+0.9.0.:
+------
+New stuff:
+- Printf family added. These offer the same features as printf on Linux.
+  * xtfprintf
+  * xtprintf
+  * xtsnprintf
+  * xtvfprintf
+  * xtvprintf
+  * xtvsnprintf
+- Proc API extended
+  * Added xtProcGetName()
+  * Added xtProcGetPids()
+- Big time API overhaul. View the API changes for more info!
+- xtRot13 is now branchless. This is a major performance gain!
+
+API changes:
+- All Windows code now uses xtsnprintf in favor of snprintf because snprintf is
+  broken on Windows. The string is not always null-terminated.
+- The File API now recognizes more file types.
+- Time API overhaul
+  * Accuracy of time retrieval functions has been increased up to nanoseconds
+  * More clock types are now supported
+  * Timestamps now use the new struct xtTimestamp instead of unsigned long long
+  * struct xtDate created for convenient date / datetime conversion
+  * Old time retrieval functions removed in favor of xtClockGetTime()
+
+Removed:
+- _base.h because it is no longer necessary thanks to the header inclusion style.
+- xtFileGetPathFromFilePointer() because it was unused for a long time.
+- Conversion functions in string.h because the new xtprintf family essentially
+  replaces them, including: xtSizetToStr(), xtUint64ToStr() and xtInt64ToStr().
 
 0.8.0.:
 ------
-General stuff:
-- Lots of refactoring
-- xtFormatHex() documentation
-
 New stuff:
 - Added string demo
 - Added xtFormatBytesSI() for metric system numbers
@@ -19,7 +48,7 @@ New stuff:
   * Added xtSocketPollRemoveByIndex()
   * Added functions to retrieve non-ready socket info
 
-API Changes:
+API changes:
 - Added buffer length parameter to xtFormatCommasLL() and xtFormatCommasLLU()
 - Changed many pointers parameters to restrict pointers
 - Changed xtMutexDestroy() to always succeed
