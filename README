@@ -8,11 +8,6 @@ This library is cross platform, however there are some problems.
 All functions which exhibit problems on certain platforms have this
 noted in their documentation.
 
-We have provided an extended and improved printf family for multiple
-types that are not supported on Windows. This also fixes proper
-NULL-termination if it does not fit on Windows. This is because of
-Windows's major suckage. They do not honor the C standard.
-
 Dependencies:
 When using this library, you need to link with other libraries as
 well... This is explained below.

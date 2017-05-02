@@ -1,0 +1,26 @@
+-----------------------------------------------------------------
+                         KNOWN ISSUES
+-----------------------------------------------------------------
+
+# Windows
+
+## Building
+
+The library does not build properly with some cross compilers for
+mingw32 because the linker fails with an undefined reference to
+strtok_r.
+
+## printf, fprintf, snprintf, vsnprintf
+
+We have provided an extended and improved printf family for multiple
+types that are not supported on Windows. This also fixes proper
+NULL-termination if it does not fit on Windows. This is because of
+Windows's major suckage. They do not honor the C standard.
+
+# Linux
+
+## OS API
+
+xtGetCPUInfo() is known to run very slow if the system is on high load.
+A workaround has been written, but it is not stable and fast enough to
+include in the library yet.
