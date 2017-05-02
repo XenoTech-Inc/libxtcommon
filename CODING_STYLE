@@ -40,6 +40,10 @@ instead of camelcase e.g. _xt_hash_data instead of_xtHashData. You
 should keep the number of underscores at a minimum though, as it is
 pretty annoying to type and read.
 
+If a function overrides a function provided by e.g. libc, like our
+printf family does, it must be written in lowercase. For example: printf
+is overrided as xtprinf.
+
 4. Block structure
 
 The braces should always be placed on the same line. Never place them on

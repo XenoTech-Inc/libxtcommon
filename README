@@ -7,8 +7,10 @@ building your program!
 This library is cross platform, however there are some problems.
 All functions which exhibit problems on certain platforms have this
 noted in their documentation.
-On Windows all snprintf calls currently have a bug: If the buffer is
-too small, no null-terminator will be appended. This is because of
+
+We have provided an extended and improved printf family for multiple
+types that are not supported on Windows. This also fixes proper
+NULL-termination if it does not fit on Windows. This is because of
 Windows's major suckage. They do not honor the C standard.
 
 Dependencies:
