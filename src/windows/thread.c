@@ -46,10 +46,8 @@ static unsigned __stdcall _xtThreadStart(void *arg)
 {
 	struct xtThread *t = arg;
 	// Execute the function
-	t->func(t, t->arg);
-	// The thread has forfilled it's purpose now, let it die in peace
+	t->funcRet = t->func(t, t->arg);
 	SetEvent(t->exitEvent); // Signal that the thread has ended
-	// Let the join function do the cleanup. That way thread status can still be requested
 	return 0;
 }
 
@@ -110,7 +108,7 @@ bool xtThreadIsAlive(const struct xtThread *t)
 	return WaitForSingleObject(t->exitEvent, 0) != WAIT_OBJECT_0;
 }
 
-void xtThreadJoin(struct xtThread *t)
+void *xtThreadJoin(struct xtThread *t)
 {
 	// Block until the thread has terminated
 	WaitForSingleObject(t->exitEvent, INFINITE);
@@ -118,6 +116,7 @@ void xtThreadJoin(struct xtThread *t)
 	CloseHandle(t->nativeThread);
 	CloseHandle(t->exitEvent);
 	xtMutexDestroy(&t->suspendMutex);
+	return t->funcRet;
 }
 
 int xtThreadSuspend(struct xtThread *t)

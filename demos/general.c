@@ -130,7 +130,7 @@ static void *t1Task(struct xtThread *t, void *arg)
 		xtprintf("T1: The other thread obtained the lock first\n");
 	if (ret == 0)
 		xtMutexUnlock(m);
-	return NULL;
+	return (void*) 1;
 }
 
 static void *t2Task(struct xtThread *t, void *arg)
@@ -148,7 +148,7 @@ static void *t2Task(struct xtThread *t, void *arg)
 		xtprintf("T2: The other thread obtained the lock first\n");
 	if (ret == 0)
 		xtMutexUnlock(m);
-	return NULL;
+	return (void*) 2;
 }
 
 static void threadTest(void)
@@ -164,8 +164,8 @@ static void threadTest(void)
 	if ((ret = xtThreadCreate(&t2, t2Task, &m, 0)) != 0)
 		goto err;
 	tMainTask(&t1, &t2);
-	xtThreadJoin(&t1);
-	xtThreadJoin(&t2);
+	printf("T1 ret: %p\n", xtThreadJoin(&t1));
+	printf("T2 ret: %p\n", xtThreadJoin(&t2));
 	xtMutexDestroy(&m);
 	return;
 err:

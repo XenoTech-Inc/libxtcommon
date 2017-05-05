@@ -92,6 +92,7 @@ struct xtThread {
 	HANDLE exitEvent, nativeThread;
 	xtMutex suspendMutex;
 	unsigned tid;
+	void *funcRet;
 #endif
 };
 /**
@@ -128,8 +129,9 @@ bool xtThreadIsAlive(const struct xtThread *t);
  * Joins the specified thread. This operation blocks until the specified thread has terminated.
  * All of the thread's resources will be cleaned up. A second call to this function for an
  * already joined thread will result in undefined behavior.
+ * @return The return value of the thread that is being joined.
  */
-void xtThreadJoin(struct xtThread *t);
+void *xtThreadJoin(struct xtThread *t);
 /**
  * Increases the suspend count by one. If the suspend count is higher than zero, the thread will be suspended
  * on a call to this function. The thread will not be suspended when the suspend count is zero or lower.
