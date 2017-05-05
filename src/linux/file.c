@@ -63,7 +63,7 @@ int xtFileCreateDir(const char *path)
 void xtFileExecute(const char *path)
 {
 	char buf[FILENAME_MAX];
-	snprintf(buf, FILENAME_MAX, "xdg-open \"%s\"", path);
+	snprintf(buf, FILENAME_MAX, "/usr/bin/xdg-open \"%s\"", path);
 	// Fix hack for ./configure -ffast-math warning: ignoring return value of ‘system’, declared with attribute
 	int ignore = system(buf);
 	(void)ignore;
@@ -108,7 +108,7 @@ int xtFileGetCWD(char *buf, size_t buflen)
 int xtFileGetExecutablePath(char *buf, size_t buflen)
 {
 	char cmdbuf[64];
-	snprintf(cmdbuf, sizeof(cmdbuf) / sizeof(cmdbuf[0]), "readlink /proc/%zu/exe 2> /dev/null", (size_t) getpid());
+	snprintf(cmdbuf, sizeof(cmdbuf), "/bin/readlink /proc/%zu/exe 2> /dev/null", (size_t) getpid());
 	FILE *fp = popen(cmdbuf, "r");
 	if (!fp)
 		return _xtTranslateSysError(errno);
