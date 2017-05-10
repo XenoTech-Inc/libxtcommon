@@ -32,7 +32,7 @@ int xtCharToDigit(char c);
  * @param value - The number to format in SI metric system.
  * @param decimals - Number of fractional decimals (0 disables fractions).
  * @param strictBinary - Use 1024 (e.g. KiB, MiB) rather than 1000 (e.g. KB, MB).
- * @param base - An optional pointer which receives the base of the formatted time.
+ * @param base - An optional pointer which receives the base of the formatted bytes.
  * E.g.: 0 is the number in bytes, 1 in kilobytes, 2 in megabytes etc.
  * @returns A pointer to \a buf.
  */
