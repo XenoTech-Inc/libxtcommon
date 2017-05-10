@@ -56,10 +56,7 @@ static void *_xtThreadStart(void *arg)
 {
 	struct xtThread *t = arg;
 	// Execute the function
-	t->func(t, t->arg);
-	// The thread has forfilled it's purpose now, let it die in peace
-	// Let the join function do the cleanup. That way thread status can still be requested
-	return NULL;
+	return t->func(t, t->arg);
 }
 
 int xtThreadContinue(struct xtThread *t)
@@ -135,13 +132,15 @@ bool xtThreadIsAlive(const struct xtThread *t)
 	return pthread_kill(t->nativeThread, 0) != ESRCH;
 }
 
-void xtThreadJoin(struct xtThread *t)
+void *xtThreadJoin(struct xtThread *t)
 {
 	// Block until the thread has terminated
-	pthread_join(t->nativeThread, NULL);
+	void* ret;
+	pthread_join(t->nativeThread, &ret);
 	// Perform cleanup
 	pthread_mutex_destroy(&t->suspendMutex);
 	pthread_cond_destroy(&t->suspendCond);
+	return ret;
 }
 
 int xtThreadSuspend(struct xtThread *t)
