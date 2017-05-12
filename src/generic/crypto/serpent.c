@@ -23,7 +23,7 @@ See below for original author and license.
 #define _BSD_SOURCE
 #endif
 
-#include <endian.h>
+#include <xt/endian.h>
 
 void _xtCryptoSerpentEncryptBlock(struct xtCryptoSerpent *ctx, void *restrict dest, const void *restrict src);
 void _xtCryptoSerpentDecryptBlock(struct xtCryptoSerpent *ctx, void *restrict dest, const void *restrict src);
@@ -54,11 +54,11 @@ void _xtCryptoSerpentDecryptBlock(struct xtCryptoSerpent *ctx, void *restrict de
 #define aa(x,y) k_set(x,a,b,c,d);sb##y(a,b,c,d,e,f,g,h);k_get(x,e,f,g,h);
 #define ab(x) aa(x,3)aa(x+1,2)aa(x+2,1)aa(x+3,0)aa(x+4,7)aa(x+5,6)aa(x+6,5)aa(x+7,4)
 #define AA 0x9e3779b9
-#define ac(a,b) a=htole32(*((const uint32_t*)(in_blk+b)));
+#define ac(a,b) a=xthtole32(*((const uint32_t*)(in_blk+b)));
 #define ad(x,y) ai((x),a,b,c,d);sb##y(a,b,c,d,e,f,g,h);rot(e,f,g,h);
 #define ae(x,y) ai((x),e,f,g,h);sb##y(e,f,g,h,a,b,c,d);rot(a,b,c,d);
 #define af(x) ad(x,0)ae(x+1,1)ad(x+2,2)ae(x+3,3)ad(x+4,4)ae(x+5,5)ad(x+6,6)ae(x+7,7)
-#define ag(a,b) *((uint32_t*)(out_blk+b))=le32toh(a);
+#define ag(a,b) *((uint32_t*)(out_blk+b))=xtle32toh(a);
 #define ah(x,y) irot(e,f,g,h);ib##y(e,f,g,h,a,b,c,d);ai((x),a,b,c,d);
 #define aj(x,y) irot(a,b,c,d);ib##y(a,b,c,d,e,f,g,h);ai((x),e,f,g,h);
 #define ak(x) aj(x,7)ah(x-1,6)aj(x-2,5)ah(x-3,4)aj(x-4,3)ah(x-5,2)aj(x-6,1)ah(x-7,0)
@@ -71,7 +71,7 @@ int xtCryptoSerpentInit(struct xtCryptoSerpent *ctx, const void *src, unsigned k
 	if (key_len > 256) return XT_EOVERFLOW;
 	i = 0; lk = (key_len + 31) / 32;
 	while (i < lk) {
-		ctx->l_key[i] = htole32(*((const uint32_t *)(in_key + 4 * i))); i++;
+		ctx->l_key[i] = xthtole32(*((const uint32_t *)(in_key + 4 * i))); i++;
 	}
 	if (key_len < 256) {
 		while(i < 8)

@@ -70,20 +70,20 @@ extern "C" {
 #endif
 
 /* ntohs, ntohl and ntohll */
-#define xtntohs(x) htons(x)
-#define xtntohl(x) htonl(x)
+#define xtntohs(x) xthtons(x)
+#define xtntohl(x) xthtonl(x)
 #ifdef _XT_HAS_LLU
-	#define xtntohll(x) htonll(x)
+	#define xtntohll(x) xthtonll(x)
 #endif
 
 /* htobeXX and beXXtoh family */
-#define xthtobe16(x) htons(x)
-#define xtbe16toh(x) ntohs(x)
-#define xthtobe32(x) htonl(x)
-#define xtbe32toh(x) ntohl(x)
+#define xthtobe16(x) xthtons(x)
+#define xtbe16toh(x) xtntohs(x)
+#define xthtobe32(x) xthtonl(x)
+#define xtbe32toh(x) xtntohl(x)
 #ifdef _XT_HAS_LLU
-	#define xthtobe64(x) htonll(x)
-	#define xtbe64toh(x) ntohll(x)
+	#define xthtobe64(x) xthtonll(x)
+	#define xtbe64toh(x) xtntohll(x)
 #endif
 
 /* htoleXX and leXXtoh family */
@@ -101,9 +101,9 @@ extern "C" {
 	#endif
 #endif
 
-#define xtle16toh(x) htole16(x)
-#define xtle32toh(x) htole32(x)
-#define xtle64toh(x) htole64(x)
+#define xtle16toh(x) xthtole16(x)
+#define xtle32toh(x) xthtole32(x)
+#define xtle64toh(x) xthtole64(x)
 
 #ifdef __cplusplus
 }
