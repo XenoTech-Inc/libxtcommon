@@ -25,8 +25,8 @@ See below for original author and license.
 
 #include <xt/endian.h>
 
-void _xtCryptoSerpentEncryptBlock(struct xtCryptoSerpent *ctx, void *restrict dest, const void *restrict src);
-void _xtCryptoSerpentDecryptBlock(struct xtCryptoSerpent *ctx, void *restrict dest, const void *restrict src);
+void _xtSerpentEncryptBlock(struct xtSerpent *ctx, void *restrict dest, const void *restrict src);
+void _xtSerpentDecryptBlock(struct xtSerpent *ctx, void *restrict dest, const void *restrict src);
 
 #define rotr(x,n) (((x)>>((int)((n)&0x1f)))|((x)<<((int)((32-((n)&0x1f))))))
 #define rotl(x,n) (((x)<<((int)((n)&0x1f)))|((x)>>((int)((32-((n)&0x1f))))))
@@ -63,7 +63,7 @@ void _xtCryptoSerpentDecryptBlock(struct xtCryptoSerpent *ctx, void *restrict de
 #define aj(x,y) irot(a,b,c,d);ib##y(a,b,c,d,e,f,g,h);ai((x),e,f,g,h);
 #define ak(x) aj(x,7)ah(x-1,6)aj(x-2,5)ah(x-3,4)aj(x-4,3)ah(x-5,2)aj(x-6,1)ah(x-7,0)
 
-int xtCryptoSerpentInit(struct xtCryptoSerpent *ctx, const void *src, unsigned key_len)
+int xtSerpentInit(struct xtSerpent *ctx, const void *src, unsigned key_len)
 {
 	const uint8_t *in_key = src;
 	uint32_t  i,lk,a,b,c,d,e,f,g,h;
@@ -91,7 +91,7 @@ int xtCryptoSerpentInit(struct xtCryptoSerpent *ctx, const void *src, unsigned k
 	return 0;
 }
 
-void _xtCryptoSerpentEncryptBlock(struct xtCryptoSerpent *ctx, void *restrict dest, const void *restrict src)
+void _xtSerpentEncryptBlock(struct xtSerpent *ctx, void *restrict dest, const void *restrict src)
 {
 	const uint8_t *in_blk = src;
 	uint8_t *out_blk = dest;
@@ -104,7 +104,7 @@ void _xtCryptoSerpentEncryptBlock(struct xtCryptoSerpent *ctx, void *restrict de
 	ag(a,0)ag(b,4)ag(c,8)ag(d,12)
 }
 
-void _xtCryptoSerpentDecryptBlock(struct xtCryptoSerpent *ctx, void *restrict dest, const void *restrict src)
+void _xtSerpentDecryptBlock(struct xtSerpent *ctx, void *restrict dest, const void *restrict src)
 {
 	const uint8_t *in_blk = src;
 	uint8_t *out_blk = dest;
@@ -117,18 +117,18 @@ void _xtCryptoSerpentDecryptBlock(struct xtCryptoSerpent *ctx, void *restrict de
 	ag(a,0)ag(b,4)ag(c,8)ag(d,12)
 }
 
-void xtCryptoSerpentEncrypt(struct xtCryptoSerpent *ctx, void *restrict dest, const void *restrict data, size_t dataSize)
+void xtSerpentEncrypt(struct xtSerpent *ctx, void *restrict dest, const void *restrict data, size_t dataSize)
 {
 	const uint8_t *in = data;
 	uint8_t *out = dest;
 	for (size_t i = 0; i < dataSize; i += 16)
-		_xtCryptoSerpentEncryptBlock(ctx, &out[i], &in[i]);
+		_xtSerpentEncryptBlock(ctx, &out[i], &in[i]);
 }
 
-void xtCryptoSerpentDecrypt(struct xtCryptoSerpent *ctx, void *restrict dest, const void *restrict data, size_t dataSize)
+void xtSerpentDecrypt(struct xtSerpent *ctx, void *restrict dest, const void *restrict data, size_t dataSize)
 {
 	const uint8_t *in = data;
 	uint8_t *out = dest;
 	for (size_t i = 0; i < dataSize; i += 16)
-		_xtCryptoSerpentDecryptBlock(ctx, &out[i], &in[i]);
+		_xtSerpentDecryptBlock(ctx, &out[i], &in[i]);
 }

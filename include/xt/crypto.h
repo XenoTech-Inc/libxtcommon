@@ -9,8 +9,8 @@
  * @copyright XT-License.
  */
 
-#ifndef _XT_HASH_H
-#define _XT_HASH_H
+#ifndef _XT_CRYPTO_H
+#define _XT_CRYPTO_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,7 +23,7 @@ extern "C" {
 /**
  * Serpent cipher.
  */
-struct xtCryptoSerpent {
+struct xtSerpent {
 	uint32_t l_key[140];
 };
 
@@ -34,7 +34,7 @@ struct xtCryptoSerpent {
  * @param key - The encryption/decryption key
  * @param keySize - Key size in bytes (should be at least 16 and less than 256).
  */
-int xtCryptoSerpentInit(struct xtCryptoSerpent *ctx, const void *key, unsigned keySize);
+int xtSerpentInit(struct xtSerpent *ctx, const void *key, unsigned keySize);
 /**
  * Encrypt a block of data. \a dataSize must be a multiple of 16.
  * @param ctx - The encryp cipher to use.
@@ -42,8 +42,8 @@ int xtCryptoSerpentInit(struct xtCryptoSerpent *ctx, const void *key, unsigned k
  * @param data - The block of data to be encrypted.
  * @param dataSize - The number of bytes to encrypt.
  */
-void xtCryptoSerpentEncrypt(struct xtCryptoSerpent *ctx, void *restrict dest, const void *restrict data, size_t dataSize);
-void xtCryptoSerpentDecrypt(struct xtCryptoSerpent *ctx, void *restrict dest, const void *restrict data, size_t dataSize);
+void xtSerpentEncrypt(struct xtSerpent *ctx, void *restrict dest, const void *restrict data, size_t dataSize);
+void xtSerpentDecrypt(struct xtSerpent *ctx, void *restrict dest, const void *restrict data, size_t dataSize);
 
 #ifdef __cplusplus
 }

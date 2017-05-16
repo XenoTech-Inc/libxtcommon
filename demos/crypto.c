@@ -13,14 +13,14 @@ static void serpent_init(void)
 {
 	xtConsoleFillLine("-");
 	puts("-- SERPENT INIT TEST");
-	struct xtCryptoSerpent serpent;
+	struct xtSerpent serpent;
 	char data[256];
 	int error = 0;
 	for (unsigned i = 0; i < sizeof data; ++i)
 		data[i] = rand();
-	error = xtCryptoSerpentInit(&serpent, data, 512);
+	error = xtSerpentInit(&serpent, data, 512);
 	assert(error == XT_EOVERFLOW);
-	error = xtCryptoSerpentInit(&serpent, data, 256);
+	error = xtSerpentInit(&serpent, data, 256);
 	assert(!error);
 }
 
@@ -28,19 +28,19 @@ static void serpent_encrypt_decrypt()
 {
 	xtConsoleFillLine("-");
 	puts("-- ENCRYPT DECRYPT TEST");
-	struct xtCryptoSerpent serpent;
+	struct xtSerpent serpent;
 	const char *str = "You are tearing me apart Lisa!";
 	char buf[80], buf2[80];
 	char data[256];
 	int error = 0;
 	for (unsigned i = 0; i < sizeof data; ++i)
 		data[i] = rand();
-	error = xtCryptoSerpentInit(&serpent, data, 256);
+	error = xtSerpentInit(&serpent, data, 256);
 	assert(!error);
 	printf("Encrypt and decrypt \"%s\"\n", str);
 	strcpy(buf, str);
-	xtCryptoSerpentEncrypt(&serpent, buf2, buf, sizeof buf);
-	xtCryptoSerpentDecrypt(&serpent, buf, buf2, sizeof buf);
+	xtSerpentEncrypt(&serpent, buf2, buf, sizeof buf);
+	xtSerpentDecrypt(&serpent, buf, buf2, sizeof buf);
 	assert(!strcmp(str, buf));
 }
 
