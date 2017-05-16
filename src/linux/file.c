@@ -44,7 +44,7 @@ int xtFileCopyByHandle(FILE *restrict src, FILE *restrict dst)
 	char buf[8192];
 	size_t len;
 	while (true) {
-		len = fread(buf, 1, sizeof(buf) / sizeof(buf[0]), src);
+		len = fread(buf, 1, sizeof(buf), src);
 		if (len == 0)
 			break;
 		if (fwrite(buf, len, 1, dst) != 1)
@@ -130,7 +130,7 @@ const char *xtFileGetExtension(const char *path)
 	if (!dotPlus)
 		return NULL;
 	++dotPlus;
-	return dotPlus != '\0' ? dotPlus : NULL;
+	return *dotPlus != '\0' ? dotPlus : NULL;
 }
 /**
  * This function belongs to xtFileGetFiles().
@@ -151,7 +151,7 @@ int xtFileGetFiles(const char *restrict path, struct xtListP *restrict files)
 	for (int i = 0; i < cnt; ++i) {
 		// Length of the file name including the null terminator
 		fileNameLen = strlen(namelist[i]->d_name) + 1;
-		struct xtFile *file = malloc(sizeof(struct xtFile));
+		struct xtFile *file = malloc(sizeof(*file));
 		if (!file) {
 			ret = XT_ENOMEM;
 			goto error;
@@ -273,7 +273,7 @@ int xtFileSetCWD(const char *path)
 int xtFileTempFile(char *restrict buf, size_t buflen, FILE **restrict f)
 {
 	char path[32];
-	snprintf(path, sizeof(path) / sizeof(path[0]), "/tmp/tmpfile.XXXXXX");
+	snprintf(path, sizeof(path), "/tmp/tmpfile.XXXXXX");
 	int fd = mkstemp(path);
 	if (fd == -1)
 		return _xtTranslateSysError(errno);

@@ -17,7 +17,7 @@ static void fileTest(void)
 	char sbuf[256], sbuf2[256];
 	if (xtFileGetExecutablePath(sbuf, sizeof(sbuf)) != 0) {
 		xtfprintf(stderr, "Failed to retrieve the path of myself\n");
-		xtsnprintf(sbuf, sizeof(sbuf), "test_file");
+		xtsnprintf(sbuf, sizeof(sbuf), "./general.o");
 	}
 	xtprintf("Executable path: %s\n", sbuf);
 
