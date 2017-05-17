@@ -3,6 +3,9 @@
 
 #include <xt/crypto.h>
 
+/** Minimum number of rounds for computing salt */
+#define XT_BCRYPT_MIN_ROUNDS 16
+
 /* Internal use only */
 void _xtBlowfishEncipher(struct xtBlowfish *, uint32_t *, uint32_t *);
 void _xtBlowfishDecipher(struct xtBlowfish *, uint32_t *, uint32_t *);
@@ -27,5 +30,14 @@ static inline uint32_t _xtBlowfishGrab(const uint8_t *data, unsigned n, unsigned
 	*pos = j;
 	return word;
 }
+
+/**
+ * Print \a csalt in base64 human-friendly format.
+ * @param salt - The base64 destination for \a csalt
+ * @param csalt - The computed salt
+ * @param clen - The computed salt length in bytes
+ * @param logRounds - The log2 number of rounds used to compute the salt
+ */
+void _xtEncodeSalt(char *salt, uint8_t *csalt, uint16_t clen, uint8_t logRounds);
 
 #endif

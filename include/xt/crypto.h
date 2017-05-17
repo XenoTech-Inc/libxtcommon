@@ -29,14 +29,17 @@ struct xtSerpent {
 
 /* Schneier specifies a maximum key length of 56 bytes.
  * This ensures that every key bit affects every cipher
- * bit.  However, the subkeys can hold up to 72 bytes.
+ * bit. However, the subkeys can hold up to 72 bytes.
  * Warning: For normal blowfish encryption only 56 bytes
  * of the key affect all cipherbits.
  */
 
-#define XT_BLOWFISH_N	16			/* Number of Subkeys */
-#define XT_BLOWFISH_MAXKEYLEN ((XT_BLOWFISH_N-2)*4)	/* 448 bits */
-#define XT_BLOWFISH_MAXUTILIZED ((XT_BLOWFISH_N+2)*4)	/* 576 bits */
+/* Number of Subkeys */
+#define XT_BLOWFISH_N 16
+/* 448 bits */
+#define XT_BLOWFISH_MAXKEYLEN ((XT_BLOWFISH_N-2)*4)
+/* 576 bits */
+#define XT_BLOWFISH_MAXUTILIZED ((XT_BLOWFISH_N+2)*4)
 
 /**
  * Blowfish cipher.
@@ -53,32 +56,36 @@ struct xtBlowfish {
 /** Ciphertext blocks */
 #define XT_BCRYPT_BLOCKS 6
 /** Minimum log2 number of rounds for computing salt */
-#define XT_BCRYPT_LOG2_MIN_ROUNDS 4
-/** Minimum number of rounds for computing salt */
-#define XT_BCRYPT_MIN_ROUNDS 16
+#define XT_BCRYPT_MIN_LOGROUNDS 4
 
 #define XT_BCRYPT_SALT_LENGTH 32
-/** Max encrypted password hash length, not counting NUL */
+/** Max encrypted password hash length, not counting '\0' */
 #define XT_BCRYPT_KEY_LENGTH 128
 
 /**
  * Initializes a serpent cipher with the specified key. Note that \a keySize
  * must not exceed 256 bytes.
  * @param ctx - The crypto cipher to initialize.
- * @param key - The encryption/decryption key
+ * @param key - The encryption/decryption key.
  * @param keySize - Key size in bytes (should be at least 16 and less than 256).
  */
 int xtSerpentInit(struct xtSerpent *ctx, const void *key, unsigned keySize);
 /**
  * Encrypt a block of data. \a dataSize must be a multiple of 16.
- * @param ctx - The encryp cipher to use.
+ * @param ctx - The encrypt cipher to use.
  * @param dest - Location for the encrypted data.
  * @param data - The block of data to be encrypted.
  * @param dataSize - The number of bytes to encrypt.
  */
 void xtSerpentEncrypt(struct xtSerpent *ctx, void *restrict dest, const void *restrict data, size_t dataSize);
+/**
+ * Decrypt a block of data. \a dataSize must be a multiple of 16.
+ * @param ctx - The decrypt cipher to use.
+ * @param dest - Location for the encrypted data.
+ * @param data - The block of data to be encrypted.
+ * @param dataSize - The number of bytes to encrypt.
+ */
 void xtSerpentDecrypt(struct xtSerpent *ctx, void *restrict dest, const void *restrict data, size_t dataSize);
-
 /**
  * Initializes a blowfish cipher with the specified key. Note that \a keySize
  * must not exceed XT_BLOWFISH_MAXKEYLEN.
@@ -121,48 +128,39 @@ void xtBlowfishDecryptECB(struct xtBlowfish *ctx, uint8_t *data, uint32_t dataSi
  * Encrypt a block of data in place using cipher block chaining. \a dataSize
  * must be a multiple of 8.
  * @param ctx - The encrypt cipher to use.
- * @param iva - The initialization vector to use.
+ * @param iv - The initialization vector to use.
  * @param data - The block of data to be encrypted.
  * @param dataSize - The number of bytes to encrypt.
  */
-void xtBlowfishEncryptCBC(struct xtBlowfish *ctx, uint8_t *iva, uint8_t *data, uint32_t dataSize);
+void xtBlowfishEncryptCBC(struct xtBlowfish *ctx, uint8_t *iv, uint8_t *data, uint32_t dataSize);
 /**
  * Decrypt a block of data in place using cipher block chaining. \a dataSize
  * must be a multiple of 8.
  * @param ctx - The decrypt cipher to use.
- * @param iva - The initialization vector to use.
+ * @param iv - The initialization vector to use.
  * @param data - The block of data to be decrypted.
  * @param dataSize - The number of bytes to decrypt.
  */
-void xtBlowfishDecryptCBC(struct xtBlowfish *ctx, uint8_t *iva, uint8_t *data, uint32_t dataSize);
-
+void xtBlowfishDecryptCBC(struct xtBlowfish *ctx, uint8_t *iv, uint8_t *data, uint32_t dataSize);
 /**
  * Generate a salt using \a seed in \a gsalt. \a logRounds should be at least 10
  * to ensure proper security. It is adjusted if it is not within the required
  * range (i.e. [4,31]).
- * @param logRounds - The log2 number of rounds (minimum 4, maximum 31)
- * @param seed - The random number source
- * @param gsalt - The destination for the generated salt
+ * @param logRounds - The log2 number of rounds (minimum 4, maximum 31).
+ * @param seed - The random number source.
+ * @param gsalt - The destination for the generated salt.
  */
 void xtBcryptGenSalt(uint8_t logRounds, uint8_t *seed, char *gsalt);
 /**
  * Compute hashed credentials for \a key using \a salt and store this the result
  * in \a encrypted. It is sufficient to store just \a encrypted in a database
  * when validating login credentials since the salt is included as well.
- * @param key - The credential key
+ * @param key - The credential key.
  * @param salt - The secure random salt to prevent password cracking using brute
  * force.
  * @param encrypted - The encrypted password hash.
  */
 void xtBcrypt(const char *key, const char *salt, char *encrypted);
-/**
- * Print \a csalt in base64 human-friendly format.
- * @param salt - The base64 destination for \a csalt
- * @param csalt - The computed salt
- * @param clen - The computed salt length in bytes
- * @param logRounds - The log2 number of rounds used to compute the salt
- */
-void xtEncodeSalt(char *salt, uint8_t *csalt, uint16_t clen, uint8_t logRounds);
 /**
  * Determine the number of rounds required to compute and verify \a hash.
  * @param - The encrypted password hash.

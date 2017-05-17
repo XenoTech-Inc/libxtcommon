@@ -1,8 +1,56 @@
+/*	$OpenBSD: bcrypt.c,v 1.24 2008/04/02 19:54:05 millert Exp $	*/
+
+/*
+ * Copyright 1997 Niels Provos <provos@physnet.uni-hamburg.de>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. All advertising materials mentioning features or use of this software
+ *    must display the following acknowledgement:
+ *      This product includes software developed by Niels Provos.
+ * 4. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/* This password hashing algorithm was designed by David Mazieres
+ * <dm@lcs.mit.edu> and works as follows:
+ *
+ * 1. state := InitState ()
+ * 2. state := ExpandKey (state, salt, password) 3.
+ * REPEAT rounds:
+ *	state := ExpandKey (state, 0, salt)
+ *      state := ExpandKey(state, 0, password)
+ * 4. ctext := "OrpheanBeholderScryDoubt"
+ * 5. REPEAT 64:
+ * 	ctext := Encrypt_ECB (state, ctext);
+ * 6. RETURN Concatenate (salt, ctext);
+ *
+ */
+#include "blowfish.h"
+
+// STD headers
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <string.h>
-#include "bcrypt.h"
 
 /*
  * This implementation is adaptable to current computing power.
@@ -67,14 +115,14 @@ static void _xtBase64Decode(uint8_t *buffer, uint16_t len, uint8_t *data)
 	}
 }
 
-void xtEncodeSalt(char *salt, uint8_t *csalt, uint16_t clen, uint8_t logr)
+void _xtEncodeSalt(char *salt, uint8_t *csalt, uint16_t clen, uint8_t logRounds)
 {
 	salt[0] = '$';
 	salt[1] = XT_BCRYPT_VERSION;
 	salt[2] = 'a';
 	salt[3] = '$';
 
-	snprintf(salt + 4, 4, "%2.2u$", logr);
+	snprintf(salt + 4, 4, "%2.2u$", logRounds);
 
 	_xtBase64Encode((uint8_t*)salt + 7, csalt, clen);
 }
@@ -86,7 +134,7 @@ void xtBcryptGenSalt(uint8_t log_rounds, uint8_t *seed, char *gsalt)
 	else if (log_rounds > 31)
 		log_rounds = 31;
 
-	xtEncodeSalt(gsalt, seed, XT_BCRYPT_MAXSALT, log_rounds);
+	_xtEncodeSalt(gsalt, seed, XT_BCRYPT_MAXSALT, log_rounds);
 }
 
 /* We handle $Vers$log2(NumRounds)$salt+passwd$
@@ -141,7 +189,7 @@ void xtBcrypt(const char *key, const char *salt, char *encrypted)
 		return;
 	}
 	logr = (uint8_t)n;
-	if ((rounds = (uint32_t)1 << logr) < XT_BCRYPT_MINROUNDS) {
+	if ((rounds = (uint32_t)1 << logr) < XT_BCRYPT_MIN_ROUNDS) {
 		strcpy(encrypted, error);
 		return;
 	}
