@@ -104,6 +104,41 @@ static void serpent_encrypt_decrypt()
 	assert(!strcmp(str, buf));
 }
 
+#define LOGROUNDS 12
+/* 50 should be enough, but just in case */
+#define SALTSZ 80
+#define KEYSZ 128
+
+static int compare_salt(const char *passwd, const char *hash)
+{
+	char bcrypted[KEYSZ];
+	xtBcrypt(passwd, hash, bcrypted);
+	/*
+	 * This does not check the whole string making it vulnerable to a timing attack,
+	 * but we don't care about that during test purposes.
+	 */
+	return strcmp(bcrypted, hash);
+}
+
+static void bcrypt_salt(void)
+{
+	xtConsoleFillLine("-");
+	puts("-- BCRYPT SALT TEST");
+	const char *passwd = "WhoahD1nnur";
+	char salt[SALTSZ], hash[KEYSZ];
+	uint8_t seed[XT_BCRYPT_MAXSALT];
+	for (unsigned i = 0; i < sizeof seed; ++i)
+		seed[i] = rand();
+	xtBcryptGenSalt(LOGROUNDS, seed, salt);
+	printf("salt: %s\n", salt);
+	xtBcrypt(passwd, salt, hash);
+	printf("hash: %s\n", hash);
+	puts("check \"WhoahDinnur\" != \"WhoahD1nnur\"");
+	assert(compare_salt("WhoahDinnur", hash));
+	puts("check \"WhoahD1nnur\" == \"WhoahD1nnur\"");
+	assert(!compare_salt("WhoahD1nnur", hash));
+}
+
 int main(void)
 {
 	srand(time(NULL));
@@ -113,6 +148,7 @@ int main(void)
 	serpent_encrypt_decrypt();
 	blowfish_block09();
 	blowfish_encrypt_decrypt();
+	bcrypt_salt();
 	xtConsoleFillLine("-");
 	puts("All tests have been completed!");
 	return EXIT_SUCCESS;

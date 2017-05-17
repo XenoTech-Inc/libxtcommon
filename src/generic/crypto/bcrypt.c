@@ -10,8 +10,8 @@
  * time to come.
  */
 
-static void encode_base64(uint8_t *, uint8_t *, uint16_t);
-static void decode_base64(uint8_t *, uint16_t, uint8_t *);
+static void _xtBase64Encode(uint8_t *, uint8_t *, uint16_t);
+static void _xtBase64Decode(uint8_t *, uint16_t, uint8_t *);
 
 static const char *error = ":";
 
@@ -35,7 +35,7 @@ static const uint8_t index_64[128] = {
 };
 #define CHAR64(c)  ( (c) > 127 ? 255 : index_64[(c)])
 
-static void decode_base64(uint8_t *buffer, uint16_t len, uint8_t *data)
+static void _xtBase64Decode(uint8_t *buffer, uint16_t len, uint8_t *data)
 {
 	uint8_t c1, c2, c3, c4, *bp = buffer, *p = data;
 	while (bp < buffer + len) {
@@ -67,44 +67,44 @@ static void decode_base64(uint8_t *buffer, uint16_t len, uint8_t *data)
 	}
 }
 
-void encode_salt(char *salt, uint8_t *csalt, uint16_t clen, uint8_t logr)
+void xtEncodeSalt(char *salt, uint8_t *csalt, uint16_t clen, uint8_t logr)
 {
 	salt[0] = '$';
-	salt[1] = BCRYPT_VERSION;
+	salt[1] = XT_BCRYPT_VERSION;
 	salt[2] = 'a';
 	salt[3] = '$';
 
 	snprintf(salt + 4, 4, "%2.2u$", logr);
 
-	encode_base64((uint8_t*)salt + 7, csalt, clen);
+	_xtBase64Encode((uint8_t*)salt + 7, csalt, clen);
 }
 
-void bcrypt_gensalt(uint8_t log_rounds, uint8_t *seed, char *gsalt)
+void xtBcryptGenSalt(uint8_t log_rounds, uint8_t *seed, char *gsalt)
 {
 	if (log_rounds < 4)
 		log_rounds = 4;
 	else if (log_rounds > 31)
 		log_rounds = 31;
 
-	encode_salt(gsalt, seed, BCRYPT_MAXSALT, log_rounds);
+	xtEncodeSalt(gsalt, seed, XT_BCRYPT_MAXSALT, log_rounds);
 }
 
 /* We handle $Vers$log2(NumRounds)$salt+passwd$
    i.e. $2$04$iwouldntknowwhattosayetKdJ6iFtacBqJdKe6aW7ou */
-void bcrypt(const char *key, const char *salt, char *encrypted)
+void xtBcrypt(const char *key, const char *salt, char *encrypted)
 {
 	struct xtBlowfish state;
 	uint32_t rounds, i, k;
 	uint8_t key_len, salt_len, logr, minor;
-	uint8_t ciphertext[4 * BCRYPT_BLOCKS+1] = "OrpheanBeholderScryDoubt";
-	uint8_t csalt[BCRYPT_MAXSALT];
-	uint32_t cdata[BCRYPT_BLOCKS];
+	uint8_t ciphertext[4 * XT_BCRYPT_BLOCKS+1] = "OrpheanBeholderScryDoubt";
+	uint8_t csalt[XT_BCRYPT_MAXSALT];
+	uint32_t cdata[XT_BCRYPT_BLOCKS];
 	int n;
 
 	/* Discard "$" identifier */
 	++salt;
 
-	if (*salt > BCRYPT_VERSION) {
+	if (*salt > XT_BCRYPT_VERSION) {
 		/* How do I handle errors ? Return ':' */
 		strcpy(encrypted, error);
 		return;
@@ -141,7 +141,7 @@ void bcrypt(const char *key, const char *salt, char *encrypted)
 		return;
 	}
 	logr = (uint8_t)n;
-	if ((rounds = (uint32_t)1 << logr) < BCRYPT_MINROUNDS) {
+	if ((rounds = (uint32_t)1 << logr) < XT_BCRYPT_MINROUNDS) {
 		strcpy(encrypted, error);
 		return;
 	}
@@ -149,14 +149,14 @@ void bcrypt(const char *key, const char *salt, char *encrypted)
 	/* Discard num rounds + "$" identifier */
 	salt += 3;
 
-	if (strlen(salt) * 3 / 4 < BCRYPT_MAXSALT) {
+	if (strlen(salt) * 3 / 4 < XT_BCRYPT_MAXSALT) {
 		strcpy(encrypted, error);
 		return;
 	}
 
 	/* We dont want the base64 salt but the raw data */
-	decode_base64(csalt, BCRYPT_MAXSALT, (uint8_t*)salt);
-	salt_len = BCRYPT_MAXSALT;
+	_xtBase64Decode(csalt, XT_BCRYPT_MAXSALT, (uint8_t*)salt);
+	salt_len = XT_BCRYPT_MAXSALT;
 	key_len = strlen(key) + (minor >= 'a' ? 1 : 0);
 
 
@@ -169,14 +169,14 @@ void bcrypt(const char *key, const char *salt, char *encrypted)
 	}
 
 	/* This can be precomputed later */
-	for (unsigned i = 0, j = 0; i < BCRYPT_BLOCKS; i++)
-		cdata[i] = _xtBlowfishGrab(ciphertext, 4 * BCRYPT_BLOCKS, &j);
+	for (unsigned i = 0, j = 0; i < XT_BCRYPT_BLOCKS; i++)
+		cdata[i] = _xtBlowfishGrab(ciphertext, 4 * XT_BCRYPT_BLOCKS, &j);
 
 	/* Now do the encryption */
 	for (unsigned k = 0; k < 64; k++)
-		xtBlowfishEncrypt(&state, cdata, BCRYPT_BLOCKS / 2);
+		xtBlowfishEncrypt(&state, cdata, XT_BCRYPT_BLOCKS / 2);
 
-	for (unsigned i = 0; i < BCRYPT_BLOCKS; i++) {
+	for (unsigned i = 0; i < XT_BCRYPT_BLOCKS; i++) {
 		ciphertext[4 * i + 3] = cdata[i] & 0xff;
 		cdata[i] >>= 8;
 		ciphertext[4 * i + 2] = cdata[i] & 0xff;
@@ -188,22 +188,22 @@ void bcrypt(const char *key, const char *salt, char *encrypted)
 
 	i = 0;
 	encrypted[i++] = '$';
-	encrypted[i++] = BCRYPT_VERSION;
+	encrypted[i++] = XT_BCRYPT_VERSION;
 	if (minor)
 		encrypted[i++] = minor;
 	encrypted[i++] = '$';
 
 	snprintf(encrypted + i, 4, "%2.2u$", logr);
 
-	encode_base64((uint8_t*)encrypted + i + 3, csalt, BCRYPT_MAXSALT);
-	encode_base64((uint8_t*)encrypted + strlen(encrypted), ciphertext, 4 * BCRYPT_BLOCKS - 1);
+	_xtBase64Encode((uint8_t*)encrypted + i + 3, csalt, XT_BCRYPT_MAXSALT);
+	_xtBase64Encode((uint8_t*)encrypted + strlen(encrypted), ciphertext, 4 * XT_BCRYPT_BLOCKS - 1);
 	memset(&state, 0, sizeof state);
 	memset(ciphertext, 0, sizeof ciphertext);
 	memset(csalt, 0, sizeof csalt);
 	memset(cdata, 0, sizeof cdata);
 }
 
-uint32_t bcrypt_get_rounds(const char *hash)
+uint32_t xtBcryptGetRounds(const char *hash)
 {
 	/* skip past the leading "$" */
 	if (!hash || *(hash++) != '$') return 0;
@@ -216,7 +216,7 @@ uint32_t bcrypt_get_rounds(const char *hash)
 	return atoi(hash);
 }
 
-static void encode_base64(uint8_t *buffer, uint8_t *data, uint16_t len)
+static void _xtBase64Encode(uint8_t *buffer, uint8_t *data, uint16_t len)
 {
 	uint8_t c1, c2, *bp = buffer, *p = data;
 	while (p < data + len) {

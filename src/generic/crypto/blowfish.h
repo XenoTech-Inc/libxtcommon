@@ -1,5 +1,5 @@
-#ifndef BLOWFISH_H
-#define BLOWFISH_H
+#ifndef _XT_BLOWFISH_H
+#define _XT_BLOWFISH_H
 
 #include <xt/crypto.h>
 
@@ -12,7 +12,7 @@ void _xtBlowfishExpandState(struct xtBlowfish *, const uint8_t *, uint16_t, cons
 
 /*
  * Converts uint8_t to uint32_t
- * Don't move this: it is also used by bcrypt
+ * Don't move this: it is also used by xtBcrypt
  */
 static inline uint32_t _xtBlowfishGrab(const uint8_t *data, unsigned n, unsigned *pos)
 {
@@ -27,6 +27,5 @@ static inline uint32_t _xtBlowfishGrab(const uint8_t *data, unsigned n, unsigned
 	*pos = j;
 	return word;
 }
-
 
 #endif

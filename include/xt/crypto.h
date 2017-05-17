@@ -48,6 +48,13 @@ struct xtBlowfish {
 	uint32_t P[XT_BLOWFISH_N + 2];
 };
 
+#define XT_BCRYPT_VERSION '2'
+#define XT_BCRYPT_MAXSALT 16
+/** Ciphertext blocks */
+#define XT_BCRYPT_BLOCKS 6
+/** Minimum number of rounds for computing salt */
+#define XT_BCRYPT_MINROUNDS 16
+
 /**
  * Initializes a serpent cipher with the specified key. Note that \a keySize
  * must not exceed 256 bytes.
@@ -122,6 +129,12 @@ void xtBlowfishEncryptCBC(struct xtBlowfish *ctx, uint8_t *iva, uint8_t *data, u
  * @param dataSize - The number of bytes to decrypt.
  */
 void xtBlowfishDecryptCBC(struct xtBlowfish *ctx, uint8_t *iva, uint8_t *data, uint32_t dataSize);
+
+/* xtBcrypt functions*/
+void xtBcryptGenSalt(uint8_t log_rounds, uint8_t *seed, char *gsalt);
+void xtBcrypt(const char *key, const char *salt, char *encrypted);
+void xtEncodeSalt(char *, uint8_t *, uint16_t, uint8_t);
+uint32_t xtBcryptGetRounds(const char *);
 
 #ifdef __cplusplus
 }
