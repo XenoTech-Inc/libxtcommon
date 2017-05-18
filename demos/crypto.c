@@ -105,13 +105,10 @@ static void serpent_encrypt_decrypt()
 }
 
 #define LOGROUNDS 12
-/* 50 should be enough, but just in case */
-#define SALTSZ 80
-#define KEYSZ 128
 
 static int compare_salt(const char *passwd, const char *hash)
 {
-	char bcrypted[KEYSZ];
+	char bcrypted[XT_BCRYPT_KEY_LENGTH];
 	xtBcrypt(passwd, hash, bcrypted);
 	/*
 	 * This does not check the whole string making it vulnerable to a timing attack,
@@ -125,7 +122,7 @@ static void bcrypt_salt(void)
 	xtConsoleFillLine("-");
 	puts("-- BCRYPT SALT TEST");
 	const char *passwd = "WhoahD1nnur";
-	char salt[SALTSZ], hash[KEYSZ];
+	char salt[XT_BCRYPT_SALT_LENGTH], hash[XT_BCRYPT_KEY_LENGTH];
 	uint8_t seed[XT_BCRYPT_MAXSALT];
 	for (unsigned i = 0; i < sizeof seed; ++i)
 		seed[i] = rand();
