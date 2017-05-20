@@ -428,6 +428,15 @@ fail:
 	return ret;
 }
 
+char *xtstrncpy(char *restrict dest, const char *restrict src, size_t n)
+{
+	if (n) {
+		strncpy(dest, src, n - 1);
+		dest[n - 1] = '\0';
+	}
+	return dest;
+}
+
 bool xtStringContainsLen(const char *restrict haystack, const char *restrict needle, size_t haystackLen)
 {
 	size_t needleLen = strlen(needle);

@@ -134,6 +134,16 @@ static void end(void)
 	puts("Success");
 }
 
+static void copy(void)
+{
+	xtConsoleFillLine("-");
+	puts("-- STRING COPY TEST");
+	char small[8];
+	const char *str9 = "1234567!"; // strlen > 8
+	xtstrncpy(small, str9, sizeof small);
+	xtprintf("Exclamation mark should not be visible: %s\n", small);
+}
+
 static void formatSI(void)
 {
 	xtConsoleFillLine("-");
@@ -212,6 +222,7 @@ int main(void)
 	puts("-- STRING TEST");
 	start();
 	end();
+	copy();
 	contains();
 	reverse();
 	rot13();

@@ -147,6 +147,15 @@ int xtvfprintf(FILE *stream, const char *format, va_list args);
 int xtsnprintf(char *str, size_t size, const char *format, ...);
 int xtvsnprintf(char *str, size_t size, const char *format, va_list args);
 /**
+ * Copy a string of maximum \a n characters and guarantee NULL-termination. This
+ * behaves the same as strncpy except it always guarantees NULL-termination.
+ * @param dest - Pointer to copy string to.
+ * @param src - Pointer to copy string from.
+ * @param n - Maximum number of characters including null byte.
+ * @returns Pointer to copy string to.
+ */
+char *xtstrncpy(char *restrict dest, const char *restrict src, size_t n);
+/**
  * Checks if the haystack contains the needle somewhere in it.
  * @param needle - A pointer to a null terminated string that serves as needle.
  */
