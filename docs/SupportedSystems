@@ -1,0 +1,44 @@
+This file contains the results of the compilation process of the library
+across different compilers and OS'.
+
+################################################################################
+OS group: Linux - Debian
+Version : 8.8.0 x64
+Compiler: GCC 7.1.0 x64 (Custom compiler)
+Target  : Linux x64
+Results : Everything works.
+Verdict : Safe for usage.
+--------------------------------------------------------------------------------
+Version : 8.8.0 x64
+Compiler: GCC 6.3.0 x64 (Custom compiler)
+Target  : Linux x64
+Results : Everything works.
+Verdict : Safe for usage.
+--------------------------------------------------------------------------------
+Version : 8.8.0 x64
+Compiler: GCC 4.9.2 x64 (Default system compiler)
+Target  : Linux x64
+Results : Compilation as release will cause a segfault in the general demo.
+Verdict : DO NOT use the library with this compiler to prevent any unexpected
+          problems.
+################################################################################
+OS group: Linux - Xubuntu
+Version : 16.04.3 LTS x64
+Compiler: GCC 5.4.0 x64 (Default system compiler)
+Target  : Linux x64
+Results : Everything works.
+Verdict : Safe for usage.
+################################################################################
+OS group: Windows
+--------------------------------------------------------------------------------
+Version : XP SP3 x86
+Compiler: TDM-GCC 6.3.0
+Target  : Windows XP x86
+Results : The library uses functions which exist since Windows Vista.
+Verdict : The library cannot be compiled for targets under Windows Vista.
+--------------------------------------------------------------------------------
+Version : Windows 10
+Compiler: Cygwin-GCC 6.4.0
+Target  : Windows Vista x64
+Results : The library uses functions which exist since Windows Vista.
+Verdict : The library cannot be compiled for targets under Windows Vista.
