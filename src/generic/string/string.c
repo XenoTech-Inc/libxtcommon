@@ -533,32 +533,16 @@ char *xtStringReplaceAll(char *str, const char org, const char replacer)
 
 char *xtStringTrim(char *str)
 {
-	if (!*str)
-		return str;
-	size_t oldstrlen = strlen(str);
-	// First look where the last REAL character is
-	char *lastchar = &str[0]; // Just init this for safety
-	for (size_t i = oldstrlen; i > 0; --i) {
-		// Good enough, just assume the rest is real data
-		if (str[i] != ' ' && str[i] != '\t' && str[i] != '\0') {
-			lastchar = &str[i];
+	char *start, *end;
+	for (start = str; ; ++start)
+		if (!isspace(*start))
 			break;
-		}
-	}
-	// Now find the start of the first character!
-	char *p = str;
-	while ((*p == ' ' || *p == '\t') && *p != '\0') ++p;
-	// Unfortunately we do have to make a seperate buffer...
-	size_t newlen = lastchar - p + 2;
-	char *buf = malloc(newlen);
-	if (!buf)
-		return str;
-	// First copy it to the new buffer...
-	memmove(buf, p, newlen);
-	// Then copy it back to the old buffer
-	memmove(str, buf, newlen);
-	str[newlen - 1] = '\0';
-	free(buf);
+	for (end = start + strlen(start); end > start; --end)
+		if (!isspace(end[-1]))
+			break;
+	memmove(str, start, end - start);
+	end -= start - str;
+	*end = '\0';
 	return str;
 }
 
