@@ -23,12 +23,17 @@ static void trim(void)
 	char test2[] = "     What's the    most \t fucking  important   ASSpect?";
 	xtStringTrim(test2);
 	printf("Trim: \"%s\"\n", test2);
-	if (isspace(test[0]) || isspace(test[strlen(test) - 1]))
+	if (isspace(test2[0]) || isspace(test2[strlen(test2) - 1]))
 		goto fail;
 	char test3[] = "This is   againsed      \t law, reported   \t ";
 	xtStringTrim(test3);
 	printf("Trim: \"%s\"\n", test3);
-	if (isspace(test[0]) || isspace(test[strlen(test) - 1]))
+	if (isspace(test3[0]) || isspace(test3[strlen(test3) - 1]))
+		goto fail;
+	char test4[] = "";
+	xtStringTrim(test4);
+	printf("Trim: \"%s\"\n", test4);
+	if (*test4)
 		goto fail;
 	return;
 fail:
