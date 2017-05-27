@@ -120,7 +120,7 @@ size_t xtThreadGetID(const struct xtThread *t);
 /**
  * Returns the current suspend count for the specified thread.
  */
-int xtThreadGetSuspendCount(const struct xtThread *t);
+int xtThreadGetSuspendCount(struct xtThread *t);
 /**
  * Returns if the specified thread is still executing their task and has not terminated yet.
  */

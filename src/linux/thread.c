@@ -121,9 +121,12 @@ size_t xtThreadGetID(const struct xtThread *t)
 		return pthread_self();
 }
 
-inline int xtThreadGetSuspendCount(const struct xtThread *t)
+inline int xtThreadGetSuspendCount(struct xtThread *t)
 {
-	return t->suspendCount;
+	pthread_mutex_lock(&t->suspendMutex);
+	int suspendCount = t->suspendCount;
+	pthread_mutex_unlock(&t->suspendMutex);
+	return suspendCount;
 }
 
 bool xtThreadIsAlive(const struct xtThread *t)
