@@ -88,6 +88,7 @@ struct xtThread {
 	pthread_t nativeThread;
 	pthread_cond_t suspendCond;
 	pthread_mutex_t suspendMutex;
+	pthread_attr_t attr;
 #elif XT_IS_WINDOWS
 	HANDLE exitEvent, nativeThread;
 	xtMutex suspendMutex;
@@ -109,10 +110,11 @@ int xtThreadContinue(struct xtThread *t);
  * @param arg - An optional argument which the function takes.
  * @param stackSizeKB - The stack size in KB for the thread. Specify zero to use the OS default stack size. If this value
  * is too low for your new thread, the thread may suddenly terminate when starting.
+ * @param guardSizeKB - The guard size in KB for the thread. Speciy zero to use the OS default guard size, -1 to disable the guard.
  * @return Zero if the thread has been created, otherwise an error code.
  * @remarks You need to call xtThreadJoin() to clean up the new thread properly, otherwise system resources will leak.
  */
-int xtThreadCreate(struct xtThread *t, void *(*func) (struct xtThread *t, void *arg), void *arg, unsigned stackSizeKB);
+int xtThreadCreate(struct xtThread *t, void *(*func) (struct xtThread *t, void *arg), void *arg, unsigned stackSizeKB, int guardSizeKB);
 /**
  * Returns the unique identifier of the specified thread. Pass a null to get the ID of the caller thread.
  */
