@@ -96,6 +96,13 @@ size_t xtThreadGetID(const struct xtThread *t)
 		return GetCurrentThreadId();
 }
 
+char *xtThreadGetName(char *buf, size_t buflen)
+{
+	(void)buf;
+	(void)buflen;
+	return NULL;
+}
+
 int xtThreadGetSuspendCount(struct xtThread *t)
 {
 	xtMutexLock(&t->suspendMutex);
@@ -119,6 +126,11 @@ void *xtThreadJoin(struct xtThread *t)
 	CloseHandle(t->exitEvent);
 	xtMutexDestroy(&t->suspendMutex);
 	return t->funcRet;
+}
+
+void xtThreadSetName(const char *name)
+{
+	(void)name;
 }
 
 int xtThreadSuspend(struct xtThread *t)

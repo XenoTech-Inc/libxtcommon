@@ -157,11 +157,14 @@ static void threadTest(void)
 	int ret;
 	xtMutex m;
 	struct xtThread t1, t2;
+	printf("TMain: My name is \"%s\"\n", xtThreadGetName(sbuf, sizeof(sbuf)));
+	xtThreadSetName("thread_worker");
+	printf("TMain: My name is now \"%s\"\n", xtThreadGetName(sbuf, sizeof(sbuf)));
 	if ((ret = xtMutexCreate(&m)) != 0)
 		goto err;
-	if ((ret = xtThreadCreate(&t1, t1Task, &m, 0)) != 0)
+	if ((ret = xtThreadCreate(&t1, t1Task, &m, 0, 0)) != 0)
 		goto err;
-	if ((ret = xtThreadCreate(&t2, t2Task, &m, 0)) != 0)
+	if ((ret = xtThreadCreate(&t2, t2Task, &m, 0, 0)) != 0)
 		goto err;
 	tMainTask(&t1, &t2);
 	printf("T1 ret: %p\n", xtThreadJoin(&t1));
@@ -246,7 +249,7 @@ static void socketTest(void)
 
 
 	struct xtThread t;
-	xtThreadCreate(&t, socketTestT2, NULL, 64);
+	xtThreadCreate(&t, socketTestT2, NULL, 64, 0);
 
 	ret = xtSocketBindToAny(serverSock, 25659);
 	xtSocketGetLocalSocketAddress(serverSock, &sa);
@@ -327,7 +330,7 @@ int main(void)
 	xtConsoleFillLine("-");
 	puts("-- THREAD SLEEP TEST");
 	struct xtThread t;
-	xtThreadCreate(&t, threadTestSleep, NULL, 64);
+	xtThreadCreate(&t, threadTestSleep, NULL, 64, 0);
 	xtSleepMS(500);
 	xtThreadContinue(&t);
 	xtThreadJoin(&t);

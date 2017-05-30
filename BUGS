@@ -31,3 +31,5 @@ include in the library yet.
 
 xtThreadCreate(): Specifying a guard size has no effect since the Windows
   API has no support for such a thing.
+xtThreadSetName(), xtThreadGetName(): These both have no effect on Windows.
+  The Windows API has no support for thread names until Windows 10 and up.
