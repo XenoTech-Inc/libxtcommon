@@ -88,6 +88,7 @@ struct xtThread {
 	pthread_t nativeThread;
 	pthread_cond_t suspendCond;
 	pthread_mutex_t suspendMutex;
+	pthread_attr_t attr;
 #elif XT_IS_WINDOWS
 	HANDLE exitEvent, nativeThread;
 	xtMutex suspendMutex;
@@ -109,18 +110,24 @@ int xtThreadContinue(struct xtThread *t);
  * @param arg - An optional argument which the function takes.
  * @param stackSizeKB - The stack size in KB for the thread. Specify zero to use the OS default stack size. If this value
  * is too low for your new thread, the thread may suddenly terminate when starting.
+ * @param guardSizeKB - The guard size in KB for the thread. Specify zero to use the OS default guard size, -1 to disable the guard.
  * @return Zero if the thread has been created, otherwise an error code.
  * @remarks You need to call xtThreadJoin() to clean up the new thread properly, otherwise system resources will leak.
  */
-int xtThreadCreate(struct xtThread *t, void *(*func) (struct xtThread *t, void *arg), void *arg, unsigned stackSizeKB);
+int xtThreadCreate(struct xtThread *t, void *(*func) (struct xtThread *t, void *arg), void *arg, unsigned stackSizeKB, int guardSizeKB);
 /**
  * Returns the unique identifier of the specified thread. Pass a null to get the ID of the caller thread.
  */
 size_t xtThreadGetID(const struct xtThread *t);
 /**
+ * Retrieves the name of the caller thread.
+ * @return A pointer to \a bufon success, NULL on failure.
+ */
+char *xtThreadGetName(char *buf, size_t buflen);
+/**
  * Returns the current suspend count for the specified thread.
  */
-int xtThreadGetSuspendCount(const struct xtThread *t);
+int xtThreadGetSuspendCount(struct xtThread *t);
 /**
  * Returns if the specified thread is still executing their task and has not terminated yet.
  */
@@ -132,6 +139,14 @@ bool xtThreadIsAlive(const struct xtThread *t);
  * @return The return value of the thread that is being joined.
  */
 void *xtThreadJoin(struct xtThread *t);
+/**
+ * Sets the name of the caller thread. The thread's name is the name that also
+ * shows up in debuggers.
+ * @param name - The new name for the caller thread. It may be a maximum of 16
+ * characters (including the null-terminator) long. Any characters beyond that
+ * will silently be truncated.
+ */
+void xtThreadSetName(const char *name);
 /**
  * Increases the suspend count by one. If the suspend count is higher than zero, the thread will be suspended
  * on a call to this function. The thread will not be suspended when the suspend count is zero or lower.

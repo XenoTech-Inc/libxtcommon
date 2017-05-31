@@ -24,3 +24,12 @@ Windows's major suckage. They do not honor the C standard.
 xtGetCPUInfo() is known to run very slow if the system is on high load.
 A workaround has been written, but it is not stable and fast enough to
 include in the library yet.
+
+# Windows
+
+## Thread API
+
+xtThreadCreate(): Specifying a guard size has no effect since the Windows
+  API has no support for such a thing.
+xtThreadSetName(), xtThreadGetName(): These both have no effect on Windows.
+  The Windows API has no support for thread names until Windows 10 and up.

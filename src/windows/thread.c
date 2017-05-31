@@ -63,10 +63,9 @@ int xtThreadContinue(struct xtThread *t)
 	return 0;
 }
 
-int xtThreadCreate(struct xtThread *t, void *(*func) (struct xtThread *t, void *arg), void *arg, unsigned stackSizeKB)
+int xtThreadCreate(struct xtThread *t, void *(*func) (struct xtThread *t, void *arg), void *arg, unsigned stackSizeKB, int guardSizeKB)
 {
-	// Turn it into KB's
-	stackSizeKB *= 1024;
+	(void)guardSizeKB;
 	t->func = func;
 	t->arg = arg;
 	t->exitEvent = NULL;
@@ -77,8 +76,8 @@ int xtThreadCreate(struct xtThread *t, void *(*func) (struct xtThread *t, void *
 	if (t->exitEvent == NULL)
 		goto error;
 	t->suspendCount = 0;
-	// Specifying zero as stack size to _beginthreadex makes it use the OS default already
-	t->nativeThread = (HANDLE) _beginthreadex(NULL, stackSizeKB, _xtThreadStart, t, 0, &t->tid);
+	// Specifying zero as stack size to _beginthreadex makes it use the main threads stack size
+	t->nativeThread = (HANDLE) _beginthreadex(NULL, stackSizeKB * 1024, _xtThreadStart, t, 0, &t->tid);
 	if (t->nativeThread == 0)
 		goto error;
 	return 0;
@@ -97,9 +96,19 @@ size_t xtThreadGetID(const struct xtThread *t)
 		return GetCurrentThreadId();
 }
 
-inline int xtThreadGetSuspendCount(const struct xtThread *t)
+char *xtThreadGetName(char *buf, size_t buflen)
 {
-	return t->suspendCount;
+	(void)buf;
+	(void)buflen;
+	return NULL;
+}
+
+int xtThreadGetSuspendCount(struct xtThread *t)
+{
+	xtMutexLock(&t->suspendMutex);
+	int suspendCount = t->suspendCount;
+	xtMutexUnlock(&t->suspendMutex);
+	return suspendCount;
 }
 
 bool xtThreadIsAlive(const struct xtThread *t)
@@ -117,6 +126,11 @@ void *xtThreadJoin(struct xtThread *t)
 	CloseHandle(t->exitEvent);
 	xtMutexDestroy(&t->suspendMutex);
 	return t->funcRet;
+}
+
+void xtThreadSetName(const char *name)
+{
+	(void)name;
 }
 
 int xtThreadSuspend(struct xtThread *t)

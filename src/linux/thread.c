@@ -1,16 +1,19 @@
 // XT headers
 #include <xt/thread.h>
 #include <xt/error.h>
+#include <xt/string.h>
 
 // System headers
 #include <errno.h> // for ESRCH and the errno variable
 #include <signal.h> // pthread_kill
 #include <sched.h> // All sched things
+#include <sys/prctl.h> // prctl syscall
 #include <sys/syscall.h> // syscall
 #include <unistd.h> // usleep
 
 // STD headers
 #include <limits.h> // PTHREAD_STACK_MIN
+#include <stdio.h> // snprintf
 #include <stdlib.h> // malloc, free
 #include <time.h> // struct timespec and friends
 
@@ -71,46 +74,45 @@ int xtThreadContinue(struct xtThread *t)
 	return 0;
 }
 
-int xtThreadCreate(struct xtThread *t, void *(*func) (struct xtThread *t, void *arg), void *arg, unsigned stackSizeKB)
+int xtThreadCreate(struct xtThread *t, void *(*func) (struct xtThread *t, void *arg), void *arg, unsigned stackSizeKB, int guardSizeKB)
 {
-	// Turn it into KB's
-	stackSizeKB *= 1024;
+	int ret;
+	if ((ret = pthread_attr_init(&t->attr)) != 0)
+		return _xtTranslateSysError(ret);
+	if ((ret = pthread_cond_init(&t->suspendCond, NULL)) != 0) {
+		pthread_attr_destroy(&t->attr);
+		return _xtTranslateSysError(ret);
+	}
+	if ((ret = pthread_mutex_init(&t->suspendMutex, NULL)) != 0) {
+		pthread_cond_destroy(&t->suspendCond);
+		pthread_attr_destroy(&t->attr);
+		return _xtTranslateSysError(ret);
+	}
+	// Set the custom stack size if desired
+	if (stackSizeKB != 0) {
+		if ((ret = pthread_attr_setstacksize(&t->attr, stackSizeKB * 1024)) != 0)
+			goto error;
+	}
+	if (guardSizeKB == 0) {
+		// Do nothing. Leave the default value as it is
+	} else if (guardSizeKB == -1 || guardSizeKB > 0) {
+		if ((ret = pthread_attr_setguardsize(&t->attr, guardSizeKB == -1 ? 0 : guardSizeKB * 1024)) != 0)
+			goto error;
+	} else
+		goto error;
+	// Even although the default should be joinable, set it manually to be ultra-safe.
+	pthread_attr_setdetachstate(&t->attr, PTHREAD_CREATE_JOINABLE);
 	t->func = func;
 	t->arg = arg;
-	pthread_attr_t attr;
-	if (pthread_attr_init(&attr) != 0)
-		goto error;
-	// Set the custom stack size if desired
-	if (stackSizeKB > 0) {
-		if (pthread_attr_setstacksize(&attr, stackSizeKB) != 0) {
-			pthread_attr_destroy(&attr);
-			goto error;
-		}
-	}
-	// Even although the default should be joinable, set it manually to be ultra-safe.
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-	// Disable the stack guard so we won't waste resources
-	pthread_attr_setguardsize(&attr, 0);
-	if (pthread_cond_init(&t->suspendCond, NULL) != 0) {
-		pthread_attr_destroy(&attr);
-		goto error;
-	}
-	if (pthread_mutex_init(&t->suspendMutex, NULL) != 0) {
-		pthread_cond_destroy(&t->suspendCond);
-		pthread_attr_destroy(&attr);
-		goto error;
-	}
 	t->suspendCount = 0;
-	if (pthread_create(&t->nativeThread, &attr, _xtThreadStart, t) != 0) {
-		pthread_mutex_destroy(&t->suspendMutex);
-		pthread_cond_destroy(&t->suspendCond);
-		pthread_attr_destroy(&attr);
+	if ((ret = pthread_create(&t->nativeThread, &t->attr, _xtThreadStart, t)) != 0)
 		goto error;
-	}
-	pthread_attr_destroy(&attr); // Can do this right now, since it is copied over to the new thread by the implementation
 	return 0;
 error:
-	return _xtTranslateSysError(errno);
+	pthread_mutex_destroy(&t->suspendMutex);
+	pthread_cond_destroy(&t->suspendCond);
+	pthread_attr_destroy(&t->attr);
+	return _xtTranslateSysError(ret);
 }
 
 size_t xtThreadGetID(const struct xtThread *t)
@@ -121,9 +123,22 @@ size_t xtThreadGetID(const struct xtThread *t)
 		return pthread_self();
 }
 
-inline int xtThreadGetSuspendCount(const struct xtThread *t)
+char *xtThreadGetName(char *buf, size_t buflen)
 {
-	return t->suspendCount;
+	char sbuf[16]; // Buffer must be 16 bytes big guaranteed
+	int ret = prctl(PR_GET_NAME, sbuf);
+	if (ret != 0)
+		return NULL;
+	xtstrncpy(buf, sbuf, buflen);
+	return buf;
+}
+
+int xtThreadGetSuspendCount(struct xtThread *t)
+{
+	pthread_mutex_lock(&t->suspendMutex);
+	int suspendCount = t->suspendCount;
+	pthread_mutex_unlock(&t->suspendMutex);
+	return suspendCount;
 }
 
 bool xtThreadIsAlive(const struct xtThread *t)
@@ -140,7 +155,13 @@ void *xtThreadJoin(struct xtThread *t)
 	// Perform cleanup
 	pthread_mutex_destroy(&t->suspendMutex);
 	pthread_cond_destroy(&t->suspendCond);
+	pthread_attr_destroy(&t->attr);
 	return ret;
+}
+
+void xtThreadSetName(const char *name)
+{
+	prctl(PR_SET_NAME, name);
 }
 
 int xtThreadSuspend(struct xtThread *t)
