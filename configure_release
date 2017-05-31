@@ -1,2 +1,2 @@
 #!/bin/sh -e
-./configure -O3 -ffast-math
+./configure -O3 -ffast-math "$@"
