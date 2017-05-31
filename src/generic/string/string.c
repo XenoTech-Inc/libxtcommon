@@ -270,16 +270,6 @@ int xtvsnprintf(char *str, size_t size, const char *format, va_list args)
 			const char *i64tbl[] = {
 				PRId64, PRIi64, PRIo64, PRIu64, PRIx64, PRIX64
 			};
-			if (fptr[1] == 'M') {
-				const char *msg = xtGetErrorStr(errno);
-				size_t l = strlen(msg);
-				if (ptr + l >= end)
-					goto resize;
-				strcpy(ptr, msg);
-				ptr += l;
-				++fptr;
-				continue;
-			}
 			while (*aptr && (sub = strchr(fstr, *aptr))) {
 				flags |= 1 << (sub - fstr);
 				++aptr;

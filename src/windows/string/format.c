@@ -199,8 +199,8 @@ put:
 		default:
 			if (ptr >= end) {
 				dbgs("put");
-				printf("offset: %d\n", (int)(end - ptr));
-				printf("length: %d\n", (int)(end - buf));
+				dbgf("offset: %d\n", (int)(end - ptr));
+				dbgf("length: %d\n", (int)(end - buf));
 					goto resize;
 			}
 			*ptr++ = *fptr;
