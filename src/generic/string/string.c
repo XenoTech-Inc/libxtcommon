@@ -490,16 +490,24 @@ char *xtStringReverse(char *str)
 	return xtStringReverseLen(str, strlen(str));
 }
 
+#if XT_IS_WINDOWS
+	#define strtok_r strtok_s
+#endif
+
 void xtStringSplit(char *restrict str, const char *restrict delim, char **restrict tokens, unsigned *restrict num)
 {
 	char *save_ptr, *token = strtok_r(str, delim, &save_ptr);
 	unsigned i = 0;
-	for (; i < *num && token; ++i) {
+	for (str = NULL; i < *num && token; ++i) {
 		tokens[i] = token;
-		token = strtok_r(save_ptr, delim, &save_ptr);
+		token = strtok_r(str, delim, &save_ptr);
 	}
 	*num = i;
 }
+
+#if XT_IS_WINDOWS
+	#undef strtok_r
+#endif
 
 bool xtStringStartsWith(const char *restrict haystack, const char *restrict needle)
 {
