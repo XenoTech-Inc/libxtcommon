@@ -190,7 +190,7 @@ int xtSocketCreate(xtSocket *sock, enum xtSocketProto proto)
 		//
 		// This macro is defined with a magic value because the original M$ macro is not to be found in
 		// the headers that we use
-		#define _XT_SIO_UDP_CONNRESET -1744830452
+		#define _XT_SIO_UDP_CONNRESET 0x9800000C
 		DWORD dwBytesReturned = 0;
 		BOOL bNewBehavior = FALSE;
 		int status;
