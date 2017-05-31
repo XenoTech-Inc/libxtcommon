@@ -191,7 +191,7 @@ static void printFormat(void)
 		INT64_MIN, UINT64_MAX
 	);
 	puts(buf);
-	xtprintf("Custom error format: message=%M, code=%d\n", errno);
+	xtprintf("Custom error format: message=%s, code=%d\n", xtGetErrorStr(errno), errno);
 }
 
 static void formatTime(void)
