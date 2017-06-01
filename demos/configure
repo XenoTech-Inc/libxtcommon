@@ -72,7 +72,7 @@ cat <<'EOF' >>Makefile
 default: $(OBJECTS) $(MAIN)
 EOF
 for i in $MAIN; do
-	printf '%s: %s %s $(LIST)\n' "${i/%.c/}" "$LIBPATH" "${i/%.c/.o}" >>Makefile
+	printf '%s: %s $(LIST) %s\n' "${i/%.c/}" "${i/%.c/.o}" "$LIBPATH" >>Makefile
 done
 cat <<'EOF' >>Makefile
 %.o: %.c
