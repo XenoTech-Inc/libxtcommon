@@ -52,6 +52,10 @@
 #include <sys/types.h>
 #include <string.h>
 
+// Otherwise GCC spits out some warnings about snprintf in here
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation"
+
 /*
  * This implementation is adaptable to current computing power.
  * You can have up to 2^31 rounds which should be enough for some
@@ -290,3 +294,5 @@ static void _xtBase64Encode(uint8_t *buffer, uint8_t *data, uint16_t len)
 	}
 	*bp = '\0';
 }
+
+#pragma GCC diagnostic pop
