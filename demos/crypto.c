@@ -3,16 +3,18 @@
 #include <xt/os.h>
 #include <xt/string.h>
 
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "utils.h"
+
+static struct stats stats;
 
 static void report(uint32_t *data, size_t len)
 {
 	for (size_t i = 0; i < len; i += 2)
-		xtprintf(
+		xtfprintf(stderr,
 			"Block: %zu: %08I32x %08I32x.\n",
 			i / 2, data[i], data[i + 1]
 		);
@@ -20,7 +22,6 @@ static void report(uint32_t *data, size_t len)
 
 static void blowfish_block09(void)
 {
-	xtConsoleFillLine("-");
 	puts("- BLOWFISH BLOCK TEST");
 	struct xtBlowfish ctx;
 	char key[] = "AAAAA";
@@ -39,8 +40,6 @@ static void blowfish_block09(void)
 
 static void blowfish_encrypt_decrypt(void)
 {
-	xtConsoleFillLine("-");
-	puts("- BLOWFISH ENCRYPT/DECRYPT TEST");
 	struct xtBlowfish ctx;
 	char key[] = "abcdefghijklmnopqrstuvwxyz";
 	uint32_t data[] = {0x424c4f57l, 0x46495348l};
@@ -50,41 +49,49 @@ static void blowfish_encrypt_decrypt(void)
 	xtBlowfishEncrypt(&ctx, data, 1);
 	{
 		uint32_t match[2] = {0x324ed0fe, 0xf413a203};
-		xtprintf("\nShould read as: %I32x %I32x.\n", match[0], match[1]);
-		report(data, 2);
-		assert(data[0] == match[0]);
-		assert(data[1] == match[1]);
+		if (data[0] == match[0] && data[1] == match[1])
+			PASS("xtBlowfishEncrypt()");
+		else {
+			FAIL("xtBlowfishEncrypt()");
+			xtfprintf(stderr, "Should read as: %I32x %I32x.\n", match[0], match[1]);
+			report(data, 2);
+		}
 	}
 	/* second match test */
 	xtBlowfishDecrypt(&ctx, data, 1);
 	{
 		uint32_t match[2] = {0x424c4f57, 0x46495348};
-		xtprintf("\nShould read as: %I32x %I32x.\n", match[0], match[1]);
-		report(data, 2);
-		assert(data[0] == match[0]);
-		assert(data[1] == match[1]);
+		if (data[0] == match[0] && data[1] == match[1])
+			PASS("xtBlowfishDecrypt()");
+		else {
+			FAIL("xtBlowfishDecrypt()");
+			xtfprintf(stderr, "Should read as: %I32x %I32x.\n", match[0], match[1]);
+			report(data, 2);
+		}
 	}
 }
 
 static void serpent_init(void)
 {
-	xtConsoleFillLine("-");
-	puts("-- SERPENT INIT TEST");
 	struct xtSerpent serpent;
 	char data[256];
 	int error = 0;
 	for (unsigned i = 0; i < sizeof data; ++i)
 		data[i] = rand();
 	error = xtSerpentInit(&serpent, data, 512);
-	assert(error == XT_EOVERFLOW);
+	if (error != XT_EOVERFLOW)
+		FAIL("xtSerpentInit() - overflow");
+	else
+		PASS("xtSerpentInit() - overflow");
 	error = xtSerpentInit(&serpent, data, 256);
-	assert(!error);
+	if (error)
+		FAIL("xtSerpentInit() - default");
+	else
+		PASS("xtSerpentInit() - default");
 }
 
 static void serpent_encrypt_decrypt()
 {
-	xtConsoleFillLine("-");
-	puts("-- ENCRYPT DECRYPT TEST");
 	struct xtSerpent serpent;
 	const char *str = "You are tearing me apart Lisa!";
 	char buf[80], buf2[80];
@@ -96,15 +103,20 @@ static void serpent_encrypt_decrypt()
 	for (unsigned i = 0; i < sizeof data; ++i)
 		data[i] = rand();
 	error = xtSerpentInit(&serpent, data, 256);
-	assert(!error);
-	printf("Encrypt and decrypt \"%s\"\n", str);
+	if (error)
+		FAIL("xtSerpentInit() - encrypt/decrypt");
+	else
+		PASS("xtSerpentInit() - encrypt/decrypt");
 	strcpy(buf, str);
 	xtSerpentEncrypt(&serpent, buf2, buf, sizeof buf);
 	xtSerpentDecrypt(&serpent, buf, buf2, sizeof buf);
-	assert(!strcmp(str, buf));
+	if (strcmp(str, buf))
+		FAIL("xtSerpent - encrypt/decrypt");
+	else
+		PASS("xtSerpent - encrypt/decrypt");
 }
 
-#define LOGROUNDS 12
+#define LOGROUNDS 10
 
 static int compare_salt(const char *passwd, const char *hash)
 {
@@ -119,7 +131,6 @@ static int compare_salt(const char *passwd, const char *hash)
 
 static void bcrypt_salt(void)
 {
-	xtConsoleFillLine("-");
 	puts("-- BCRYPT SALT TEST");
 	const char *passwd = "WhoahD1nnur";
 	char salt[XT_BCRYPT_SALT_LENGTH], hash[XT_BCRYPT_KEY_LENGTH];
@@ -130,23 +141,26 @@ static void bcrypt_salt(void)
 	printf("salt: %s\n", salt);
 	xtBcrypt(passwd, salt, hash);
 	printf("hash: %s\n", hash);
-	puts("check \"WhoahDinnur\" != \"WhoahD1nnur\"");
-	assert(compare_salt("WhoahDinnur", hash));
-	puts("check \"WhoahD1nnur\" == \"WhoahD1nnur\"");
-	assert(!compare_salt("WhoahD1nnur", hash));
+	if (!compare_salt("WhoahDinnur", hash))
+		FAIL("xtBcrypt() - wrong password");
+	else
+		PASS("xtBcrypt() - wrong password");
+	if (compare_salt("WhoahD1nnur", hash))
+		FAIL("xtBcrypt() - good password");
+	else
+		PASS("xtBcrypt() - good password");
 }
 
 int main(void)
 {
+	stats_init(&stats, "crypto");
 	srand(time(NULL));
-	xtConsoleFillLine("-");
 	puts("-- CRYPTO TEST");
 	serpent_init();
 	serpent_encrypt_decrypt();
 	blowfish_block09();
 	blowfish_encrypt_decrypt();
 	bcrypt_salt();
-	xtConsoleFillLine("-");
-	puts("All tests have been completed!");
-	return EXIT_SUCCESS;
+	stats_info(&stats);
+	return stats_status(&stats);
 }

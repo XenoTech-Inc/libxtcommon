@@ -6,63 +6,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "utils.h"
 
-static unsigned strtodt(char *str, size_t n, size_t num, unsigned fnum)
-{
-	static const char *sibase[] = {
-		"us", "ms", "sec", NULL
-	};
-	const char **si = sibase;
-	size_t d = num;
-	unsigned rem = 0;
-	while (*si && d >= 1000) {
-		rem = d % 1000;
-		d /= 1000;
-		++si;
-	}
-	if (!fnum || si == sibase)
-		xtsnprintf(str, n, "%u%s", (unsigned)d, *si);
-	else {
-		char sbuf[32];
-		xtsnprintf(sbuf, sizeof sbuf, "%%u.%%0%du%%s", fnum);
-		xtsnprintf(str, n, sbuf, (unsigned)d, (unsigned)(rem / 1.0f), *si);
-	}
-	return (unsigned)(si - sibase);
-}
+static struct stats stats;
 
-static void chklistu(unsigned *a, size_t n, int ascend)
-{
-	if (ascend)
-		for (size_t i = 1; i < n; ++i)
-			assert(a[i - 1] <= a[i]);
-	else
-		for (size_t i = 1; i < n; ++i)
-			assert(a[i - 1] >= a[i]);
-}
+#define CHK_SUBTYPE U
+#define CHK_TYPE unsigned
 
-static void chklistd(int *a, size_t n, int ascend)
-{
-	if (ascend)
-		for (size_t i = 1; i < n; ++i)
-			assert(a[i - 1] <= a[i]);
-	else
-		for (size_t i = 1; i < n; ++i)
-			assert(a[i - 1] >= a[i]);
-}
+#include "chklist.h"
+
+#define CHK_SUBTYPE D
+#define CHK_TYPE int
+
+#include "chklist.h"
 
 #define ASZ 4096
-
-static void arndu(unsigned *a, size_t n)
-{
-	for (size_t i = 0; i < n; ++i)
-		a[i] = rand();
-}
-
-static void arndd(int *a, size_t n)
-{
-	for (size_t i = 0; i < n; ++i)
-		a[i] = rand();
-}
 
 enum xtSortType types[] = {
 	XT_SORT_BUBBLE,
@@ -82,75 +40,78 @@ const char *names[] = {
 
 static void sortu(void)
 {
+	char buf[256];
 	unsigned a[ASZ];
-	xtprintf("Sort ascending %u unsigned ints", ASZ);
 	for (unsigned i = 0; i < NTYPE; ++i) {
-		arndu(a, ASZ);
-		assert(!xtSortU(a, ASZ, types[i], 1));
-		chklistu(a, ASZ, 1);
-		putchar('.');
+		arndU(a, ASZ);
+		if (xtSortU(a, ASZ, types[i], 1)) {
+			snprintf(buf, sizeof buf, "xtSortU() - %s ascending", names[i]);
+			FAIL(buf);
+			continue;
+		}
+		chklistU(a, ASZ, 1, names[i]);
 	}
-	putchar('\n');
-	xtprintf("Sort descending %u unsigned ints", ASZ);
 	for (unsigned i = 0; i < NTYPE; ++i) {
-		arndu(a, ASZ);
-		assert(!xtSortU(a, ASZ, types[i], 0));
-		chklistu(a, ASZ, 0);
-		putchar('.');
+		arndU(a, ASZ);
+		if (xtSortU(a, ASZ, types[i], 0)) {
+			snprintf(buf, sizeof buf, "xtSortU() - %s descending", names[i]);
+			FAIL(buf);
+			continue;
+		}
+		chklistU(a, ASZ, 0, names[i]);
 	}
-	putchar('\n');
 }
 
 static void sortd(void)
 {
+	char buf[256];
 	int a[ASZ];
-	xtprintf("Sort ascending %u unsigned ints", ASZ);
 	for (unsigned i = 0; i < NTYPE; ++i) {
-		arndd(a, ASZ);
-		assert(!xtSortD(a, ASZ, types[i], 1));
-		chklistd(a, ASZ, 1);
-		putchar('.');
+		arndD(a, ASZ);
+		if (xtSortD(a, ASZ, types[i], 1)) {
+			snprintf(buf, sizeof buf, "xtSortD() - %s ascending", names[i]);
+			FAIL(buf);
+			continue;
+		}
+		chklistD(a, ASZ, 1, names[i]);
 	}
-	putchar('\n');
-	xtprintf("Sort descending %u unsigned ints", ASZ);
 	for (unsigned i = 0; i < NTYPE; ++i) {
-		arndd(a, ASZ);
-		assert(!xtSortD(a, ASZ, types[i], 0));
-		chklistd(a, ASZ, 0);
-		putchar('.');
+		arndD(a, ASZ);
+		if (xtSortD(a, ASZ, types[i], 0)) {
+			snprintf(buf, sizeof buf, "xtSortD() - %s descending", names[i]);
+			FAIL(buf);
+			continue;
+		}
+		chklistD(a, ASZ, 0, names[i]);
 	}
-	putchar('\n');
 }
 
 static void large(void)
 {
-	size_t n = 1 << 16LLU;
+	size_t n = 1 << 14LLU;
 	unsigned *a = malloc(n * sizeof(unsigned));
 	if (!a) abort();
 	struct xtTimestamp then, now;
-	char buf[32];
-	xtConsoleFillLine("-");
-	puts("-- LARGE SORT TEST");
+	char buf[256];
 	xtprintf("Sort ascending %zu unsigned ints\n", n);
 	for (unsigned i = 0; i < NTYPE; ++i) {
-		arndu(a, n);
+		arndU(a, n);
 		xtfprintf(stdout, "%s: ", names[i]);
 		fflush(stdout);
 		xtClockGetTime(&then, XT_CLOCK_MONOTONIC);
 		xtSortU(a, n, types[i], 1);
 		xtClockGetTime(&now, XT_CLOCK_MONOTONIC);
-		chklistu(a, n, 1);
-		unsigned long long diff = (now.nsec - then.nsec) / 1000LLU;
-		strtodt(buf, sizeof buf, diff, 3);
-		xtprintf("%s (%lluus)\n", buf, diff);
+		chklistU(a, n, 1, names[i]);
+		xtFormatTimeDuration(buf, sizeof buf, "Elapsed time: %G", &then, &now);
+		puts(buf);
 	}
 	free(a);
 }
 
 int main(void)
 {
+	stats_init(&stats, "sort");
 	srand(time(NULL));
-	xtConsoleFillLine("-");
 	puts("-- SORT TEST");
 	fputs("Algorithms:", stdout);
 	for (unsigned i = 0; i < NTYPE; ++i)
@@ -160,5 +121,6 @@ int main(void)
 	sortd();
 	large();
 	puts("done");
-	return 0;
+	stats_info(&stats);
+	return stats_status(&stats);
 }
