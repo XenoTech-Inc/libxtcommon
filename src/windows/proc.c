@@ -1,6 +1,7 @@
 // XT headers
 #include <xt/proc.h>
 #include <xt/error.h>
+#include <xt/string.h>
 
 // System headers
 #include <windows.h> // Include windows.h before psapi.h and tlhelp32.h
@@ -22,8 +23,10 @@ int xtProcGetMemoryInfo(struct xtProcMemoryInfo *info, unsigned pid)
 	if (handle == NULL)
 		goto error;
 	PROCESS_MEMORY_COUNTERS pmc;
-	if (GetProcessMemoryInfo(handle, &pmc, sizeof(pmc)) == FALSE)
+	if (GetProcessMemoryInfo(handle, &pmc, sizeof(pmc)) == FALSE) {
+		CloseHandle(handle);
 		goto error;
+	}
 	info->hwm = pmc.PeakWorkingSetSize;
 	info->rss = pmc.WorkingSetSize;
 	// Fucking can't be done reliably!!!. The API that $hit$oft offers just
@@ -33,34 +36,24 @@ int xtProcGetMemoryInfo(struct xtProcMemoryInfo *info, unsigned pid)
 	CloseHandle(handle);
 	return 0;
 error:
-	CloseHandle(handle);
 	return _xtTranslateSysError(GetLastError());
 }
 
 int xtProcGetName(char *buf, size_t buflen, unsigned pid)
 {
-	int ret = XT_EINVAL;
-	HANDLE hProcessSnap;
-	PROCESSENTRY32 pe32;
-	hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-	if (hProcessSnap == INVALID_HANDLE_VALUE)
-		return _xtTranslateSysError(GetLastError());
-	pe32.dwSize = sizeof(PROCESSENTRY32);
-	if (!Process32First(hProcessSnap, &pe32)) {
-		CloseHandle(hProcessSnap);
-		return _xtTranslateSysError(GetLastError());
+	HANDLE handle = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+	if (handle == NULL)
+		goto error;
+	DWORD len = buflen;
+	if (QueryFullProcessImageName(handle, 0, buf, &len) == FALSE) {
+		CloseHandle(handle);
+		goto error;
 	}
-	while (Process32Next(hProcessSnap, &pe32)) {
-		if (pe32.th32ProcessID != pid)
-			continue;
-		strncpy(buf, pe32.szExeFile, buflen);
-		size_t len = strlen(pe32.szExeFile);
-		buf[len >= buflen ? buflen - 1 : len] = '\0';
-		ret = 0;
-		break;
-	}
-	CloseHandle(hProcessSnap);
-	return ret;
+	xtStringReplaceAll(buf, '\\', '/');
+	CloseHandle(handle);
+	return 0;
+error:
+	return _xtTranslateSysError(GetLastError());
 }
 
 int xtProcGetPids(unsigned *restrict pids, unsigned *restrict pidCount)
