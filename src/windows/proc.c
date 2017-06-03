@@ -100,25 +100,13 @@ unsigned xtProcGetProcessCount(void)
 
 bool xtProcIsAlive(unsigned pid)
 {
-	HANDLE hProcessSnap;
-	PROCESSENTRY32 pe32;
-	hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-	if (hProcessSnap == INVALID_HANDLE_VALUE)
-		return false;
-	pe32.dwSize = sizeof(PROCESSENTRY32);
-	if (!Process32First(hProcessSnap, &pe32)) {
-		CloseHandle(hProcessSnap);
-		return false;
+	HANDLE handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+	if (handle == NULL) {
+		// Process is alive but we don't have access to open a handle to it
+		return GetLastError() == ERROR_ACCESS_DENIED ? true : false;
 	}
-	bool isAlive = false;
-	while (Process32Next(hProcessSnap, &pe32)) {
-		if (pe32.th32ProcessID == pid) {
-			isAlive = true;
-			break;
-		}
-	}
-	CloseHandle(hProcessSnap);
-	return isAlive;
+	CloseHandle(handle);
+	return true;
 }
 
 int xtProcKill(unsigned pid, enum xtProcSignal signal)
