@@ -80,7 +80,7 @@ int xtMutexUnlock(xtMutex *m);
  */
 struct xtThread {
 	/** The target function for the thread to execute. */
-	void *(*func) (struct xtThread *t, void *arg);
+	void *(*func)(struct xtThread *t, void *arg);
 	/** The argument that is passed to the target function. */
 	void *arg;
 	int suspendCount;
@@ -114,14 +114,14 @@ int xtThreadContinue(struct xtThread *t);
  * @return Zero if the thread has been created, otherwise an error code.
  * @remarks You need to call xtThreadJoin() to clean up the new thread properly, otherwise system resources will leak.
  */
-int xtThreadCreate(struct xtThread *t, void *(*func) (struct xtThread *t, void *arg), void *arg, unsigned stackSizeKB, int guardSizeKB);
+int xtThreadCreate(struct xtThread *t, void *(*func)(struct xtThread *t, void *arg), void *arg, unsigned stackSizeKB, int guardSizeKB);
 /**
- * Returns the unique identifier of the specified thread. Pass a null to get the ID of the caller thread.
+ * Returns the unique identifier of the specified thread. Pass a NULL to get the ID of the caller thread.
  */
 size_t xtThreadGetID(const struct xtThread *t);
 /**
  * Retrieves the name of the caller thread.
- * @return A pointer to \a bufon success, NULL on failure.
+ * @return A pointer to \a buf on success, NULL on failure.
  */
 char *xtThreadGetName(char *buf, size_t buflen);
 /**

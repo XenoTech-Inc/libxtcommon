@@ -74,7 +74,7 @@ int xtThreadContinue(struct xtThread *t)
 	return 0;
 }
 
-int xtThreadCreate(struct xtThread *t, void *(*func) (struct xtThread *t, void *arg), void *arg, unsigned stackSizeKB, int guardSizeKB)
+int xtThreadCreate(struct xtThread *t, void *(*func)(struct xtThread *t, void *arg), void *arg, unsigned stackSizeKB, int guardSizeKB)
 {
 	int ret;
 	if ((ret = pthread_attr_init(&t->attr)) != 0)
