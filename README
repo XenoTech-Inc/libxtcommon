@@ -15,7 +15,7 @@ Read this correctly! You do not need to link with everything if certain
 library functions are not used!
 
 The minimum versions listed below ensure that everything should work
-flawlessly. Most depedencies are present by default on all systems.
+flawlessly. Most dependencies are present by default on all systems.
 
 Linux kernel 3.00+
 #################################################################
@@ -34,6 +34,7 @@ Things that you may need to install (or should have):
 -----------------------------------------------------------------
 Linkage dependencies
 ####################
+proc.h:   -lpsapi
 socket.h: -lws2_32
 thread.h: -lntdll
 

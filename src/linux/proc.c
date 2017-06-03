@@ -1,6 +1,7 @@
 // XT headers
 #include <xt/proc.h>
 #include <xt/error.h>
+#include <xt/string.h>
 
 // System headers
 #include <dirent.h>
@@ -13,6 +14,7 @@
 
 // STD headers
 #include <stdlib.h>
+#include <string.h>
 
 static int _xtProcSignalToSys(enum xtProcSignal signal)
 {
@@ -32,6 +34,37 @@ static int _xtProcSignalToSys(enum xtProcSignal signal)
 unsigned xtProcGetCurrentPID(void)
 {
 	return getpid();
+}
+
+int xtProcGetMemoryInfo(struct xtProcMemoryInfo *info, unsigned pid)
+{
+	char path[64];
+	snprintf(path, sizeof(path), "/proc/%u/status", pid);
+	FILE *f = fopen(path, "r");
+	if (!f)
+		return _xtTranslateSysError(errno);
+	memset(info, 0, sizeof(*info)); // Be safe incase we can't read everything
+	char sbuf[256];
+	char *tokens[10];
+	unsigned numTokens;
+	while (xtStringReadLine(sbuf, sizeof(sbuf), NULL, f)) {
+		numTokens = sizeof(tokens);
+		if (xtStringStartsWith(sbuf, "VmHWM")) {
+			xtStringSplit(sbuf, " ", tokens, &numTokens);
+			info->hwm = strtoull(tokens[1], NULL, 10) * 1024;
+		} else if (xtStringStartsWith(sbuf, "VmRSS")) {
+			xtStringSplit(sbuf, " ", tokens, &numTokens);
+			info->rss = strtoull(tokens[1], NULL, 10) * 1024;
+		} else if (xtStringStartsWith(sbuf, "VmSwap")) {
+			xtStringSplit(sbuf, " ", tokens, &numTokens);
+			info->swap = strtoull(tokens[1], NULL, 10) * 1024;
+		} else if (xtStringStartsWith(sbuf, "VmPeak")) {
+			xtStringSplit(sbuf, " ", tokens, &numTokens);
+			info->vmPeak = strtoull(tokens[1], NULL, 10) * 1024;
+		}
+	}
+	fclose(f);
+	return 0;
 }
 
 int xtProcGetName(char *buf, size_t buflen, unsigned pid)

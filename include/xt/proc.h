@@ -18,8 +18,30 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 
+/**
+ * This structure contains the status of memory usage of a process.
+ * All values are in bytes.
+ */
+struct xtProcMemoryInfo {
+	/** Peak resident set size ("high water mark"). */
+	unsigned long long hwm;
+	/**
+	 * Resident set size (RSS). This the portion of memory that resides in the
+	 * physical memory.
+	 */
+	unsigned long long rss;
+	/** The amount of bytes that are swapped out. */
+	unsigned long long swap;
+	/** Peak virtual memory size. */
+	unsigned long long vmPeak;
+};
+/**
+ * All supported signals that can be sent to processes.
+ */
 enum xtProcSignal {
-	/** Hangup detected on controlling terminal or death of controlling process. */
+	/** Hangup detected on controlling terminal or death of the controlling
+	 * process.
+	 */
 	XT_SIGHUP,
 	/** Interrupt from keyboard. */
 	XT_SIGINT,
@@ -40,6 +62,12 @@ enum xtProcSignal {
  * Returns the PID for the current process. This function will always succeed.
  */
 unsigned xtProcGetCurrentPID(void);
+/**
+ * Retrieves the memory information for \a pid.
+ * @return Zero if the information has been retrieved, otherwise an error code.
+ */
+int xtProcGetMemoryInfo(struct xtProcMemoryInfo *info, unsigned pid);
+
 int xtProcGetName(char *buf, size_t buflen, unsigned pid);
 /**
  * Fetches the PID's of all running processes. The order of the PID's is

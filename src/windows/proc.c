@@ -3,8 +3,9 @@
 #include <xt/error.h>
 
 // System headers
-#include <windows.h> // Include windows.h before TlHelp32.h, otherwise we get problems
-#include <tlhelp32.h> // For CreateToolhelp32Snapshot
+#include <windows.h> // Include windows.h before psapi.h and tlhelp32.h
+#include <psapi.h> // For GetProcessMemoryInfo()
+#include <tlhelp32.h> // For CreateToolhelp32Snapshot()
 
 // STD headers
 #include <stdbool.h>
@@ -13,6 +14,27 @@
 unsigned xtProcGetCurrentPID(void)
 {
 	return GetCurrentProcessId();
+}
+
+int xtProcGetMemoryInfo(struct xtProcMemoryInfo *info, unsigned pid)
+{
+	HANDLE handle = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+	if (handle == NULL)
+		goto error;
+	PROCESS_MEMORY_COUNTERS pmc;
+	if (GetProcessMemoryInfo(handle, &pmc, sizeof(pmc)) == FALSE)
+		goto error;
+	info->hwm = pmc.PeakWorkingSetSize;
+	info->rss = pmc.WorkingSetSize;
+	// Fucking can't be done reliably!!!. The API that $hit$oft offers just
+	// doesn't work. The returned numbers are bogus so they are no use.
+	info->swap = 0;
+	info->vmPeak = 0;
+	CloseHandle(handle);
+	return 0;
+error:
+	CloseHandle(handle);
+	return _xtTranslateSysError(GetLastError());
 }
 
 int xtProcGetName(char *buf, size_t buflen, unsigned pid)

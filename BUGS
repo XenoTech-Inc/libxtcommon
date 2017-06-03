@@ -27,6 +27,12 @@ include in the library yet.
 
 # Windows
 
+## Proc API
+
+xtProcGetMemoryInfo(): In the returned memory info structure, the 'swap' and
+  'vmPeak' fields are always set to zero. This is because Windows gives us
+  invalid fields with bogus values. We cannot reliably retrieve them.
+
 ## Thread API
 
 xtThreadCreate(): Specifying a guard size has no effect since the Windows
