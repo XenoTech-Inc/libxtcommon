@@ -12,18 +12,49 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#define FileTimeToLLU(x) ((((ULONGLONG) (x).dwHighDateTime) << 32) + (x).dwLowDateTime)
+
 unsigned xtProcGetCurrentPID(void)
 {
 	return GetCurrentProcessId();
 }
 
+float xtProcCPUTimeCalculate(const struct xtProcCPUTime *start,
+	const struct xtProcCPUTime *end)
+{
+	SYSTEM_INFO sysInfo;
+	GetSystemInfo(&sysInfo); // Cannot fail
+	float percent = (end->stime - start->stime) + (end->utime - start->utime);
+	percent /= (end->timestamp - start->timestamp);
+	percent /= (float) sysInfo.dwNumberOfProcessors;
+	return percent * 100;
+}
+
+int xtProcCPUTimeGet(struct xtProcCPUTime *cpuTime, unsigned pid)
+{
+	int ret = 1;
+	HANDLE handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+	if (!handle)
+		goto error;
+	FILETIME ftTime, ftSys, ftUser;
+	GetSystemTimeAsFileTime(&ftTime);
+	cpuTime->timestamp = FileTimeToLLU(ftTime);
+	GetProcessTimes(handle, &ftTime, &ftTime, &ftSys, &ftUser);
+	cpuTime->stime = FileTimeToLLU(ftSys);
+	cpuTime->utime = FileTimeToLLU(ftUser);
+	CloseHandle(handle);
+	ret = 0;
+error:
+	return ret == 0 ? 0 : _xtTranslateSysError(GetLastError());
+}
+
 int xtProcGetMemoryInfo(struct xtProcMemoryInfo *info, unsigned pid)
 {
 	HANDLE handle = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
-	if (handle == NULL)
+	if (!handle)
 		goto error;
 	PROCESS_MEMORY_COUNTERS pmc;
-	if (GetProcessMemoryInfo(handle, &pmc, sizeof(pmc)) == FALSE) {
+	if (GetProcessMemoryInfo(handle, &pmc, sizeof pmc) == FALSE) {
 		CloseHandle(handle);
 		goto error;
 	}
@@ -42,7 +73,7 @@ error:
 int xtProcGetName(char *buf, size_t buflen, unsigned pid)
 {
 	HANDLE handle = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
-	if (handle == NULL)
+	if (!handle)
 		goto error;
 	DWORD len = buflen;
 	if (QueryFullProcessImageName(handle, 0, buf, &len) == FALSE) {
@@ -63,7 +94,7 @@ int xtProcGetPids(unsigned *restrict pids, unsigned *restrict pidCount)
 	hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	if (hProcessSnap == INVALID_HANDLE_VALUE)
 		return _xtTranslateSysError(GetLastError());
-	pe32.dwSize = sizeof(PROCESSENTRY32);
+	pe32.dwSize = sizeof pe32;
 	if (!Process32First(hProcessSnap, &pe32)) {
 		CloseHandle(hProcessSnap);
 		return _xtTranslateSysError(GetLastError());
@@ -86,7 +117,7 @@ unsigned xtProcGetProcessCount(void)
 	hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	if (hProcessSnap == INVALID_HANDLE_VALUE)
 		return 0;
-	pe32.dwSize = sizeof(PROCESSENTRY32);
+	pe32.dwSize = sizeof pe32;
 	if (!Process32First(hProcessSnap, &pe32)) {
 		CloseHandle(hProcessSnap);
 		return 0;
@@ -101,7 +132,7 @@ unsigned xtProcGetProcessCount(void)
 bool xtProcIsAlive(unsigned pid)
 {
 	HANDLE handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
-	if (handle == NULL) {
+	if (!handle) {
 		// Process is alive but we don't have access to open a handle to it
 		return GetLastError() == ERROR_ACCESS_DENIED ? true : false;
 	}
@@ -112,14 +143,16 @@ bool xtProcIsAlive(unsigned pid)
 int xtProcKill(unsigned pid, enum xtProcSignal signal)
 {
 	char sbuf[128];
-	HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-	if (handle == NULL)
+	HANDLE handle = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+	if (!handle)
 		return _xtTranslateSysError(GetLastError());
+	// Windows doesn't really support signals so just choose
+	// the most appropriate signal to use
 	int ret;
 	if (signal == XT_SIGKILL)
 		ret = TerminateProcess(handle, signal) == TRUE ? 0 : _xtTranslateSysError(GetLastError());
 	else {
-		snprintf(sbuf, sizeof(sbuf), "C:\\windows\\system32\\taskkill.exe /t /pid %u > NUL", pid);
+		snprintf(sbuf, sizeof sbuf, "C:\\windows\\system32\\taskkill.exe /t /pid %u > NUL", pid);
 		ret = system(sbuf) == 0 ? 0 : _xtTranslateSysError(GetLastError());
 	}
 	CloseHandle(handle);
@@ -128,8 +161,8 @@ int xtProcKill(unsigned pid, enum xtProcSignal signal)
 
 int xtProcWait(unsigned pid, unsigned timeout)
 {
-	HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-	if (handle == NULL)
+	HANDLE handle = OpenProcess(SYNCHRONIZE, FALSE, pid);
+	if (!handle)
 		return _xtTranslateSysError(GetLastError());
 	if (timeout == 0)
 		timeout = INFINITE;

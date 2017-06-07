@@ -14,12 +14,29 @@
 extern "C" {
 #endif
 
+// XT headers
+#include <xt/os_macros.h>
+
 // STD headers
 #include <stdbool.h>
 #include <stddef.h>
 
 /**
- * This structure contains the status of memory usage of a process.
+ * @brief Used to calculate the CPU utilization of a process.
+ *
+ * You should threat this struct as if it were opaque.
+ */
+struct xtProcCPUTime {
+#if XT_IS_LINUX
+	long cstime, cutime;
+	unsigned long stime, utime;
+	unsigned long cpuTime;
+#elif XT_IS_WINDOWS
+	unsigned long long timestamp, stime, utime;
+#endif
+};
+/**
+ * @brief Contains memory usage information of a process.
  * All values are in bytes.
  */
 struct xtProcMemoryInfo {
@@ -59,11 +76,26 @@ enum xtProcSignal {
 	XT_SIGSTOP
 };
 /**
+ * Calculates the system wide CPU utilization given the timestamps provided by
+ * \a start and \a end.
+ * @return The global CPU utilization in percentage. This means that if you are
+ * e.g. on an 8 core system and 100% is returned, that all cores are busy.
+ */
+float xtProcCPUTimeCalculate(const struct xtProcCPUTime *start,
+	const struct xtProcCPUTime *end);
+/**
+ * Retrieves the CPU timestamps for \a pid. This function needs to be called a
+ * second time after a small interval (500 msecs at minimum is recommended) in
+ * order to be able to calculate the global CPU usage afterwards.
+ * @return Zero if the timestamp has been retrieved, otherwise an error code.
+ */
+int xtProcCPUTimeGet(struct xtProcCPUTime *cpuTime, unsigned pid);
+/**
  * Returns the PID for the current process. This function will always succeed.
  */
 unsigned xtProcGetCurrentPID(void);
 /**
- * Retrieves the memory information for \a pid.
+ * Retrieves the memory usage information for \a pid.
  * @return Zero if the information has been retrieved, otherwise an error code.
  */
 int xtProcGetMemoryInfo(struct xtProcMemoryInfo *info, unsigned pid);
@@ -71,7 +103,7 @@ int xtProcGetMemoryInfo(struct xtProcMemoryInfo *info, unsigned pid);
 int xtProcGetName(char *buf, size_t buflen, unsigned pid);
 /**
  * Fetches the PID's of all running processes. The order of the PID's is
- * random.
+ * undefined.
  * @param pids - The buffer which will receive all PID's.
  * @param pidCount - The amount of PID's that will fit into \a pids. On
  * success, it shall be updated to contain the amount of PID's that have
@@ -88,8 +120,7 @@ unsigned xtProcGetProcessCount(void);
 
 bool xtProcIsAlive(unsigned pid);
 /**
- * Kills \a pid with the specified signal. Do note that on Windows many
- * signals are not supported. Instead these signals perform a standard kill.
+ * Kills \a pid with the specified signal.
  */
 int xtProcKill(unsigned pid, enum xtProcSignal signal);
 /**

@@ -37,7 +37,8 @@ include in the library yet.
 xtProcGetMemoryInfo(): In the returned memory info structure, the 'swap' and
   'vmPeak' fields are always set to zero. This is because Windows gives us
   invalid fields with bogus values. We cannot reliably retrieve them.
-
+xtProcKill(): Many signals on Windows are not supported and send a standard kill
+  signal instead.
 ## Thread API
 
 xtThreadCreate(): Specifying a guard size has no effect since the Windows

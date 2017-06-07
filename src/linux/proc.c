@@ -31,6 +31,51 @@ static int _xtProcSignalToSys(enum xtProcSignal signal)
 	}
 }
 
+float xtProcCPUTimeCalculate(const struct xtProcCPUTime *start,
+	const struct xtProcCPUTime *end)
+{
+	unsigned long diff = end->cpuTime - start->cpuTime;
+	float scpu = (end->stime + end->cstime) - (start->stime + start->cstime);
+	float ucpu = (end->utime + end->cutime) - (start->utime + start->cutime);
+	return scpu / diff * 100 + ucpu / diff * 100;
+}
+
+int xtProcCPUTimeGet(struct xtProcCPUTime *cpuTime, unsigned pid)
+{
+	int ret = 1;
+	unsigned long cpuTimeRaw[10] = {0};
+	FILE *pidStat = NULL, *procStat = NULL;
+	char pidStatPath[64];
+	cpuTime->cstime = 0;
+	cpuTime->cutime = 0;
+	cpuTime->stime = 0;
+	cpuTime->utime = 0;
+	cpuTime->cpuTime = 0;
+	snprintf(pidStatPath, sizeof pidStatPath, "/proc/%u/stat", pid);
+	if (!(pidStat = fopen(pidStatPath, "r")) ||
+		!(procStat = fopen("/proc/stat", "r")))
+		goto error;
+	if (fscanf(pidStat, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u"
+		"%lu %lu %ld %ld %*d %*d %*d %*d %*u %*u %*d",
+		&cpuTime->utime, &cpuTime->stime,
+		&cpuTime->cutime, &cpuTime->cstime) == EOF)
+		goto error;
+	if (fscanf(procStat, "%*s %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu",
+		&cpuTimeRaw[0], &cpuTimeRaw[1], &cpuTimeRaw[2], &cpuTimeRaw[3],
+		&cpuTimeRaw[4], &cpuTimeRaw[5], &cpuTimeRaw[6], &cpuTimeRaw[7],
+		&cpuTimeRaw[8], &cpuTimeRaw[9]) == EOF)
+		goto error;
+	for (int i = 0; i < 10; ++i)
+		cpuTime->cpuTime += cpuTimeRaw[i];
+	ret = 0;
+error:
+	if (procStat)
+		fclose(procStat);
+	if (pidStat)
+		fclose(pidStat);
+	return ret == 0 ? 0 : _xtTranslateSysError(errno);
+}
+
 unsigned xtProcGetCurrentPID(void)
 {
 	return getpid();
@@ -39,16 +84,16 @@ unsigned xtProcGetCurrentPID(void)
 int xtProcGetMemoryInfo(struct xtProcMemoryInfo *info, unsigned pid)
 {
 	char path[64];
-	snprintf(path, sizeof(path), "/proc/%u/status", pid);
+	snprintf(path, sizeof path, "/proc/%u/status", pid);
 	FILE *f = fopen(path, "r");
 	if (!f)
 		return _xtTranslateSysError(errno);
-	memset(info, 0, sizeof(*info)); // Be safe incase we can't read everything
+	memset(info, 0, sizeof *info); // Be safe incase we can't read everything
 	char sbuf[256];
 	char *tokens[10];
 	unsigned numTokens;
-	while (xtStringReadLine(sbuf, sizeof(sbuf), NULL, f)) {
-		numTokens = sizeof(tokens);
+	while (xtStringReadLine(sbuf, sizeof sbuf, NULL, f)) {
+		numTokens = sizeof tokens;
 		if (xtStringStartsWith(sbuf, "VmHWM")) {
 			xtStringSplit(sbuf, " ", tokens, &numTokens);
 			info->hwm = strtoull(tokens[1], NULL, 10) * 1024;
@@ -70,7 +115,7 @@ int xtProcGetMemoryInfo(struct xtProcMemoryInfo *info, unsigned pid)
 int xtProcGetName(char *buf, size_t buflen, unsigned pid)
 {
 	char path[64];
-	snprintf(path, sizeof(path), "/proc/%u/cmdline", pid);
+	snprintf(path, sizeof path, "/proc/%u/cmdline", pid);
 	int fd = open(path, O_RDONLY);
 	if (fd == -1)
 		return _xtTranslateSysError(errno);
