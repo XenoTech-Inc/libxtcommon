@@ -30,7 +30,7 @@ float xtProcCPUTimeCalculate(const struct xtProcCPUTime *start,
 	return percent * 100;
 }
 
-int xtProcCPUTimeGet(struct xtProcCPUTime *cpuTime, unsigned pid)
+int xtProcGetCPUTime(unsigned pid, struct xtProcCPUTime *cpuTime)
 {
 	int ret = 1;
 	HANDLE handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
@@ -48,7 +48,7 @@ error:
 	return ret == 0 ? 0 : _xtTranslateSysError(GetLastError());
 }
 
-int xtProcGetMemoryInfo(struct xtProcMemoryInfo *info, unsigned pid)
+int xtProcGetMemoryInfo(unsigned pid, struct xtProcMemoryInfo *info)
 {
 	HANDLE handle = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
 	if (!handle)
@@ -70,7 +70,7 @@ error:
 	return _xtTranslateSysError(GetLastError());
 }
 
-int xtProcGetName(char *buf, size_t buflen, unsigned pid)
+int xtProcGetName(unsigned pid, char *buf, size_t buflen)
 {
 	HANDLE handle = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
 	if (!handle)

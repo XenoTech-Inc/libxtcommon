@@ -89,7 +89,7 @@ float xtProcCPUTimeCalculate(const struct xtProcCPUTime *start,
  * order to be able to calculate the global CPU usage afterwards.
  * @return Zero if the timestamp has been retrieved, otherwise an error code.
  */
-int xtProcCPUTimeGet(struct xtProcCPUTime *cpuTime, unsigned pid);
+int xtProcGetCPUTime(unsigned pid, struct xtProcCPUTime *cpuTime);
 /**
  * Returns the PID for the current process. This function will always succeed.
  */
@@ -98,9 +98,9 @@ unsigned xtProcGetCurrentPID(void);
  * Retrieves the memory usage information for \a pid.
  * @return Zero if the information has been retrieved, otherwise an error code.
  */
-int xtProcGetMemoryInfo(struct xtProcMemoryInfo *info, unsigned pid);
+int xtProcGetMemoryInfo(unsigned pid, struct xtProcMemoryInfo *info);
 
-int xtProcGetName(char *buf, size_t buflen, unsigned pid);
+int xtProcGetName(unsigned pid, char *buf, size_t buflen);
 /**
  * Fetches the PID's of all running processes. The order of the PID's is
  * undefined.

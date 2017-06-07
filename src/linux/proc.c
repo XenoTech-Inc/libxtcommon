@@ -40,7 +40,7 @@ float xtProcCPUTimeCalculate(const struct xtProcCPUTime *start,
 	return scpu / diff * 100 + ucpu / diff * 100;
 }
 
-int xtProcCPUTimeGet(struct xtProcCPUTime *cpuTime, unsigned pid)
+int xtProcGetCPUTime(unsigned pid, struct xtProcCPUTime *cpuTime)
 {
 	int ret = 1;
 	unsigned long cpuTimeRaw[10] = {0};
@@ -81,7 +81,7 @@ unsigned xtProcGetCurrentPID(void)
 	return getpid();
 }
 
-int xtProcGetMemoryInfo(struct xtProcMemoryInfo *info, unsigned pid)
+int xtProcGetMemoryInfo(unsigned pid, struct xtProcMemoryInfo *info)
 {
 	char path[64];
 	snprintf(path, sizeof path, "/proc/%u/status", pid);
@@ -112,7 +112,7 @@ int xtProcGetMemoryInfo(struct xtProcMemoryInfo *info, unsigned pid)
 	return 0;
 }
 
-int xtProcGetName(char *buf, size_t buflen, unsigned pid)
+int xtProcGetName(unsigned pid, char *buf, size_t buflen)
 {
 	char path[64];
 	snprintf(path, sizeof path, "/proc/%u/cmdline", pid);
