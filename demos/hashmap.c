@@ -3,9 +3,11 @@
 #include <xt/os.h>
 #include <xt/string.h>
 #include <xt/time.h>
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "utils.h"
+
+static struct stats stats;
 
 size_t _keyHash(const void *key)
 {
@@ -24,13 +26,15 @@ int main(void)
 {
 	int ret = 0;
 	struct xtHashmap map;
-	xtConsoleFillLine("-");
+	char buf[256];
+	stats_init(&stats, "string");
 	puts("-- HASHMAP TEST");
 	ret = xtHashmapCreate(&map, HASHMAP_SIZE, _keyHash, _keyCompare);
 	if (ret) {
-		fputs("Create failed\n", stderr);
-		return 1;
+		FAIL("xtHashmapCreate()");
+		goto end;
 	}
+	PASS("xtHashmapCreate()");
 	xtHashmapSetFlags(&map, XT_HASHMAP_FREE_KEY);
 	size_t j = 0;
 	void *key, *val;
@@ -44,46 +48,51 @@ int main(void)
 		*v = i;
 		int ret;
 		if ((ret = xtHashmapAdd(&map, v, NULL))  != 0) {
-			xtfprintf(stderr, "Failed to add `%zu': %s\n", i, xtGetErrorStr(ret));
+			xtsnprintf(buf, sizeof buf, "xtHashmapForeach() - Failed to add `%zu': %s\n", i, xtGetErrorStr(ret));
+			FAIL(buf);
 			goto fail;
 		}
 		if (i > HASHMAP_SIZE) {
 			if (i == HASHMAP_SIZE + 1)
 				puts("Iterating hashmap while adding new data");
 			if (!xtHashmapForeach(&map, &key, &val)) {
-				xtfprintf(stderr, "Broken iterator state: (%p,%p)\n", key, val);
+				xtsnprintf(buf, sizeof buf, "xtHashmapForeach() - Broken iterator state: (%p,%p)\n", key, val);
+				FAIL(buf);
 				goto fail;
 			}
 			++j;
 			if (*(size_t*)key != j) {
-				xtfprintf(stderr, "Value: %zu, (expected: %zu)\n", *(size_t*)key, j);
+				xtsnprintf(buf, sizeof buf, "xtHashmapForeach() - Value: %zu, (expected: %zu)\n", *(size_t*)key, j);
+				FAIL(buf);
 				goto fail;
 			}
 		}
 		if ((i + 1) != xtHashmapGetCount(&map)) {
-			xtfprintf(stderr, "Wrong size: %zu (expected: %zu)\n", xtHashmapGetCount(&map), i + 1);
+			xtsnprintf(buf, sizeof buf, "xtHashmapGetCount() - Wrong size: %zu (expected: %zu)\n", xtHashmapGetCount(&map), i + 1);
+			FAIL(buf);
 			goto fail;
 		}
 	}
+	PASS("xtHashmapGetCount()");
 	puts("Done adding items");
 	xtprintf("Count: %zu\n", xtHashmapGetCount(&map));
 	xtHashmapForeachEnd(&map);
-	xtConsoleFillLine("-");
-	puts("-- LOOP TEST");
 	for (j = 0; xtHashmapForeach(&map, &key, &val); ++j)
 		if (j != *(size_t*)key) {
-			xtfprintf(stderr, "Value: %zu, (expected: %zu)\n", *(size_t*)key, j);
+			xtsnprintf(buf, sizeof buf, "xtHashmapForeach() - Value: %zu, (expected: %zu)\n", *(size_t*)key, j);
+			FAIL(buf);
 			goto fail;
 		}
 	if (j != TEST_SIZE) {
-		xtfprintf(stderr, "Wrong size: %zu (expected: %d)\n", j, TEST_SIZE);
+		xtsnprintf(buf, sizeof buf, "xtHashmapForeach() - Wrong size: %zu (expected: %d)\n", j, TEST_SIZE);
+		FAIL(buf);
 		goto fail;
 	}
-	puts("Looping is OK");
+	PASS("xtHashmapForeach()");
 	ret = 0;
-	xtConsoleFillLine("-");
-	puts("All tests have been completed!");
 fail:
 	xtHashmapDestroy(&map);
-	return ret;
+end:
+	stats_info(&stats);
+	return stats_status(&stats);
 }
