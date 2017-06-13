@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "utils.h"
+
+static struct stats stats;
 
 void init(void)
 {
@@ -18,11 +21,13 @@ void init(void)
 	xtStackUInit (&stu );
 	xtStackLUInit(&stlu);
 	xtStackZUInit(&stzu);
+	PASS("xtStack*Init()");
 	xtStackZUDestroy(&stzu);
 	xtStackLUDestroy(&stlu);
 	xtStackUDestroy (&stu );
 	xtStackDDestroy (&std );
 	xtStackHDDestroy(&sthd);
+	PASS("xtStack*Destroy()");
 }
 
 int push(void)
@@ -35,6 +40,12 @@ int push(void)
 	struct xtStackU  stu ;
 	struct xtStackLU stlu;
 	struct xtStackZU stzu;
+#define INIT_HD  1
+#define INIT_D   2
+#define INIT_U   4
+#define INIT_LU  8
+#define INIT_ZU 16
+	unsigned init = 0;
 	xtStackHDInit(&sthd);
 	xtStackDInit (&std );
 	xtStackUInit (&stu );
@@ -46,6 +57,7 @@ int push(void)
 	unsigned      *listu  = NULL;
 	unsigned long *listlu = NULL;
 	size_t        *listzu = NULL;
+	char buf[256];
 	if (!(listhd = malloc(LISTSZ * sizeof(short))))
 		goto fail;
 	if (!(listd  = malloc(LISTSZ * sizeof(int))))
@@ -65,101 +77,171 @@ int push(void)
 		listzu[i] = rand();
 	}
 	puts("Creating stacks");
-	if (xtStackHDCreate(&sthd, STACKSZ)) {
-		fputs("Failed to create StackHD\n", stderr);
-		goto fail;
-	}
-	if (xtStackDCreate(&std, STACKSZ)) {
-		fputs("Failed to create StackD\n", stderr);
-		goto fail;
-	}
-	if (xtStackUCreate(&stu, STACKSZ)) {
-		fputs("Failed to create StackU\n", stderr);
-		goto fail;
-	}
-	if (xtStackLUCreate(&stlu, STACKSZ)) {
-		fputs("Failed to create StackLU\n", stderr);
-		goto fail;
-	}
-	if (xtStackZUCreate(&stzu, STACKSZ)) {
-		fputs("Failed to create StackZU\n", stderr);
-		goto fail;
-	}
+	if (!xtStackHDCreate(&sthd, STACKSZ)) {
+		init |= INIT_HD;
+		PASS("xtStackHDCreate()");
+	} else
+		FAIL("xtStackHDCreate()");
+	if (!xtStackDCreate(&std, STACKSZ)) {
+		init |= INIT_D;
+		PASS("xtStackDCreate()");
+	} else
+		FAIL("xtStackDCreate()");
+	if (!xtStackUCreate(&stu, STACKSZ)) {
+		init |= INIT_U;
+		PASS("xtStackUCreate()");
+	} else
+		FAIL("xtStackUCreate()");
+	if (!xtStackLUCreate(&stlu, STACKSZ)) {
+		init |= INIT_LU;
+		PASS("xtStackLUCreate()");
+	} else
+		FAIL("xtStackLUCreate()");
+	if (!xtStackZUCreate(&stzu, STACKSZ)) {
+		init |= INIT_ZU;
+		PASS("xtStackZUCreate()");
+	} else
+		FAIL("xtStackZUCreate()");
 	puts("Pushing random data");
-	for (unsigned i = 0; i < LISTSZ; ++i) {
-		if (xtStackHDPush(&sthd, listhd[i])) {
-			xtfprintf(stderr, "Failed to push %hd to StackHD\n", listhd[i]);
-			goto fail;
-		}
-		if (xtStackDPush(&std, listd[i])) {
-			xtfprintf(stderr, "Failed to push %d to StackD\n", listd[i]);
-			goto fail;
-		}
-		if (xtStackUPush(&stu, listu[i])) {
-			xtfprintf(stderr, "Failed to push %u to StackU\n", listu[i]);
-			goto fail;
-		}
-		if (xtStackLUPush(&stlu, listlu[i])) {
-			xtfprintf(stderr, "Failed to push %lu to StackLU\n", listlu[i]);
-			goto fail;
-		}
-		if (xtStackZUPush(&stzu, listzu[i])) {
-			xtfprintf(stderr, "Failed to push %zu to StackZU\n", listzu[i]);
-			goto fail;
-		}
+	if (init & INIT_HD) {
+		unsigned i;
+		for (i = 0; i < LISTSZ; ++i)
+			if (xtStackHDPush(&sthd, listhd[i])) {
+				xtsnprintf(buf, sizeof buf, "xtStackHDPush(%hd)", listhd[i]);
+				FAIL(buf);
+				break;
+			}
+		if (i == LISTSZ)
+			PASS("xtStackHDPush()");
+	}
+	if (init & INIT_D) {
+		unsigned i;
+		for (i = 0; i < LISTSZ; ++i)
+			if (xtStackDPush(&std, listd[i])) {
+				xtsnprintf(buf, sizeof buf, "xtStackDPush(%d)", listd[i]);
+				FAIL(buf);
+				break;
+			}
+		if (i == LISTSZ)
+			PASS("xtStackDPush()");
+	}
+	if (init & INIT_U) {
+		unsigned i;
+		for (i = 0; i < LISTSZ; ++i)
+			if (xtStackUPush(&stu, listu[i])) {
+				xtsnprintf(buf, sizeof buf, "xtStackUPush(%u)", listu[i]);
+				FAIL(buf);
+				break;
+			}
+		if (i == LISTSZ)
+			PASS("xtStackUPush()");
+	}
+	if (init & INIT_LU) {
+		unsigned i;
+		for (i = 0; i < LISTSZ; ++i)
+			if (xtStackLUPush(&stlu, listlu[i])) {
+				xtsnprintf(buf, sizeof buf, "xtStackLUPush(%lu)", listlu[i]);
+				FAIL(buf);
+				break;
+			}
+		if (i == LISTSZ)
+			PASS("xtStackLUPush()");
+	}
+	if (init & INIT_ZU) {
+		unsigned i;
+		for (i = 0; i < LISTSZ; ++i)
+			if (xtStackZUPush(&stzu, listzu[i])) {
+				xtsnprintf(buf, sizeof buf, "xtStackZUPush(%zu)", listzu[i]);
+				FAIL(buf);
+				break;
+			}
+		if (i == LISTSZ)
+			PASS("xtStackZUPush()");
 	}
 	puts("Verifying random data");
-	for (unsigned i = 0; i < LISTSZ; ++i) {
+	if (init & INIT_HD) {
+		unsigned i;
 		short hd;
+		for (i = 0; i < LISTSZ; ++i) {
+			if (!xtStackHDPop(&sthd, &hd)) {
+				FAIL("xtStackHDPop()");
+				break;
+			}
+			if (hd != listhd[LISTSZ - i - 1]) {
+				xtsnprintf(buf, sizeof buf, "xtStackHDPop() - Got %hd but expected %hd", hd, listhd[i]);
+				FAIL(buf);
+				break;
+			}
+		}
+		if (i == LISTSZ)
+			PASS("xtStackHDPop()");
+	}
+	if (init & INIT_D) {
+		unsigned i;
 		int d;
-		unsigned u;
+		for (i = 0; i < LISTSZ; ++i) {
+			if (!xtStackDPop(&std, &d)) {
+				FAIL("xtStackDPop()");
+				break;
+			}
+			if (d != listd[LISTSZ - i - 1]) {
+				xtsnprintf(buf, sizeof buf, "xtStackDPop() - Got %d but expected %d", d, listd[i]);
+				FAIL(buf);
+				break;
+			}
+		}
+		if (i == LISTSZ)
+			PASS("xtStackDPop()");
+	}
+	if (init & INIT_U) {
+		unsigned i, u;
+		for (i = 0; i < LISTSZ; ++i) {
+			if (!xtStackUPop(&stu, &u)) {
+				FAIL("xtStackUPop()");
+				break;
+			}
+			if (u != listu[LISTSZ - i - 1]) {
+				xtsnprintf(buf, sizeof buf, "xtStackUPop() - Got %u but expected %u", u, listu[i]);
+				FAIL(buf);
+				break;
+			}
+		}
+		if (i == LISTSZ)
+			PASS("xtStackUPop()");
+	}
+	if (init & INIT_LU) {
+		unsigned i;
 		unsigned long lu;
+		for (i = 0; i < LISTSZ; ++i) {
+			if (!xtStackLUPop(&stlu, &lu)) {
+				FAIL("xtStackLUPop()");
+				break;
+			}
+			if (lu != listlu[LISTSZ - i - 1]) {
+				xtsnprintf(buf, sizeof buf, "xtStackLUPop() - Got %lu but expected %lu", lu, listlu[i]);
+				FAIL(buf);
+				break;
+			}
+		}
+		if (i == LISTSZ)
+			PASS("xtStackLUPop()");
+	}
+	if (init & INIT_ZU) {
+		unsigned i;
 		size_t zu;
-		if (!xtStackHDPop(&sthd, &hd)) {
-			fputs("StackHD is broken\n", stderr);
-			goto fail;
+		for (i = 0; i < LISTSZ; ++i) {
+			if (!xtStackZUPop(&stzu, &zu)) {
+				FAIL("xtStackZUPop()");
+				break;
+			}
+			if (zu != listzu[LISTSZ - i - 1]) {
+				xtsnprintf(buf, sizeof buf, "xtStackZUPop() - Got %zu but expected %zu", zu, listzu[i]);
+				FAIL(buf);
+				break;
+			}
 		}
-		if (hd != listhd[LISTSZ - i - 1]) {
-			fputs("StackHD is corrupted\n", stderr);
-			xtfprintf(stderr, "Got %hd but expected %hd\n", hd, listhd[i]);
-			goto fail;
-		}
-		if (!xtStackDPop(&std, &d)) {
-			fputs("StackD is broken\n", stderr);
-			goto fail;
-		}
-		if (d != listd[LISTSZ - i - 1]) {
-			fputs("StackD is corrupted\n", stderr);
-			xtfprintf(stderr, "Got %d but expected %d\n", d, listd[i]);
-			goto fail;
-		}
-		if (!xtStackUPop(&stu, &u)) {
-			fputs("StackU is broken\n", stderr);
-			goto fail;
-		}
-		if (u != listu[LISTSZ - i - 1]) {
-			fputs("StackU is corrupted\n", stderr);
-			xtfprintf(stderr, "got %u but expected %u\n", u, listu[i]);
-			goto fail;
-		}
-		if (!xtStackLUPop(&stlu, &lu)) {
-			fputs("StackLU is broken\n", stderr);
-			goto fail;
-		}
-		if (lu != listlu[LISTSZ - i - 1]) {
-			fputs("StackLU is corrupted\n", stderr);
-			xtfprintf(stderr, "got %lu but expected %lu\n", lu, listlu[i]);
-			goto fail;
-		}
-		if (!xtStackZUPop(&stzu, &zu)) {
-			fputs("StackZU is broken\n", stderr);
-			goto fail;
-		}
-		if (zu != listzu[LISTSZ - i - 1]) {
-			fputs("StackZU is corrupted\n", stderr);
-			xtfprintf(stderr, "got %zu but expected %zu\n", zu, listzu[i]);
-			goto fail;
-		}
+		if (i == LISTSZ)
+			PASS("xtStackZUPop()");
 	}
 	ret = 0;
 fail:
@@ -184,17 +266,12 @@ fail:
 
 int main(void)
 {
+	stats_init(&stats, "stueue");
 	srand(time(NULL));
-	xtConsoleFillLine("-");
 	puts("-- STACK TEST");
 	puts("Initialize all different types");
 	init();
-	xtConsoleFillLine("-");
-	puts("-- PUSH TEST");
-	if (push()) {
-		xtConsoleFillLine("!");
-		puts("Push test failed");
-		return 1;
-	}
-	return 0;
+	push();
+	stats_info(&stats);
+	return stats_status(&stats);
 }
