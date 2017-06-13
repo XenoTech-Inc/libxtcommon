@@ -2,7 +2,6 @@
 #include <xt/time.h>
 #include <xt/os.h>
 #include <xt/string.h>
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
