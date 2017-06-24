@@ -210,7 +210,6 @@ bool xtCPUHasHyperThreading(const struct xtCPUInfo *cpuInfo)
 
 void xtConsoleClear(void)
 {
-	//system("clear && printf '"); // This is slow!
 	// Alias for <ESC>c, the VT100 code to reset the terminal :D
 	fputs("\033c", stdout); // Really ultra fast
 }

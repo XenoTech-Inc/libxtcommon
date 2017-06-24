@@ -104,6 +104,19 @@ void xtConsoleClear(void);
  * This function takes care of the new line problem of each platform's console.
  */
 int xtConsoleFillLine(const char *pattern);
+
+#define XT_CONSOLE_ALIGN_LEFT 0
+#define XT_CONSOLE_ALIGN_CENTER 1
+#define XT_CONSOLE_ALIGN_RIGHT 2
+/**
+ * Print text that wraps around after \a textWidth characters aligned to left, center, or right.
+ * If \a textWidth is zero, it does not wrap the text and fails if it does not fit.
+ * The text is always terminated with a newline character (just like puts does).
+ * @param textWidth - Maximum width in characters. Specify zero to use the console width.
+ * @param hardSplit - If it may split words. For text, you probably would specify false.
+ * @return Zero if it has been printed, otherwise an error code.
+ */
+int xtConsolePutString(const char *str, unsigned textWidth, bool hardSplit, unsigned alignment);
 /**
  * Tells you the available amount of columns and rows in the console.
  * Both pointers are optional. They remain untouched on error.

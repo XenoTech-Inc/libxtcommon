@@ -220,6 +220,25 @@ static void formatTime(void)
 	puts(buf);
 }
 
+static void putString(void)
+{
+	const char *text = "Testerdetest\nWhoah, this is me, teh KING";
+	xtConsoleFillLine("-");
+	puts("-- PUT STRING TEST");
+
+	xtConsolePutString(text, 0, false, XT_CONSOLE_ALIGN_CENTER);
+	xtConsolePutString(text, 0, false, XT_CONSOLE_ALIGN_LEFT);
+	xtConsolePutString(text, 0, false, XT_CONSOLE_ALIGN_RIGHT);
+
+	xtConsolePutString(text, 14, false, XT_CONSOLE_ALIGN_LEFT);
+	xtConsolePutString(text, 14, false, XT_CONSOLE_ALIGN_CENTER);
+	xtConsolePutString(text, 14, false, XT_CONSOLE_ALIGN_RIGHT);
+
+	xtConsolePutString(text, 6, true, XT_CONSOLE_ALIGN_LEFT);
+	xtConsolePutString(text, 6, true, XT_CONSOLE_ALIGN_CENTER);
+	xtConsolePutString(text, 6, true, XT_CONSOLE_ALIGN_RIGHT);
+}
+
 int main(void)
 {
 	srand(time(NULL));
@@ -236,5 +255,6 @@ int main(void)
 	printFormat();
 	formatSI();
 	formatTime();
+	putString();
 	return EXIT_SUCCESS;
 }
