@@ -266,7 +266,7 @@ fail:
 
 int main(void)
 {
-	stats_init(&stats, "stueue");
+	stats_init(&stats, "stack");
 	srand(time(NULL));
 	puts("-- STACK TEST");
 	puts("Initialize all different types");
