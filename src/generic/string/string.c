@@ -496,12 +496,18 @@ char *xtStringReverse(char *str)
 
 void xtStringSplit(char *restrict str, const char *restrict delim, char **restrict tokens, unsigned *restrict num)
 {
-	char *save_ptr, *token = strtok_r(str, delim, &save_ptr);
+	char *save_ptr, *token;
 	unsigned i = 0;
-	for (str = NULL; i < *num && token; ++i) {
-		tokens[i] = token;
+
+	for (; i < *num; ++i, str = NULL) {
 		token = strtok_r(str, delim, &save_ptr);
+
+		if (!token)
+			break;
+
+		tokens[i] = token;
 	}
+
 	*num = i;
 }
 
@@ -531,10 +537,11 @@ char *xtStringToUpper(char *str)
 char *xtStringReplaceAll(char *str, const char org, const char replacer)
 {
 	size_t len = strlen(str);
-	for (size_t i = 0; i < len; ++i) {
+
+	for (size_t i = 0; i < len; ++i)
 		if (str[i] == org)
 			str[i] = replacer;
-	}
+
 	return str;
 }
 
