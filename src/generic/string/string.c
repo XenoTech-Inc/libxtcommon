@@ -490,16 +490,30 @@ char *xtStringReverse(char *str)
 	return xtStringReverseLen(str, strlen(str));
 }
 
+#if XT_IS_WINDOWS
+	#define strtok_r strtok_s
+#endif
+
 void xtStringSplit(char *restrict str, const char *restrict delim, char **restrict tokens, unsigned *restrict num)
 {
-	char *save_ptr, *token = strtok_r(str, delim, &save_ptr);
+	char *save_ptr, *token;
 	unsigned i = 0;
-	for (; i < *num && token; ++i) {
+
+	for (; i < *num; ++i, str = NULL) {
+		token = strtok_r(str, delim, &save_ptr);
+
+		if (!token)
+			break;
+
 		tokens[i] = token;
-		token = strtok_r(save_ptr, delim, &save_ptr);
 	}
+
 	*num = i;
 }
+
+#if XT_IS_WINDOWS
+	#undef strtok_r
+#endif
 
 bool xtStringStartsWith(const char *restrict haystack, const char *restrict needle)
 {
@@ -523,10 +537,11 @@ char *xtStringToUpper(char *str)
 char *xtStringReplaceAll(char *str, const char org, const char replacer)
 {
 	size_t len = strlen(str);
-	for (size_t i = 0; i < len; ++i) {
+
+	for (size_t i = 0; i < len; ++i)
 		if (str[i] == org)
 			str[i] = replacer;
-	}
+
 	return str;
 }
 

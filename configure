@@ -10,27 +10,62 @@ LIBNAME="libxtcommon.a"
 FINALLIBPATH="$LIBPATH/$LIBNAME"
 
 SYSTEM=`uname -s 2>/dev/null`
-case "$SYSTEM" in
-	Linux*)
-		OS_DIR="src/linux"
-		CFLAGS="-std=gnu99 -Wall -Wextra -pedantic"
-		MACHINE_ARCH=`uname -m`
-		if [ "$MACHINE_ARCH" != "x86_64" ]; then
-			# Enable large file support if we're not on 64 bit
-			CFLAGS="$CFLAGS -D_FILE_OFFSET_BITS=64"
+
+WINARCH=w64-mingw32
+win=no
+
+for i in "$@"; do
+	case "$i" in
+	windows*)
+		shift 1
+		case "$i" in
+		windows-x86)
+			WIN=i686-$WINARCH
+			;;
+		windows-x64)
+			WIN=x86_64-$WINARCH
+			;;
+		*)
+			echo Invalid target: $i 1>&2
+			exit 1;;
+		esac
+		CC="$WIN"-gcc
+		if ! hash "$CC" 2>/dev/null; then
+			echo Missing windows toolchain 1>&2
+			exit 1
 		fi
-		;;
-	CYGWIN*)
-		OS_DIR="src/windows"
-		# 1282 is Win XP with SP2
-		# 1536 is Windows Vista
+		win=yes
 		CFLAGS="-std=c99 -Wall -Wextra -pedantic -DWINVER=1536 -D_WIN32_WINNT=1536"
+		OS_DIR="src/windows"
 		;;
-	*)
-		echo 'Unsupported system' 1>&2
-		exit 1
-		;;
-esac
+	--)
+		break;;
+	esac
+done
+
+if [ "$win" == no ]; then
+	case "$SYSTEM" in
+		Linux*)
+			OS_DIR="src/linux"
+			CFLAGS="-std=gnu99 -Wall -Wextra -pedantic"
+			MACHINE_ARCH=`uname -m`
+			if [ "$MACHINE_ARCH" != "x86_64" ]; then
+				# Enable large file support if we're not on 64 bit
+				CFLAGS="$CFLAGS -D_FILE_OFFSET_BITS=64"
+			fi
+			;;
+		CYGWIN*)
+			OS_DIR="src/windows"
+			# 1282 is Win XP with SP2
+			# 1536 is Windows Vista
+			CFLAGS="-std=c99 -Wall -Wextra -pedantic -DWINVER=1536 -D_WIN32_WINNT=1536"
+			;;
+		*)
+			echo 'Unsupported system' 1>&2
+			exit 1
+			;;
+	esac
+fi
 
 CFLAGS="$CFLAGS $*"
 # Strip trailing spaces (see: http://www.cyberciti.biz/tips/bash-shell-parameter-substitution-2.html)

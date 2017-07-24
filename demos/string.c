@@ -56,6 +56,21 @@ static void trimWords(void)
 	printf("Trim words: \"%s\"\n", buf);
 }
 
+#define SPACE_DELIM " \f\n\r\t\v"
+
+static void split(void)
+{
+	xtConsoleFillLine("-");
+	puts("-- SPLIT TEST");
+	char dope[] = "Mah   	Boi,  this 	piece	is what	all true warriors\nstrive		for";
+	char *tokens[12];
+	unsigned num = 12;
+	xtStringSplit(dope, SPACE_DELIM, tokens, &num);
+	printf("num: %u\n", num);
+	for (unsigned i = 0; i < num; ++i)
+		puts(tokens[i]);
+}
+
 static void rot13(void)
 {
 	xtConsoleFillLine("-");
@@ -252,6 +267,7 @@ int main(void)
 	rot13();
 	trim();
 	trimWords();
+	split();
 	printFormat();
 	formatSI();
 	formatTime();
