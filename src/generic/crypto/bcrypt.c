@@ -52,10 +52,6 @@
 #include <sys/types.h>
 #include <string.h>
 
-// Otherwise GCC spits out some warnings about snprintf in here
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-truncation"
-
 /*
  * This implementation is adaptable to current computing power.
  * You can have up to 2^31 rounds which should be enough for some
@@ -126,7 +122,7 @@ void _xtEncodeSalt(char *salt, uint8_t *csalt, uint16_t clen, uint8_t logRounds)
 	salt[2] = 'a';
 	salt[3] = '$';
 
-	snprintf(salt + 4, 4, "%2.2u$", logRounds);
+	snprintf(salt + 4, 5, "%2.2u$", logRounds);
 
 	_xtBase64Encode((uint8_t*)salt + 7, csalt, clen);
 }
@@ -245,7 +241,7 @@ void xtBcrypt(const char *key, const char *salt, char *encrypted)
 		encrypted[i++] = minor;
 	encrypted[i++] = '$';
 
-	snprintf(encrypted + i, 4, "%2.2u$", logr);
+	snprintf(encrypted + i, 5, "%2.2u$", logr);
 
 	_xtBase64Encode((uint8_t*)encrypted + i + 3, csalt, XT_BCRYPT_MAXSALT);
 	_xtBase64Encode((uint8_t*)encrypted + strlen(encrypted), ciphertext, 4 * XT_BCRYPT_BLOCKS - 1);
@@ -294,5 +290,3 @@ static void _xtBase64Encode(uint8_t *buffer, uint8_t *data, uint16_t len)
 	}
 	*bp = '\0';
 }
-
-#pragma GCC diagnostic pop
