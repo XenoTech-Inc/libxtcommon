@@ -60,13 +60,18 @@ int xtFileCreateDir(const char *path)
 	return mkdir(path, S_IRWXU) == 0 ? 0 : _xtTranslateSysError(errno);
 }
 
-void xtFileExecute(const char *path)
+int xtFileExecute(const char *path)
 {
+	bool fileExists;
+	int ret = xtFileExists(path, &fileExists);
+	if (ret != 0)
+		return ret;
+	if (!fileExists)
+		return XT_ENOENT;
 	char buf[FILENAME_MAX];
 	snprintf(buf, FILENAME_MAX, "/usr/bin/xdg-open \"%s\"", path);
-	// Fix hack for ./configure -ffast-math warning: ignoring return value of ‘system’, declared with attribute
-	int ignore = system(buf);
-	(void)ignore;
+	system(buf);
+	return 0; // Just return zero because we can't really check if it worked
 }
 
 int xtFileExists(const char *restrict path, bool *restrict exists)

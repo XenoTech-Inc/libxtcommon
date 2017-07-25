@@ -136,9 +136,11 @@ bool xtThreadIsAlive(const struct xtThread *t);
  * Joins the specified thread. This operation blocks until the specified thread has terminated.
  * All of the thread's resources will be cleaned up. A second call to this function for an
  * already joined thread will result in undefined behavior.
- * @return The return value of the thread that is being joined.
+ * @param ret - An optional pointer which shall receive the thread's exit value
+ * on success.
+ * @return - Zero on success, otherwise an error code.
  */
-void *xtThreadJoin(struct xtThread *t);
+int xtThreadJoin(struct xtThread *t, void **ret);
 /**
  * Sets the name of the caller thread. The thread's name is the name that also
  * shows up in debuggers.

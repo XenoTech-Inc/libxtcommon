@@ -147,16 +147,20 @@ bool xtThreadIsAlive(const struct xtThread *t)
 	return pthread_kill(t->nativeThread, 0) != ESRCH;
 }
 
-void *xtThreadJoin(struct xtThread *t)
+int xtThreadJoin(struct xtThread *t, void **ret)
 {
+	// We want to capture NULL pointers too so initialize this variable
+	void *threadRet = NULL;
 	// Block until the thread has terminated
-	void* ret;
-	pthread_join(t->nativeThread, &ret);
+	if (pthread_join(t->nativeThread, threadRet) != 0)
+		return _xtTranslateSysError(errno);
 	// Perform cleanup
 	pthread_mutex_destroy(&t->suspendMutex);
 	pthread_cond_destroy(&t->suspendCond);
 	pthread_attr_destroy(&t->attr);
-	return ret;
+	if (ret != NULL) // Optional
+		*ret = threadRet;
+	return 0;
 }
 
 void xtThreadSetName(const char *name)
