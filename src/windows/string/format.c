@@ -71,8 +71,8 @@ int _xt_vsnprintf(char *str, size_t size, char *format, char *end, va_list args)
 				"m",
 				"%",
 			};
-#define LMODSZ (sizeof(lmod)/sizeof(lmod[0]))
-#define CSPECSZ (sizeof(cspec)/sizeof(cspec[0]))
+#define LMODSZ (sizeof lmod/sizeof lmod[0])
+#define CSPECSZ (sizeof cspec/sizeof cspec[0])
 			char *sub;
 			int ptype = -1, mod = -1, conv = -1;
 			unsigned flags = 0, prec = 0, cfw = 0;

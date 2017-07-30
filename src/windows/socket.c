@@ -34,13 +34,13 @@ bool xtSockaddrFromString(struct xtSockaddr *restrict sa, const char *restrict a
 	char buf[32];
 	char *sep = strchr(addr, ':');
 	if (sep) { // Copy the string. Otherwise inet_pton won't work, since it tries to read the whole string
-		if (sizeof(buf) <= (unsigned) (sep - addr)) // The string is too long
+		if (sizeof buf <= (unsigned)(sep - addr)) // The string is too long
 			return false;
 		strncpy(buf, addr, sep - addr);
 		buf[sep - addr] = '\0'; // To be safe. We need that NULL terminator.
 	} else {
-		strncpy(buf, addr, sizeof(buf));
-		buf[sizeof(buf) - 1] = '\0'; // To be safe, incase an invalid string is passed
+		strncpy(buf, addr, sizeof buf);
+		buf[sizeof buf - 1] = '\0'; // To be safe, incase an invalid string is passed
 	}
 	if (inet_pton(AF_INET, buf, &((struct sockaddr_in*) sa)->sin_addr) != 1)
 		return false;
@@ -141,7 +141,7 @@ static bool _xtSocketProtoToNativeProto(enum xtSocketProto proto, int *restrict 
 
 int xtSocketBindTo(xtSocket sock, const struct xtSockaddr *sa)
 {
-	if (bind(sock, (const struct sockaddr*) sa, sizeof(struct sockaddr_in)) == 0)
+	if (bind(sock, (const struct sockaddr*)sa, sizeof(struct sockaddr_in)) == 0)
 		return 0;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
@@ -169,7 +169,7 @@ int xtSocketClose(xtSocket *sock)
 
 int xtSocketConnect(xtSocket sock, const struct xtSockaddr *dest)
 {
-	if (connect(sock, (const struct sockaddr*) dest, sizeof(struct sockaddr_in)) == 0)
+	if (connect(sock, (const struct sockaddr*)dest, sizeof(struct sockaddr_in)) == 0)
 		return 0;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
@@ -197,7 +197,7 @@ int xtSocketCreate(xtSocket *sock, enum xtSocketProto proto)
 		// disable new behavior using
 		// IOCTL: SIO_UDP_CONNRESET
 		status = WSAIoctl(*sock, _XT_SIO_UDP_CONNRESET,
-			&bNewBehavior, sizeof(bNewBehavior),
+			&bNewBehavior, sizeof bNewBehavior,
 			NULL, 0, &dwBytesReturned,
 			NULL, NULL);
 		if (status == SOCKET_ERROR)
@@ -216,7 +216,7 @@ void xtSocketDestruct(void)
 int xtSocketGetLocalSocketAddress(xtSocket sock, struct xtSockaddr *sa)
 {
 	socklen_t addrlen = sizeof(struct sockaddr_in);
-	if (getsockname(sock, (struct sockaddr*) sa, &addrlen) == 0)
+	if (getsockname(sock, (struct sockaddr*)sa, &addrlen) == 0)
 		return 0;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
@@ -232,8 +232,8 @@ uint16_t xtSocketGetLocalPort(xtSocket sock)
 enum xtSocketProto xtSocketGetProtocol(const xtSocket sock)
 {
 	WSAPROTOCOL_INFO val;
-	socklen_t len = sizeof(val);
-	if (getsockopt(sock, SOL_SOCKET, SO_PROTOCOL_INFO, (char*) &val, &len) == 0)
+	socklen_t len = sizeof val;
+	if (getsockopt(sock, SOL_SOCKET, SO_PROTOCOL_INFO, (char*)&val, &len) == 0)
 		return _xtSocketNativeProtoToProto(val.iProtocol);
 	return XT_SOCKET_PROTO_UNKNOWN;
 }
@@ -241,7 +241,7 @@ enum xtSocketProto xtSocketGetProtocol(const xtSocket sock)
 int xtSocketGetRemoteSocketAddress(const xtSocket sock, struct xtSockaddr *sa)
 {
 	socklen_t addrlen = sizeof(struct sockaddr_in);
-	if (getpeername(sock, (struct sockaddr*) sa, &addrlen) == 0)
+	if (getpeername(sock, (struct sockaddr*)sa, &addrlen) == 0)
 		return 0;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
@@ -249,8 +249,8 @@ int xtSocketGetRemoteSocketAddress(const xtSocket sock, struct xtSockaddr *sa)
 int xtSocketGetSoError(const xtSocket sock, int *errnum)
 {
 	int val = 0;
-	socklen_t len = sizeof(val);
-	if (getsockopt(sock, SOL_SOCKET, SO_ERROR, (char*) &val, &len) == 0) {
+	socklen_t len = sizeof val;
+	if (getsockopt(sock, SOL_SOCKET, SO_ERROR, (char*)&val, &len) == 0) {
 		*errnum = _xtTranslateSysError(val);
 		return 0;
 	}
@@ -260,8 +260,8 @@ int xtSocketGetSoError(const xtSocket sock, int *errnum)
 int xtSocketGetSoKeepAlive(const xtSocket sock, bool *flag)
 {
 	int val = 0;
-	socklen_t len = sizeof(val);
-	if (getsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char*) &val, &len) == 0) {
+	socklen_t len = sizeof val;
+	if (getsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char*)&val, &len) == 0) {
 		*flag = val;
 		return 0;
 	}
@@ -271,8 +271,8 @@ int xtSocketGetSoKeepAlive(const xtSocket sock, bool *flag)
 int xtSocketGetSoLinger(const xtSocket sock, bool *restrict on, int *restrict linger)
 {
 	struct linger val;
-	socklen_t len = sizeof(val);
-	if (getsockopt(sock, SOL_SOCKET, SO_LINGER, (char*) &val, &len) == 0) {
+	socklen_t len = sizeof val;
+	if (getsockopt(sock, SOL_SOCKET, SO_LINGER, (char*)&val, &len) == 0) {
 		*on = val.l_onoff == 1 ? true : false;
 		*linger = val.l_linger;
 		return 0;
@@ -283,8 +283,8 @@ int xtSocketGetSoLinger(const xtSocket sock, bool *restrict on, int *restrict li
 int xtSocketGetSoReceiveBufferSize(xtSocket sock, unsigned *size)
 {
 	int val = 0;
-	socklen_t len = sizeof(val);
-	if (getsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char*) &val, &len) == 0) {
+	socklen_t len = sizeof val;
+	if (getsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char*)&val, &len) == 0) {
 		*size = val;
 		return 0;
 	}
@@ -294,8 +294,8 @@ int xtSocketGetSoReceiveBufferSize(xtSocket sock, unsigned *size)
 int xtSocketGetSoReuseAddress(const xtSocket sock, bool *flag)
 {
 	int val = 0;
-	socklen_t len = sizeof(val);
-	if (getsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*) &val, &len) == 0) {
+	socklen_t len = sizeof val;
+	if (getsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&val, &len) == 0) {
 		*flag = val;
 		return 0;
 	}
@@ -305,8 +305,8 @@ int xtSocketGetSoReuseAddress(const xtSocket sock, bool *flag)
 int xtSocketGetSoSendBufferSize(xtSocket sock, unsigned *size)
 {
 	int val = 0;
-	socklen_t len = sizeof(val);
-	if (getsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*) &val, &len) == 0) {
+	socklen_t len = sizeof val;
+	if (getsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)&val, &len) == 0) {
 		*size = val;
 		return 0;
 	}
@@ -316,8 +316,8 @@ int xtSocketGetSoSendBufferSize(xtSocket sock, unsigned *size)
 int xtSocketGetTCPNoDelay(const xtSocket sock, bool *flag)
 {
 	int val;
-	socklen_t len = sizeof(val);
-	if (getsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*) &val, &len) == 0) {
+	socklen_t len = sizeof val;
+	if (getsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*)&val, &len) == 0) {
 		*flag = val == 1;
 		return 0;
 	}
@@ -345,7 +345,7 @@ int xtSocketListen(xtSocket sock, unsigned backlog)
 {
 	// Cannot allow zero as backlog. This has different meanings across implementations
 	// Also take care of possible overflow issues from unsigned -> signed
-	if (listen(sock, (int) backlog <= 0 ? SOMAXCONN : (int) backlog) == 0)
+	if (listen(sock, (int)backlog <= 0 ? SOMAXCONN : (int)backlog) == 0)
 		return 0;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
@@ -360,8 +360,8 @@ int xtSocketSetBlocking(xtSocket sock, bool flag)
 
 int xtSocketSetSoKeepAlive(xtSocket sock, bool flag)
 {
-	int val = (flag) ? 1 : 0;
-	if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (const char*) &val, sizeof(val)) == 0)
+	int val = flag ? 1 : 0;
+	if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (const char*)&val, sizeof val) == 0)
 		return 0;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
@@ -371,7 +371,7 @@ int xtSocketSetSoLinger(xtSocket sock, bool on, int linger)
 	struct linger val;
 	val.l_onoff = on ? 1 : 0;
 	val.l_linger = linger;
-	if (setsockopt(sock, SOL_SOCKET, SO_LINGER, (const char*) &val, sizeof(val)) == 0)
+	if (setsockopt(sock, SOL_SOCKET, SO_LINGER, (const char*)&val, sizeof val) == 0)
 		return 0;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
@@ -379,7 +379,7 @@ int xtSocketSetSoLinger(xtSocket sock, bool on, int linger)
 int xtSocketSetSoReceiveBufferSize(xtSocket sock, unsigned size)
 {
 	int val = size;
-	if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (const char*) &val, sizeof(val)) == 0)
+	if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (const char*)&val, sizeof val) == 0)
 		return 0;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
@@ -387,7 +387,7 @@ int xtSocketSetSoReceiveBufferSize(xtSocket sock, unsigned size)
 int xtSocketSetSoReuseAddress(xtSocket sock, bool flag)
 {
 	int val = flag ? 1 : 0;
-	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*) &val, sizeof(val)) == 0)
+	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&val, sizeof val) == 0)
 		return 0;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
@@ -395,7 +395,7 @@ int xtSocketSetSoReuseAddress(xtSocket sock, bool flag)
 int xtSocketSetSoSendBufferSize(xtSocket sock, unsigned size)
 {
 	int val = size;
-	if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (const char*) &val, sizeof(val)) == 0)
+	if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (const char*)&val, sizeof val) == 0)
 		return 0;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
@@ -403,7 +403,7 @@ int xtSocketSetSoSendBufferSize(xtSocket sock, unsigned size)
 int xtSocketSetTCPNoDelay(xtSocket sock, bool flag)
 {
 	int val = (flag) ? 1 : 0;
-	if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (const char*) &val, sizeof(val)) == 0)
+	if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (const char*)&val, sizeof val) == 0)
 		return 0;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
@@ -546,7 +546,7 @@ int xtSocketPollAdd(struct xtSocketPoll *p, xtSocket sock, void *restrict data, 
 
 int xtSocketPollCreate(struct xtSocketPoll **p, size_t capacity)
 {
-	struct xtSocketPoll *sp = malloc(sizeof(**p));
+	struct xtSocketPoll *sp = malloc(sizeof **p);
 	if (!sp)
 		goto error;
 	sp->data = NULL;
@@ -556,14 +556,14 @@ int xtSocketPollCreate(struct xtSocketPoll **p, size_t capacity)
 		capacity = XT_SOCKET_POLL_CAPACITY_DEFAULT;
 	else if (capacity > INT_MAX)
 		capacity = INT_MAX;
-	if (!(sp->data = malloc(sizeof(*sp->data) * capacity)))
+	if (!(sp->data = malloc(sizeof *sp->data * capacity)))
 		goto error;
-	if (!(sp->fds = malloc(sizeof(*sp->fds) * capacity)))
+	if (!(sp->fds = malloc(sizeof *sp->fds * capacity)))
 		goto error;
-	if (!(sp->readyData = malloc(sizeof(*sp->readyData) * capacity)))
+	if (!(sp->readyData = malloc(sizeof *sp->readyData * capacity)))
 		goto error;
 	// Prepare the array for usage
-	for (int i = 0; i < (int) capacity; ++i) {
+	for (int i = 0; i < (int)capacity; ++i) {
 		sp->fds[i].fd = XT_SOCKET_INVALID_FD;
 		// Assign the events we want to be informed of, errors are added automatically
 		sp->fds[i].events = 0;
@@ -670,11 +670,11 @@ int xtSocketPollRemove(struct xtSocketPoll *p, xtSocket sock)
 int xtSocketPollRemoveByIndex(struct xtSocketPoll *p, size_t index)
 {
 	int capacity = p->capacity;
-	if (index >= (size_t) capacity)
+	if (index >= (size_t)capacity)
 		return XT_EINVAL;
 	xtSocket sock = p->fds[index].fd;
 	// Clean up the data in the data array
-	if (index - 1 == (size_t) capacity) {
+	if (index - 1 == (size_t)capacity) {
 		p->fds[index].fd = XT_SOCKET_INVALID_FD;
 		p->data[index].fd = XT_SOCKET_INVALID_FD;
 		p->data[index].data = NULL;
@@ -727,8 +727,7 @@ int xtSocketPollWait(struct xtSocketPoll *restrict p, int timeout, size_t *restr
 	}
 	p->socketsReady = eventCount;
 	*socketsReady = eventCount;
-	int capacity = p->capacity;
-	for (int i = 0, socketsHandled = 0; i < capacity && socketsHandled < eventCount; ++i) {
+	for (int i = 0, socketsHandled = 0, capacity = p->capacity; i < capacity && socketsHandled < eventCount; ++i)
 		if (p->fds[i].revents != 0) {
 			p->readyData[socketsHandled].fd = p->fds[i].fd;
 			p->readyData[socketsHandled].data = p->data[i].data;
@@ -739,6 +738,5 @@ int xtSocketPollWait(struct xtSocketPoll *restrict p, int timeout, size_t *restr
 			++socketsHandled;
 			continue;
 		}
-	}
 	return 0;
 }

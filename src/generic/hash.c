@@ -371,9 +371,8 @@ static void _xtSHA256Digest(struct _xtSHA256Context *restrict ctx, uint8_t *rest
 {
 	int i;
 	
-	if (ctx->curlen >= sizeof(ctx->buf)) {
+	if (ctx->curlen >= sizeof ctx->buf)
 		return;
-	}
 	
 	// Increase the length of the message
 	ctx->length += ctx->curlen * 8;
@@ -385,17 +384,15 @@ static void _xtSHA256Digest(struct _xtSHA256Context *restrict ctx, uint8_t *rest
 	// then compress.  Then we can fall back to padding zeros and length
 	// encoding like normal.
 	if (ctx->curlen > 56) {
-		while (ctx->curlen < 64) {
+		while (ctx->curlen < 64)
 			ctx->buf[ctx->curlen++] = (uint8_t) 0;
-		}
 		_xtSHA256TransformFunction(ctx, ctx->buf);
 		ctx->curlen = 0;
 	}
 	
 	// Pad up to 56 bytes of zeroes
-	while (ctx->curlen < 56) {
+	while (ctx->curlen < 56)
 		ctx->buf[ctx->curlen++] = (uint8_t) 0;
-	}
 	
 	// Store length
 	SHA256_STORE64H(ctx->length, ctx->buf + 56);
@@ -424,9 +421,8 @@ static void _xtSHA256Init(struct _xtSHA256Context *ctx)
 static void _xtSHA256Update(struct _xtSHA256Context *restrict ctx, uint8_t *restrict buf, size_t buflen)
 {
 	uint32_t n;
-	if (ctx->curlen > sizeof(ctx->buf)) {
+	if (ctx->curlen > sizeof ctx->buf)
 		return;
-	}
 	
 	while (buflen > 0) {
 		if (ctx->curlen == 0 && buflen >= SHA256_BLOCK_SIZE) {
@@ -574,23 +570,21 @@ static void _xtSHA512Digest(struct _xtSHA512Context *restrict ctx, uint8_t *rest
 {
 	int i;
 	
-	if (ctx->curlen >= sizeof(ctx->buf)) {
+	if (ctx->curlen >= sizeof ctx->buf)
 		return;
-	}
 	
 	// Increase the length of the message
 	ctx->length += ctx->curlen * 8LLU;
 	
 	// Append the '1' bit
-	ctx->buf[ctx->curlen++] = (uint8_t) 0x80;
+	ctx->buf[ctx->curlen++] = (uint8_t)0x80;
 	
 	// If the length is currently above 112 bytes we append zeros
 	// then compress.  Then we can fall back to padding zeros and length
 	// encoding like normal.
 	if (ctx->curlen > 112) {
-		while (ctx->curlen < 128) {
-			ctx->buf[ctx->curlen++] = (uint8_t) 0;
-		}
+		while (ctx->curlen < 128)
+			ctx->buf[ctx->curlen++] = (uint8_t)0;
 		_xtSHA512TransformFunction(ctx, ctx->buf);
 		ctx->curlen = 0;
 	}
@@ -598,18 +592,16 @@ static void _xtSHA512Digest(struct _xtSHA512Context *restrict ctx, uint8_t *rest
 	// Pad up to 120 bytes of zeroes
 	// note: that from 112 to 120 is the 64 MSB of the length.  We assume that you won't hash
 	// > 2^64 bits of data... :-)
-	while (ctx->curlen < 120) {
-		ctx->buf[ctx->curlen++] = (uint8_t) 0;
-	}
+	while (ctx->curlen < 120)
+		ctx->buf[ctx->curlen++] = (uint8_t)0;
 	
 	// Store length
 	SHA512_STORE64H(ctx->length, ctx->buf + 120);
 	_xtSHA512TransformFunction(ctx, ctx->buf);
 	
 	// Copy output
-	for (i = 0; i < 8; i++) {
+	for (i = 0; i < 8; i++)
 		SHA512_STORE64H(ctx->state[i], ((uint8_t*)(digest)) + (8 * i));
-	}
 }
 
 static void _xtSHA512Init(struct _xtSHA512Context *ctx)
@@ -630,21 +622,20 @@ static void _xtSHA512Update(struct _xtSHA512Context *restrict ctx, uint8_t *rest
 {
 	uint32_t n;
 	
-	if (ctx->curlen > sizeof(ctx->buf)) {
+	if (ctx->curlen > sizeof ctx->buf)
 		return;
-	}
 	
 	while (buflen > 0) {
 		if (ctx->curlen == 0 && buflen >= SHA512_BLOCK_SIZE) {
-			_xtSHA512TransformFunction(ctx, (uint8_t*) buf);
+			_xtSHA512TransformFunction(ctx, (uint8_t*)buf);
 			ctx->length += SHA512_BLOCK_SIZE * 8;
-			buf = (uint8_t*) buf + SHA512_BLOCK_SIZE;
+			buf = (uint8_t*)buf + SHA512_BLOCK_SIZE;
 			buflen -= SHA512_BLOCK_SIZE;
 		} else {
 			n = SHA512_MIN(buflen, (SHA512_BLOCK_SIZE - ctx->curlen));
-			memcpy(ctx->buf + ctx->curlen, buf, (size_t) n);
+			memcpy(ctx->buf + ctx->curlen, buf, (size_t)n);
 			ctx->curlen += n;
-			buf = (uint8_t*) buf + n;
+			buf = (uint8_t*)buf + n;
 			buflen -= n;
 			if (ctx->curlen == SHA512_BLOCK_SIZE) {
 				_xtSHA512TransformFunction(ctx, ctx->buf);

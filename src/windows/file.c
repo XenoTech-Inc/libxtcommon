@@ -38,7 +38,7 @@ int xtFileCopyByHandle(FILE *restrict src, FILE *restrict dst)
 	char buf[8192];
 	size_t len;
 	while (true) {
-		len = fread(buf, 1, sizeof(buf), src);
+		len = fread(buf, 1, sizeof buf, src);
 		if (len == 0)
 			break;
 		if (fwrite(buf, len, 1, dst) != 1)
@@ -118,7 +118,7 @@ int xtFileGetFiles(const char *restrict path, struct xtListP *restrict files)
 	WIN32_FIND_DATA fdFile;
 	HANDLE handle;
 	char sbuf[4096];
-	snprintf(sbuf, sizeof(sbuf), "%s\\*.*", path);
+	snprintf(sbuf, sizeof sbuf, "%s\\*.*", path);
 	if ((handle = FindFirstFile(sbuf, &fdFile)) == INVALID_HANDLE_VALUE)
 		return _xtTranslateSysError(GetLastError());
 	size_t fileNameLen;
@@ -126,7 +126,7 @@ int xtFileGetFiles(const char *restrict path, struct xtListP *restrict files)
 	for (; FindNextFile(handle, &fdFile); ++cnt) {
 		// Length of the file name including the null terminator
 		fileNameLen = strlen(fdFile.cFileName) + 1;
-		struct xtFile *file = malloc(sizeof(*file));
+		struct xtFile *file = malloc(sizeof *file);
 		if (!file) {
 			ret = XT_ENOMEM;
 			goto error;
@@ -257,7 +257,7 @@ int xtFileTempFile(char *restrict buf, size_t buflen, FILE **restrict f)
 	int ret;
 	char tmpdir[MAX_PATH];
 	char path[MAX_PATH];
-	ret = xtFileGetTempDir(tmpdir, sizeof(tmpdir));
+	ret = xtFileGetTempDir(tmpdir, sizeof tmpdir);
 	if (ret != 0)
 		return ret;
 	unsigned numb = GetTempFileName(tmpdir, "tmp", 0, path);

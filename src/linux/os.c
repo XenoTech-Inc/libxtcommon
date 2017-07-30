@@ -26,11 +26,11 @@ bool xtBatteryIsCharging(void)
 	size_t chargingStrLen = strlen(chargingStr);
 	char sbuf[64];
 	for (int i = 0; i < 10; ++i) { // Check for max 10 batteries if they exist
-		snprintf(sbuf, sizeof(sbuf), "%s%d%s", "/sys/class/power_supply/BAT", i, "/status");
+		snprintf(sbuf, sizeof sbuf, "%s%d%s", "/sys/class/power_supply/BAT", i, "/status");
 		int fd = open(sbuf, O_RDONLY);
 		if (fd == -1)
 			continue;
-		int retval = read(fd, sbuf, sizeof(sbuf));
+		int retval = read(fd, sbuf, sizeof sbuf);
 		close(fd);
 		return retval > 0 ? memcmp(chargingStr, sbuf, chargingStrLen) == 0 : false;
 	}
@@ -46,11 +46,11 @@ int xtBatteryGetPowerLevel(void)
 {
 	char sbuf[64];
 	for (int i = 0; i < 10; ++i) { // Check for max 10 batteries if they exist
-		snprintf(sbuf, sizeof(sbuf), "%s%d%s", "/sys/class/power_supply/BAT", i, "/capacity");
+		snprintf(sbuf, sizeof sbuf, "%s%d%s", "/sys/class/power_supply/BAT", i, "/capacity");
 		int fd = open(sbuf, O_RDONLY);
 		if (fd == -1)
 			continue;
-		int retval = read(fd, sbuf, sizeof(sbuf));
+		int retval = read(fd, sbuf, sizeof sbuf);
 		close(fd);
 		return retval > 0 ? strtol(sbuf, NULL, 10) : -1;
 	}
@@ -62,11 +62,11 @@ void xtCPUDump(const struct xtCPUInfo *restrict cpuInfo, FILE *restrict f)
 	fprintf(f, "CPU name: %s\n", cpuInfo->name);
 	char cpuArch[16];
 	switch (cpuInfo->architecture) {
-	case XT_CPU_ARCH_X64: strncpy(cpuArch, "x64", sizeof(cpuArch)); break;
-	case XT_CPU_ARCH_X86: strncpy(cpuArch, "x86", sizeof(cpuArch)); break;
-	case XT_CPU_ARCH_ARM: strncpy(cpuArch, "ARM", sizeof(cpuArch)); break;
-	case XT_CPU_ARCH_IA64: strncpy(cpuArch, "IA64", sizeof(cpuArch)); break;
-	default: strncpy(cpuArch, "Unknown", sizeof(cpuArch)); break;
+	case XT_CPU_ARCH_X64: strncpy(cpuArch, "x64", sizeof cpuArch); break;
+	case XT_CPU_ARCH_X86: strncpy(cpuArch, "x86", sizeof cpuArch); break;
+	case XT_CPU_ARCH_ARM: strncpy(cpuArch, "ARM", sizeof cpuArch); break;
+	case XT_CPU_ARCH_IA64: strncpy(cpuArch, "IA64", sizeof cpuArch); break;
+	default: strncpy(cpuArch, "Unknown", sizeof cpuArch); break;
 	}
 	fprintf(f, "CPU architecture: %s\n", cpuArch);
 	fprintf(f, "Physical cores: %u\n", cpuInfo->physicalCores);
@@ -81,7 +81,7 @@ bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo)
 	// If larger than zero, errors have occurred
 	int errorCount = 0;
 	// Initialize all values first to be safe
-	strncpy(cpuInfo->name, "Unknown", sizeof(cpuInfo->name));
+	strncpy(cpuInfo->name, "Unknown", sizeof cpuInfo->name);
 	cpuInfo->architecture = XT_CPU_ARCH_UNKNOWN;
 	cpuInfo->physicalCores = 0;
 	cpuInfo->logicalCores = 0;
@@ -97,9 +97,9 @@ bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo)
 	if (f) {
 		// Will contain the string for scanf
 		char modelFormatStr[64];
-		snprintf(modelFormatStr, sizeof(modelFormatStr), "model name : %%%luc", sizeof(cpuInfo->name));
+		snprintf(modelFormatStr, sizeof modelFormatStr, "model name : %%%luc", sizeof cpuInfo->name);
 		puts(modelFormatStr);
-		while (fgets(sbuf, sizeof(sbuf), f)) {
+		while (fgets(sbuf, sizeof sbuf, f)) {
 			sbuf[strlen(sbuf) - 1] = '\0';
 			if (sscanf(sbuf, "cpu family : %u", &cpu_family) == 1 && cpu_family >= 3 && cpu_family <= 6) // It's then always part of iX86
 				cpuInfo->architecture = XT_CPU_ARCH_X86;
@@ -125,17 +125,17 @@ bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo)
 		unsigned cacheSizes[3] = { 0, 0, 0 }; // L1 cache is at index 0!
 		for (unsigned j = 0; j < 4; ++j) {
 			unsigned currLevel;
-			snprintf(sbuf, sizeof(sbuf), "%s%u%s%u%s", base, i, "/cache/index", j, "/level");
+			snprintf(sbuf, sizeof sbuf, "%s%u%s%u%s", base, i, "/cache/index", j, "/level");
 			f = fopen(sbuf, "rb");
 			if (f) {
-				fgets(sbuf, sizeof(sbuf), f);
+				fgets(sbuf, sizeof sbuf, f);
 				currLevel = (unsigned) strtoul(sbuf, NULL, 10);
 				fclose(f);
-				snprintf(sbuf, sizeof(sbuf), "%s%u%s%u%s", base, i, "/cache/index", j, "/size");
+				snprintf(sbuf, sizeof sbuf, "%s%u%s%u%s", base, i, "/cache/index", j, "/size");
 				f = fopen(sbuf, "rb");
 				if (!f)
 					continue;
-				fgets(sbuf, sizeof(sbuf), f);
+				fgets(sbuf, sizeof sbuf, f);
 				cacheSizes[currLevel - 1] += (unsigned) strtoul(sbuf, NULL, 10);
 				fclose(f);
 			}
@@ -151,9 +151,9 @@ bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo)
 	FILE *fp = popen("lscpu", "r");
 	if (fp) {
 		// Retrieve a lot of values!!
-		while (xtStringReadLine(sbuf, sizeof(sbuf), NULL, fp)) {
-			strncpy(sbuf2, sbuf, sizeof(sbuf));
-			numTokens = sizeof(tokens) / sizeof(tokens[0]);
+		while (xtStringReadLine(sbuf, sizeof sbuf, NULL, fp)) {
+			strncpy(sbuf2, sbuf, sizeof sbuf);
+			numTokens = sizeof tokens / sizeof tokens[0];
 			xtStringSplit(sbuf, " \t", tokens, &numTokens);
 			if (xtStringStartsWith(sbuf, "Architecture")) {
 				if (strcmp(tokens[1], "x86_64") == 0)
@@ -188,9 +188,9 @@ bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo)
 	}
 	fp = fopen("/proc/cpuinfo", "rb");
 	if (fp) {
-		while (xtStringReadLine(sbuf, sizeof(sbuf), NULL, fp)) {
+		while (xtStringReadLine(sbuf, sizeof sbuf, NULL, fp)) {
 			if (xtStringStartsWith(sbuf, "model name")) {
-				strncpy(cpuInfo->name, strchr(sbuf, ':') + 2, sizeof(cpuInfo->name));
+				strncpy(cpuInfo->name, strchr(sbuf, ':') + 2, sizeof cpuInfo->name);
 				break;
 			}
 		}
@@ -298,7 +298,7 @@ int xtRAMGetInfo(struct xtRAMInfo *ramInfo)
 		return _xtTranslateSysError(errno);
 	char sbuf[128];
 	unsigned long long amount;
-	while (fgets(sbuf, sizeof(sbuf), f)) {
+	while (fgets(sbuf, sizeof sbuf, f)) {
 		if (sscanf(sbuf, "MemFree: %llu kB", &amount) == 1)
 			ramInfo->free = amount * 1024;
 		else if (sscanf(sbuf, "MemTotal: %llu kB", &amount) == 1)

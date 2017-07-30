@@ -35,7 +35,7 @@ const char *names[] = {
 	"quick", "select", "radix"
 };
 
-#define NTYPE (sizeof(types)/sizeof types[0])
+#define NTYPE (sizeof types/sizeof types[0])
 
 static void sortu(void)
 {

@@ -256,8 +256,8 @@ int xtvsnprintf(char *str, size_t size, const char *format, va_list args)
 				"m",
 				"%",
 			};
-#define LMODSZ (sizeof(lmod)/sizeof(lmod[0]))
-#define CSPECSZ (sizeof(cspec)/sizeof(cspec[0]))
+#define LMODSZ (sizeof lmod/sizeof lmod[0])
+#define CSPECSZ (sizeof cspec/sizeof cspec[0])
 			const char *i8tbl[] = {
 				PRId8, PRIi8, PRIo8, PRIu8, PRIx8, PRIX8
 			};

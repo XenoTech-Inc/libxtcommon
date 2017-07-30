@@ -316,12 +316,12 @@ void create(size_t initialCapacity, size_t maxCapacity)
 	else
 		init |= INIT_P;
 	
-	arrayHD = malloc(maxCapacity * sizeof(*arrayHD));
-	arrayD = malloc(maxCapacity * sizeof(*arrayD));
-	arrayU = malloc(maxCapacity * sizeof(*arrayU));
-	arrayLU = malloc(maxCapacity * sizeof(*arrayLU));
-	arrayZU = malloc(maxCapacity * sizeof(*arrayZU));
-	arrayP = malloc(maxCapacity * sizeof(*arrayP));
+	arrayHD = malloc(maxCapacity * sizeof *arrayHD);
+	arrayD = malloc(maxCapacity * sizeof *arrayD);
+	arrayU = malloc(maxCapacity * sizeof *arrayU);
+	arrayLU = malloc(maxCapacity * sizeof *arrayLU);
+	arrayZU = malloc(maxCapacity * sizeof *arrayZU);
+	arrayP = malloc(maxCapacity * sizeof *arrayP);
 
 	if (!arrayHD || !arrayD || !arrayU || !arrayLU || !arrayZU || !arrayP) {
 		fputs("Out of memory\n", stderr);
@@ -480,7 +480,7 @@ void removeAt(void)
 			FAIL("xtListHDRemoveAt");
 		else {
 			PASS("xtListHDRemoveAt");
-			memmove(&arrayHD[index], &arrayHD[index + 1], (--cntHD - index) * sizeof(*arrayHD));
+			memmove(&arrayHD[index], &arrayHD[index + 1], (--cntHD - index) * sizeof *arrayHD);
 		}
 	} else
 		SKIP("xtListHDRemoveAt");
@@ -490,7 +490,7 @@ void removeAt(void)
 			FAIL("xtListDRemoveAt");
 		else {
 			PASS("xtListDRemoveAt");
-			memmove(&arrayD[index], &arrayD[index + 1], (--cntD - index) * sizeof(*arrayD));
+			memmove(&arrayD[index], &arrayD[index + 1], (--cntD - index) * sizeof *arrayD);
 		}
 	} else
 		SKIP("xtListDRemoveAt");
@@ -500,7 +500,7 @@ void removeAt(void)
 			FAIL("xtListURemoveAt");
 		else {
 			PASS("xtListURemoveAt");
-			memmove(&arrayU[index], &arrayU[index + 1], (--cntU - index) * sizeof(*arrayU));
+			memmove(&arrayU[index], &arrayU[index + 1], (--cntU - index) * sizeof *arrayU);
 		}
 	} else
 		SKIP("xtListURemoveAt");
@@ -510,7 +510,7 @@ void removeAt(void)
 			FAIL("xtListLURemoveAt");
 		else {
 			PASS("xtListLURemoveAt");
-			memmove(&arrayLU[index], &arrayLU[index + 1], (--cntLU - index) * sizeof(*arrayLU));
+			memmove(&arrayLU[index], &arrayLU[index + 1], (--cntLU - index) * sizeof *arrayLU);
 		}
 	} else
 		SKIP("xtListLURemoveAt");
@@ -520,7 +520,7 @@ void removeAt(void)
 			FAIL("xtListZURemoveAt");
 		else {
 			PASS("xtListZURemoveAt");
-			memmove(&arrayZU[index], &arrayZU[index + 1], (--cntZU - index) * sizeof(*arrayZU));
+			memmove(&arrayZU[index], &arrayZU[index + 1], (--cntZU - index) * sizeof *arrayZU);
 		}
 	} else
 		SKIP("xtListZURemoveAt");
@@ -530,7 +530,7 @@ void removeAt(void)
 			FAIL("xtListPRemoveAt");
 		else {
 			PASS("xtListPRemoveAt");
-			memmove(&arrayP[index], &arrayP[index + 1], (--cntP - index) * sizeof(*arrayP));
+			memmove(&arrayP[index], &arrayP[index + 1], (--cntP - index) * sizeof *arrayP);
 		}
 	} else
 		SKIP("xtListPRemoveAt");

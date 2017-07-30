@@ -45,7 +45,7 @@ int xtHashmapAdd(struct xtHashmap *map, void *key, void *value)
 	}
 	size_t hash;
 	struct xtHashBucket *bucket, *entry;
-	entry = malloc(sizeof(struct xtHashBucket));
+	entry = malloc(sizeof *entry);
 	if (!entry)
 		return XT_ENOMEM;
 	entry->key = key;
@@ -76,7 +76,7 @@ int xtHashmapCreate(
 	bool (*keyCompare)(const void*, const void*)
 )
 {
-	map->buckets = malloc(capacity * sizeof(struct xtHashBucket*));
+	map->buckets = malloc(capacity * sizeof *map->buckets);
 	if (!map->buckets)
 		return XT_ENOMEM;
 	if (capacity == 0)
@@ -100,14 +100,12 @@ void xtHashmapDestroy(struct xtHashmap *map)
 	size_t capacity = map->capacity;
 	if (!map->buckets)
 		return;
-	for (size_t i = 0; i < capacity; ++i) {
-		if (map->buckets[i]) {
+	for (size_t i = 0; i < capacity; ++i)
+		if (map->buckets[i])
 			for (struct xtHashBucket *next, *b = map->buckets[i]; b; b = next) {
 				next = b->next;
 				_xtHashmapDeleteBucket(map, b);
 			}
-		}
-	}
 	free(map->buckets);
 	map->buckets = NULL;
 }

@@ -21,7 +21,7 @@ static void fileTest(void)
 	bool result;
 	unsigned long long size;
 	char sbuf[256], sbuf2[256];
-	if (xtFileGetExecutablePath(sbuf, sizeof(sbuf)) == 0) {
+	if (xtFileGetExecutablePath(sbuf, sizeof sbuf) == 0) {
 		PASS("xtFileGetExecutablePath()");
 	} else
 		FAIL("xtFileGetExecutablePath()");
@@ -59,18 +59,18 @@ static void fileTest(void)
 	} else
 		FAIL("xtFileIsDir()");
 
-	if (xtFileGetHomeDir(sbuf2, sizeof(sbuf2))) {
+	if (xtFileGetHomeDir(sbuf2, sizeof sbuf2)) {
 		PASS("xtFileGetHomeDir()");
 	} else
 		FAIL("xtFileGetHomeDir()");
 
-	if (xtFileGetTempDir(sbuf2, sizeof(sbuf2)) == 0) {
+	if (xtFileGetTempDir(sbuf2, sizeof sbuf2) == 0) {
 		PASS("xtFileGetTempDir()");
 	} else
 		FAIL("xtFileGetTempDir()");
 
-	if (xtFileGetCWD(sbuf2, sizeof(sbuf2)) == 0 && xtFileSetCWD(sbuf2) == 0
-		&& xtFileGetCWD(sbuf2, sizeof(sbuf2)) == 0)
+	if (xtFileGetCWD(sbuf2, sizeof sbuf2) == 0 && xtFileSetCWD(sbuf2) == 0
+		&& xtFileGetCWD(sbuf2, sizeof sbuf2) == 0)
 		PASS("xtFileGetCWD() & xtFileSetCWD()");
 	else
 		FAIL("xtFileGetCWD() & xtFileSetCWD()");
@@ -88,7 +88,7 @@ static void fileTest(void)
 
 	FILE *tmpFile;
 	char tmpFilePath[1024];
-	if (xtFileTempFile(tmpFilePath, sizeof(tmpFilePath), &tmpFile) == 0) {
+	if (xtFileTempFile(tmpFilePath, sizeof tmpFilePath, &tmpFile) == 0) {
 		PASS("xtFileTempFile()");
 		fputs("Yo!", tmpFile);
 		fflush(tmpFile);
@@ -99,7 +99,7 @@ static void fileTest(void)
 			FAIL("xtFileExecute()");
 		xtSleepMS(3000);
 		char newPath[256];
-		xtsnprintf(newPath, sizeof(newPath), "%s/tmp_file.txt", sbuf2);
+		xtsnprintf(newPath, sizeof newPath, "%s/tmp_file.txt", sbuf2);
 
 		if (xtFileCopy(tmpFilePath, newPath) == 0)
 			PASS("xtFileCopy()");
@@ -212,7 +212,7 @@ static void threadTest(void)
 	char sbuf[256];
 	xtMutex m;
 	struct xtThread t1, t2;
-	if (xtThreadGetName(sbuf, sizeof(sbuf)))
+	if (xtThreadGetName(sbuf, sizeof sbuf))
 		PASS("xtThreadGetName()");
 	else
 		FAIL("xtThreadGetName()");
@@ -295,7 +295,7 @@ static void timeTest(void)
 	else
 		FAIL("xtClockGetTime(XT_CLOCK_REALTIME_NOW)");
 
-	if (xtFormatTimePrecise(sbuf, sizeof(sbuf), &timeNow))
+	if (xtFormatTimePrecise(sbuf, sizeof sbuf, &timeNow))
 		PASS("xtFormatTimePrecise()");
 	else
 		FAIL("xtFormatTimePrecise()");

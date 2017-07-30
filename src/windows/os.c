@@ -52,11 +52,11 @@ void xtCPUDump(const struct xtCPUInfo *restrict cpuInfo, FILE *restrict f)
 	fprintf(f, "CPU name: %s\n", cpuInfo->name);
 	char cpuArch[16];
 	switch (cpuInfo->architecture) {
-	case XT_CPU_ARCH_X64: strncpy(cpuArch, "x64", sizeof(cpuArch)); break;
-	case XT_CPU_ARCH_X86: strncpy(cpuArch, "x86", sizeof(cpuArch)); break;
-	case XT_CPU_ARCH_ARM: strncpy(cpuArch, "ARM", sizeof(cpuArch)); break;
-	case XT_CPU_ARCH_IA64: strncpy(cpuArch, "IA64", sizeof(cpuArch)); break;
-	default: strncpy(cpuArch, "Unknown", sizeof(cpuArch)); break;
+	case XT_CPU_ARCH_X64: strncpy(cpuArch, "x64", sizeof cpuArch); break;
+	case XT_CPU_ARCH_X86: strncpy(cpuArch, "x86", sizeof cpuArch); break;
+	case XT_CPU_ARCH_ARM: strncpy(cpuArch, "ARM", sizeof cpuArch); break;
+	case XT_CPU_ARCH_IA64: strncpy(cpuArch, "IA64", sizeof cpuArch); break;
+	default: strncpy(cpuArch, "Unknown", sizeof cpuArch); break;
 	}
 	fprintf(f, "CPU architecture: %s\n", cpuArch);
 	fprintf(f, "Physical cores: %u\n", cpuInfo->physicalCores);
@@ -71,7 +71,7 @@ bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo)
 	// If larger than zero, errors have occurred
 	int errorCount = 0;
 	// Initialize all values first to be safe
-	strncpy(cpuInfo->name, "Unknown", sizeof(cpuInfo->name));
+	strncpy(cpuInfo->name, "Unknown", sizeof cpuInfo->name);
 	cpuInfo->architecture = XT_CPU_ARCH_UNKNOWN;
 	cpuInfo->physicalCores = 0;
 	cpuInfo->logicalCores = 0;
@@ -101,14 +101,14 @@ bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo)
 		__cpuid(CPUInfo, i);
 	// Interpret CPU brand string
 	if (i >= 0x80000002 && i <= 0x80000004)
-		memcpy(sbuf + 16 * (i - 0x80000002), CPUInfo, sizeof(CPUInfo));
+		memcpy(sbuf + 16 * (i - 0x80000002), CPUInfo, sizeof CPUInfo);
 	}
 	// For some reason there are a lot of spaces infront; filter them out.
 	char *spaces = sbuf;
 	while (*spaces == ' ') ++spaces;
 	// Sometimes the CPU name contains weird tabs or spaces. Remove them!
 	xtStringTrimWords(sbuf);
-	snprintf(cpuInfo->name, sizeof(cpuInfo->name), "%s", sbuf);
+	snprintf(cpuInfo->name, sizeof cpuInfo->name, "%s", sbuf);
 	// Fetch the amount of logical cores
 	typedef BOOL (WINAPI *LPFN_GLPI)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
 	LPFN_GLPI glpi = (LPFN_GLPI) GetProcAddress(GetModuleHandle("kernel32.dll"), "GetLogicalProcessorInformation");
@@ -327,7 +327,7 @@ char *xtGetOSName(char *buf, size_t buflen)
 int xtRAMGetInfo(struct xtRAMInfo *ramInfo)
 {
 	MEMORYSTATUSEX statex;
-	statex.dwLength = sizeof(statex);
+	statex.dwLength = sizeof statex;
 	// Cannot fail, as we are setting this all up correctly
 	GlobalMemoryStatusEx(&statex);
 	ramInfo->free = statex.ullAvailPhys;

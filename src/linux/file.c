@@ -44,7 +44,7 @@ int xtFileCopyByHandle(FILE *restrict src, FILE *restrict dst)
 	char buf[8192];
 	size_t len;
 	while (true) {
-		len = fread(buf, 1, sizeof(buf), src);
+		len = fread(buf, 1, sizeof buf, src);
 		if (len == 0)
 			break;
 		if (fwrite(buf, len, 1, dst) != 1)
@@ -112,7 +112,7 @@ int xtFileGetCWD(char *buf, size_t buflen)
 int xtFileGetExecutablePath(char *buf, size_t buflen)
 {
 	char cmdbuf[64];
-	snprintf(cmdbuf, sizeof(cmdbuf), "/bin/readlink /proc/%zu/exe 2> /dev/null", (size_t) getpid());
+	snprintf(cmdbuf, sizeof cmdbuf, "/bin/readlink /proc/%zu/exe 2> /dev/null", (size_t) getpid());
 	FILE *fp = popen(cmdbuf, "r");
 	if (!fp)
 		return _xtTranslateSysError(errno);
@@ -155,7 +155,7 @@ int xtFileGetFiles(const char *restrict path, struct xtListP *restrict files)
 	for (int i = 0; i < cnt; ++i) {
 		// Length of the file name including the null terminator
 		fileNameLen = strlen(namelist[i]->d_name) + 1;
-		struct xtFile *file = malloc(sizeof(*file));
+		struct xtFile *file = malloc(sizeof *file);
 		if (!file) {
 			ret = XT_ENOMEM;
 			goto error;
@@ -188,7 +188,7 @@ error:
 	if (ret != 0) {
 		for (int i = cnt - 1; i >= 0; --i) {
 			struct xtFile *file;
-			xtListPGet(files, i, (void**) &file);
+			xtListPGet(files, i, (void**)&file);
 			free(file->path);
 			free(file);
 		}
@@ -277,7 +277,7 @@ int xtFileSetCWD(const char *path)
 int xtFileTempFile(char *restrict buf, size_t buflen, FILE **restrict f)
 {
 	char path[32];
-	snprintf(path, sizeof(path), "/tmp/tmpfile.XXXXXX");
+	snprintf(path, sizeof path, "/tmp/tmpfile.XXXXXX");
 	int fd = mkstemp(path);
 	if (fd == -1)
 		return _xtTranslateSysError(errno);
