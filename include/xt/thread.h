@@ -39,8 +39,10 @@ extern "C" {
  */
 #if XT_IS_LINUX
 	typedef pthread_mutex_t xtMutex;
+	#define XT_MUTEX_INIT PTHREAD_MUTEX_INITIALIZER
 #elif XT_IS_WINDOWS
 	typedef RTL_CRITICAL_SECTION xtMutex;
+	#define XT_MUTEX_INIT {0, 0, 0, 0, 0, 0}
 #endif
 /**
  * Creates a new mutex. Attempting to initialize an already initialized mutex results in undefined behavior.

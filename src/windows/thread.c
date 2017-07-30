@@ -7,11 +7,42 @@
 #include <ntstatus.h> // NTSTATUS and STATUS_XXX
 #include <process.h> // beginthreadex
 
+#ifdef XT_THREAD_DEBUG
+#include <xt/string.h>
+#define dbgf(f,...) xtprintf(f, ## __VA_ARGS__)
+#define dbgs(s) puts(s)
+#else
+#define dbgf(f,...) ((void)0)
+#define dbgs(s) ((void)0)
+#endif
+
 extern NTSTATUS WINAPI RtlInitializeCriticalSection(RTL_CRITICAL_SECTION *crit);
 extern NTSTATUS WINAPI RtlDeleteCriticalSection(RTL_CRITICAL_SECTION *crit);
 extern NTSTATUS WINAPI RtlEnterCriticalSection(RTL_CRITICAL_SECTION *crit);
 extern BOOL WINAPI RtlTryEnterCriticalSection(RTL_CRITICAL_SECTION *crit);
 extern NTSTATUS WINAPI RtlLeaveCriticalSection(RTL_CRITICAL_SECTION *crit);
+
+static volatile HANDLE _xtLockMutex = NULL;
+
+static int _xtLockMutexLock(void)
+{
+	dbgs("global mutex lock");
+	if (!_xtLockMutex) {
+		HANDLE p = CreateMutex(NULL, FALSE, NULL);
+		dbgf("global mutex: %p\n", p);
+		while (NULL != InterlockedCompareExchangePointer((PVOID*)&_xtLockMutex, (PVOID)p, NULL)) {
+			dbgf("cmpxchg again %p\n", p);
+		}
+	}
+	dbgs("wait");
+	return WaitForSingleObject(_xtLockMutex, INFINITE) == WAIT_FAILED;
+}
+
+static int _xtLockMutexUnlock(void)
+{
+	dbgs("global mutex unlock");
+	return ReleaseMutex(_xtLockMutex);
+}
 
 int xtMutexCreate(xtMutex *m)
 {
@@ -26,15 +57,41 @@ void xtMutexDestroy(xtMutex *m)
 	RtlDeleteCriticalSection(m);
 }
 
+static bool _xtMutexIsInit(const xtMutex *m)
+{
+	xtMutex empty = XT_MUTEX_INIT;
+	return memcmp(m, &empty, sizeof empty) != 0;
+}
+
 int xtMutexLock(xtMutex *m)
 {
+	_xtLockMutexLock();
+	/* Create if lock is statically initialized */
+	if (!_xtMutexIsInit(m)) {
+		dbgs("lazy create mutex");
+		int retval = xtMutexCreate(m);
+		if (retval)
+			return retval;
+	}
 	RtlEnterCriticalSection(m);
+	_xtLockMutexUnlock();
 	return 0;
 }
 
 int xtMutexTryLock(xtMutex *m)
 {
-	return RtlTryEnterCriticalSection(m) == TRUE ? 0 : XT_EBUSY;
+	int retval;
+	_xtLockMutexLock();
+	/* Create if lock is statically initialized */
+	if (!_xtMutexIsInit(m)) {
+		dbgs("lazy create mutex");
+		int retval = xtMutexCreate(m);
+		if (retval)
+			return retval;
+	}
+	retval = RtlTryEnterCriticalSection(m) == TRUE ? 0 : XT_EBUSY;
+	_xtLockMutexUnlock();
+	return retval;
 }
 
 int xtMutexUnlock(xtMutex *m)
