@@ -70,8 +70,7 @@ int xtFileExecute(const char *path)
 		return XT_ENOENT;
 	char buf[FILENAME_MAX];
 	snprintf(buf, FILENAME_MAX, "/usr/bin/xdg-open \"%s\"", path);
-	system(buf);
-	return 0; // Just return zero because we can't really check if it worked
+	return system(buf) == 0 ? 0 : XT_EUNKNOWN; // We can't know what the retval means
 }
 
 int xtFileExists(const char *restrict path, bool *restrict exists)

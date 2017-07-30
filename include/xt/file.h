@@ -75,6 +75,8 @@ int xtFileCreateDir(const char *path);
  * This program is executed as new process, so keep in mind that the
  * caller thread should return immidiately.
  * @return Zero if the file has been executed, otherwise an error code.
+ * XT_EUNKNOWN is returned if the file was executed but returned an error
+ * code afterwards.
  */
 int xtFileExecute(const char *path);
 /**
