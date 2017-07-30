@@ -5,6 +5,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "utils.h"
+
+static struct stats stats;
 
 const char *getFileType(unsigned type)
 {
@@ -20,13 +23,19 @@ int main(void)
 {
 	int ret;
 	struct xtListP list;
-	xtConsoleFillLine("-");
+	stats_init(&stats, "directory");
 	puts("-- DIRECTORY TEST");
 	if ((ret = xtListPCreate(&list, 256))) {
-		xtprintf("Unable to create the list: %s\n", xtGetErrorStr(ret));
+		FAIL("xtListPCreate()");
+		xtfprintf(stderr, "Unable to create the list: %s\n", xtGetErrorStr(ret));
 		return EXIT_FAILURE;
-	}
+	} else
+		PASS("xtListPCreate()");
 	ret = xtFileGetFiles(".", &list);
+	if (ret)
+		FAIL("xtFileGetFiles()");
+	else
+		PASS("xtFileGetFiles()");
 	xtprintf("File list retrieval: %s\n", xtGetErrorStr(ret));
 	xtprintf("Amount of files: %zu\n", xtListPGetCount(&list));
 	struct xtFile *file;
@@ -38,5 +47,6 @@ int main(void)
 		free(file);
 	}
 	xtListPDestroy(&list);
-	return EXIT_SUCCESS;
+	stats_info(&stats);
+	return stats_status(&stats);
 }

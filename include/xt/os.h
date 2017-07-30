@@ -80,19 +80,22 @@ struct xtCPUInfo {
  */
 void xtCPUDump(const struct xtCPUInfo *restrict cpuInfo, FILE *restrict f);
 /**
- * Retrieves information about the processor. All fields will ALWAYS be filled with default values,
- * even although an error may occur while retrieving some info. This means that it is possible that not all
- * information will be retrieved.
- * @return True if all information has successfully been retrieved. False is returned
- * if the information has been retrieved only partially.
- * @remarks Not reliable when having multiple sockets installed with running processors or when ran in a VM.
- * The results will probably be inaccurate.\n
- * Problems when compiling for Windows 32 bit: The info will always be retrieved partially. The amount of
- * physical cores will always be same as the amount of logical cores.
+ * Retrieves information about the processor. All fields will ALWAYS be filled
+ * with default values, even although an error may occur while retrieving some
+ * info. This means that it is possible that not all information will be
+ * retrieved.
+ * @return True if all information has successfully been retrieved. False is
+ * returned if the information has been retrieved only partially.
+ * @remarks Not reliable when having multiple sockets installed with running
+ * processors or when ran in a VM. The results will probably be inaccurate.\n
+ * Problems when compiling for Windows 32 bit: The info will always be retrieved
+ * partially. The amount of physical cores will always be same as the amount
+ * of logical cores.
  */
 bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo);
 /**
- * Returns if this processor has some sort of HyperThreading enabled. (Multiple threads per core)
+ * Returns if this processor has some sort of HyperThreading enabled.
+ * (Multiple threads per core)
  */
 bool xtCPUHasHyperThreading(const struct xtCPUInfo *cpuInfo);
 /**
@@ -120,12 +123,13 @@ int xtConsolePutString(const char *str, unsigned textWidth, bool hardSplit, unsi
 /**
  * Tells you the available amount of columns and rows in the console.
  * Both pointers are optional. They remain untouched on error.
- * @return Zero if property has been fetched, otherwise an error code.
+ * @return Zero if the property has been fetched, otherwise an error code.
  */
 int xtConsoleGetSize(unsigned *restrict cols, unsigned *restrict rows);
 /**
- * Returns if the program was launched from a console and thus if one is available.
- * If the program was launched by double-clicking, false should be returned.
+ * Returns if the program was launched from a console and thus if one is
+ * available. If the program was launched by double-clicking, false should
+ * be returned.
  */
 bool xtConsoleIsAvailable(void);
 /**
@@ -138,25 +142,35 @@ void xtConsoleSetTitle(const char *title);
  */
 char *xtGetHostname(char *buf, size_t buflen);
 /**
- * Returns the name of the OS that this computer is running. On failure
- * a less accurate representation of the OS name is returned.
+ * Returns the name of the OS that this computer is running. On failure, a less
+ * accurate representation of the OS name is returned.
  * (e.g "Linux" instead of "Ubuntu 14.04.5 LTS")
  * @remarks For Linux, this only works on LSB compliant distros.
  */
 char *xtGetOSName(char *buf, size_t buflen);
 /**
- * Returns the total amount of physical RAM available for use in bytes.
- * Zero is returned on failure.
+ * Contains information about the RAM usage of the system.
  */
-unsigned long long xtRAMGetAmountFree(void);
+struct xtRAMInfo {
+	/**
+	 * The total amount of physical RAM available for use in bytes.
+	 */
+	unsigned long long free;
+	/**
+	 * The total amount of physical RAM available to the system in bytes.
+	 * @remarks This value will differ across operating systems. This function
+	 * will never display the "true" installed RAM value.
+	 */
+	unsigned long long total;
+};
 /**
- * Returns the total amount of physical RAM available to the system in bytes.
- * Zero is returned on failure.
- * @remarks This value will differ across operating systems. This function will never display the "true" installed RAM value.
+ * Fetches all the RAM information from the system.
+ * @return Zero if the information has been fetched, otherwise an error code.
  */
-unsigned long long xtRAMGetAmountTotal(void);
+int xtRAMGetInfo(struct xtRAMInfo *ramInfo);
 /**
- * Returns the name of the user who is logged in on this session. On error a null pointer is returned.
+ * Returns the name of the user who is logged in on this session. On error a
+ * null pointer is returned.
  */
 char *xtGetUsername(char *buf, size_t buflen);
 

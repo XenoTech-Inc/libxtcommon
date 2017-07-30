@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "utils.h"
+
+static struct stats stats;
 
 void init(void)
 {
@@ -18,11 +21,13 @@ void init(void)
 	xtQueueUInit (&qu );
 	xtQueueLUInit(&qlu);
 	xtQueueZUInit(&qzu);
+	PASS("xtQueue*Init()");
 	xtQueueZUDestroy(&qzu);
 	xtQueueLUDestroy(&qlu);
 	xtQueueUDestroy (&qu );
 	xtQueueDDestroy (&qd );
 	xtQueueHDDestroy(&qhd);
+	PASS("xtQueue*Destroy()");
 }
 
 int push(void)
@@ -35,6 +40,12 @@ int push(void)
 	struct xtQueueU  qu ;
 	struct xtQueueLU qlu;
 	struct xtQueueZU qzu;
+#define INIT_HD  1
+#define INIT_D   2
+#define INIT_U   4
+#define INIT_LU  8
+#define INIT_ZU 16
+	unsigned init = 0;
 	xtQueueHDInit(&qhd);
 	xtQueueDInit (&qd );
 	xtQueueUInit (&qu );
@@ -46,6 +57,7 @@ int push(void)
 	unsigned      *listu  = NULL;
 	unsigned long *listlu = NULL;
 	size_t        *listzu = NULL;
+	char buf[256];
 	if (!(listhd = malloc(LISTSZ * sizeof(short))))
 		goto fail;
 	if (!(listd  = malloc(LISTSZ * sizeof(int))))
@@ -65,101 +77,171 @@ int push(void)
 		listzu[i] = rand();
 	}
 	puts("Creating queues");
-	if (xtQueueHDCreate(&qhd, QUEUESZ)) {
-		fputs("Failed to create QueueHD\n", stderr);
-		goto fail;
-	}
-	if (xtQueueDCreate(&qd, QUEUESZ)) {
-		fputs("Failed to create QueueD\n", stderr);
-		goto fail;
-	}
-	if (xtQueueUCreate(&qu, QUEUESZ)) {
-		fputs("Failed to create QueueU\n", stderr);
-		goto fail;
-	}
-	if (xtQueueLUCreate(&qlu, QUEUESZ)) {
-		fputs("Failed to create QueueLU\n", stderr);
-		goto fail;
-	}
-	if (xtQueueZUCreate(&qzu, QUEUESZ)) {
-		fputs("Failed to create QueueZU\n", stderr);
-		goto fail;
-	}
+	if (!xtQueueHDCreate(&qhd, QUEUESZ)) {
+		init |= INIT_HD;
+		PASS("xtQueueHDCreate()");
+	} else
+		FAIL("xtQueueHDCreate()");
+	if (!xtQueueDCreate(&qd, QUEUESZ)) {
+		init |= INIT_D;
+		PASS("xtQueueDCreate()");
+	} else
+		FAIL("xtQueueDCreate()");
+	if (!xtQueueUCreate(&qu, QUEUESZ)) {
+		init |= INIT_U;
+		PASS("xtQueueUCreate()");
+	} else
+		FAIL("xtQueueUCreate()");
+	if (!xtQueueLUCreate(&qlu, QUEUESZ)) {
+		init |= INIT_LU;
+		PASS("xtQueueLUCreate()");
+	} else
+		FAIL("xtQueueLUCreate()");
+	if (!xtQueueZUCreate(&qzu, QUEUESZ)) {
+		init |= INIT_ZU;
+		PASS("xtQueueZUCreate()");
+	} else
+		FAIL("xtQueueZUCreate()");
 	puts("Pushing random data");
-	for (unsigned i = 0; i < LISTSZ; ++i) {
-		if (xtQueueHDPush(&qhd, listhd[i])) {
-			xtfprintf(stderr, "Failed to push %hd to QueueHD\n", listhd[i]);
-			goto fail;
-		}
-		if (xtQueueDPush(&qd, listd[i])) {
-			xtfprintf(stderr, "Failed to push %d to QueueD\n", listd[i]);
-			goto fail;
-		}
-		if (xtQueueUPush(&qu, listu[i])) {
-			xtfprintf(stderr, "Failed to push %u to QueueU\n", listu[i]);
-			goto fail;
-		}
-		if (xtQueueLUPush(&qlu, listlu[i])) {
-			xtfprintf(stderr, "Failed to push %lu to QueueLU\n", listlu[i]);
-			goto fail;
-		}
-		if (xtQueueZUPush(&qzu, listzu[i])) {
-			xtfprintf(stderr, "Failed to push %zu to QueueZU\n", listzu[i]);
-			goto fail;
-		}
+	if (init & INIT_HD) {
+		unsigned i;
+		for (i = 0; i < LISTSZ; ++i)
+			if (xtQueueHDPush(&qhd, listhd[i])) {
+				xtsnprintf(buf, sizeof buf, "xtQueueHDPush(%hd)", listhd[i]);
+				FAIL(buf);
+				break;
+			}
+		if (i == LISTSZ)
+			PASS("xtQueueHDPush()");
+	}
+	if (init & INIT_D) {
+		unsigned i;
+		for (i = 0; i < LISTSZ; ++i)
+			if (xtQueueDPush(&qd, listd[i])) {
+				xtsnprintf(buf, sizeof buf, "xtQueueDPush(%d)", listd[i]);
+				FAIL(buf);
+				break;
+			}
+		if (i == LISTSZ)
+			PASS("xtQueueDPush()");
+	}
+	if (init & INIT_U) {
+		unsigned i;
+		for (i = 0; i < LISTSZ; ++i)
+			if (xtQueueUPush(&qu, listu[i])) {
+				xtsnprintf(buf, sizeof buf, "xtQueueUPush(%u)", listu[i]);
+				FAIL(buf);
+				break;
+			}
+		if (i == LISTSZ)
+			PASS("xtQueueUPush()");
+	}
+	if (init & INIT_LU) {
+		unsigned i;
+		for (i = 0; i < LISTSZ; ++i)
+			if (xtQueueLUPush(&qlu, listlu[i])) {
+				xtsnprintf(buf, sizeof buf, "xtQueueLUPush(%lu)", listlu[i]);
+				FAIL(buf);
+				break;
+			}
+		if (i == LISTSZ)
+			PASS("xtQueueLUPush()");
+	}
+	if (init & INIT_ZU) {
+		unsigned i;
+		for (i = 0; i < LISTSZ; ++i)
+			if (xtQueueZUPush(&qzu, listzu[i])) {
+				xtsnprintf(buf, sizeof buf, "xtQueueZUPush(%zu)", listzu[i]);
+				FAIL(buf);
+				break;
+			}
+		if (i == LISTSZ)
+			PASS("xtQueueZUPush()");
 	}
 	puts("Verifying random data");
-	for (unsigned i = 0; i < LISTSZ; ++i) {
+	if (init & INIT_HD) {
+		unsigned i;
 		short hd;
+		for (i = 0; i < LISTSZ; ++i) {
+			if (!xtQueueHDPop(&qhd, &hd)) {
+				FAIL("xtQueueHDPop()");
+				break;
+			}
+			if (hd != listhd[i]) {
+				xtsnprintf(buf, sizeof buf, "xtQueueHDPop() - Got %hd but expected %hd", hd, listhd[i]);
+				FAIL(buf);
+				break;
+			}
+		}
+		if (i == LISTSZ)
+			PASS("xtQueueHDPop()");
+	}
+	if (init & INIT_D) {
+		unsigned i;
 		int d;
-		unsigned u;
+		for (i = 0; i < LISTSZ; ++i) {
+			if (!xtQueueDPop(&qd, &d)) {
+				FAIL("xtQueueDPop()");
+				break;
+			}
+			if (d != listd[i]) {
+				xtsnprintf(buf, sizeof buf, "xtQueueDPop() - Got %d but expected %d", d, listd[i]);
+				FAIL(buf);
+				break;
+			}
+		}
+		if (i == LISTSZ)
+			PASS("xtQueueDPop()");
+	}
+	if (init & INIT_U) {
+		unsigned i, u;
+		for (i = 0; i < LISTSZ; ++i) {
+			if (!xtQueueUPop(&qu, &u)) {
+				FAIL("xtQueueUPop()");
+				break;
+			}
+			if (u != listu[i]) {
+				xtsnprintf(buf, sizeof buf, "xtQueueUPop() - Got %u but expected %u", u, listu[i]);
+				FAIL(buf);
+				break;
+			}
+		}
+		if (i == LISTSZ)
+			PASS("xtQueueUPop()");
+	}
+	if (init & INIT_LU) {
+		unsigned i;
 		unsigned long lu;
+		for (i = 0; i < LISTSZ; ++i) {
+			if (!xtQueueLUPop(&qlu, &lu)) {
+				FAIL("xtQueueLUPop()");
+				break;
+			}
+			if (lu != listlu[i]) {
+				xtsnprintf(buf, sizeof buf, "xtQueueLUPop() - Got %lu but expected %lu", lu, listlu[i]);
+				FAIL(buf);
+				break;
+			}
+		}
+		if (i == LISTSZ)
+			PASS("xtQueueLUPop()");
+	}
+	if (init & INIT_ZU) {
+		unsigned i;
 		size_t zu;
-		if (!xtQueueHDPop(&qhd, &hd)) {
-			fputs("QueueHD is broken\n", stderr);
-			goto fail;
+		for (i = 0; i < LISTSZ; ++i) {
+			if (!xtQueueZUPop(&qzu, &zu)) {
+				FAIL("xtQueueZUPop()");
+				break;
+			}
+			if (zu != listzu[i]) {
+				xtsnprintf(buf, sizeof buf, "xtQueueZUPop() - Got %zu but expected %zu", zu, listzu[i]);
+				FAIL(buf);
+				break;
+			}
 		}
-		if (hd != listhd[i]) {
-			fputs("QueueHD is corrupted\n", stderr);
-			xtfprintf(stderr, "Got %hd but expected %hd\n", hd, listhd[i]);
-			goto fail;
-		}
-		if (!xtQueueDPop(&qd, &d)) {
-			fputs("QueueD is broken\n", stderr);
-			goto fail;
-		}
-		if (d != listd[i]) {
-			fputs("QueueD is corrupted\n", stderr);
-			xtfprintf(stderr, "Got %d but expected %d\n", d, listd[i]);
-			goto fail;
-		}
-		if (!xtQueueUPop(&qu, &u)) {
-			fputs("QueueU is broken\n", stderr);
-			goto fail;
-		}
-		if (u != listu[i]) {
-			fputs("QueueU is corrupted\n", stderr);
-			xtfprintf(stderr, "got %u but expected %u\n", u, listu[i]);
-			goto fail;
-		}
-		if (!xtQueueLUPop(&qlu, &lu)) {
-			fputs("QueueLU is broken\n", stderr);
-			goto fail;
-		}
-		if (lu != listlu[i]) {
-			fputs("QueueLU is corrupted\n", stderr);
-			xtfprintf(stderr, "got %lu but expected %lu\n", lu, listlu[i]);
-			goto fail;
-		}
-		if (!xtQueueZUPop(&qzu, &zu)) {
-			fputs("QueueZU is broken\n", stderr);
-			goto fail;
-		}
-		if (zu != listzu[i]) {
-			fputs("QueueZU is corrupted\n", stderr);
-			xtfprintf(stderr, "got %zu but expected %zu\n", zu, listzu[i]);
-			goto fail;
-		}
+		if (i == LISTSZ)
+			PASS("xtQueueZUPop()");
 	}
 	ret = 0;
 fail:
@@ -184,17 +266,12 @@ fail:
 
 int main(void)
 {
+	stats_init(&stats, "queue");
 	srand(time(NULL));
-	xtConsoleFillLine("-");
 	puts("-- QUEUE TEST");
 	puts("Initialize all different types");
 	init();
-	xtConsoleFillLine("-");
-	puts("-- PUSH TEST");
-	if (push()) {
-		xtConsoleFillLine("!");
-		puts("Push test failed");
-		return 1;
-	}
-	return 0;
+	push();
+	stats_info(&stats);
+	return stats_status(&stats);
 }

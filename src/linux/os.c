@@ -283,48 +283,26 @@ char *xtGetOSName(char *buf, size_t buflen)
 	return buf;
 }
 
-unsigned long long xtRAMGetAmountFree(void)
+int xtRAMGetInfo(struct xtRAMInfo *ramInfo)
 {
 #if XT_IS_X64
 	// Doesn't show correct amount of RAM on 32 bit systems with 4GB+ RAM
 	struct sysinfo info;
 	sysinfo(&info);
-	return info.freeram;
-#else
-	FILE *f = fopen("/proc/meminfo", "rb");
-	if (!f)
-		return 0;
-	char sbuf[128];
-	unsigned long long amount;
-	while (fgets(sbuf, sizeof(sbuf), f)) {
-		if (sscanf(sbuf, "MemFree: %llu kB", &amount) == 1) {
-			fclose(f);
-			return amount * 1024;
-		}
-	}
-	fclose(f);
+	ramInfo->free = info.freeram;
+	ramInfo->total = info.totalram;
 	return 0;
-#endif
-}
-
-unsigned long long xtRAMGetAmountTotal(void)
-{
-#if XT_IS_X64
-	// Doesn't show correct amount of RAM on 32 bit systems with 4GB+ RAM
-	struct sysinfo info;
-	sysinfo(&info);
-	return info.totalram;
 #else
 	FILE *f = fopen("/proc/meminfo", "rb");
 	if (!f)
-		return 0;
+		return _xtTranslateSysError(errno);
 	char sbuf[128];
 	unsigned long long amount;
 	while (fgets(sbuf, sizeof(sbuf), f)) {
-		if (sscanf(sbuf, "MemTotal: %llu kB", &amount) == 1) {
-			fclose(f);
-			return amount * 1024;
-		}
+		if (sscanf(sbuf, "MemFree: %llu kB", &amount) == 1)
+			ramInfo->free = amount * 1024;
+		else if (sscanf(sbuf, "MemTotal: %llu kB", &amount) == 1)
+			ramInfo->total = amount * 1024;
 	}
 	fclose(f);
 	return 0;

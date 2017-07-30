@@ -117,15 +117,18 @@ bool xtThreadIsAlive(const struct xtThread *t)
 	return WaitForSingleObject(t->exitEvent, 0) != WAIT_OBJECT_0;
 }
 
-void *xtThreadJoin(struct xtThread *t)
+int xtThreadJoin(struct xtThread *t, void **ret)
 {
 	// Block until the thread has terminated
-	WaitForSingleObject(t->exitEvent, INFINITE);
+	if (WaitForSingleObject(t->exitEvent, INFINITE) == WAIT_FAILED)
+		return _xtTranslateSysError(GetLastError());
 	// Perform cleanup
 	CloseHandle(t->nativeThread);
 	CloseHandle(t->exitEvent);
 	xtMutexDestroy(&t->suspendMutex);
-	return t->funcRet;
+	if (ret != NULL) // Optional
+		*ret = t->funcRet;
+	return 0;
 }
 
 void xtThreadSetName(const char *name)

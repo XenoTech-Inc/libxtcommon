@@ -10,50 +10,58 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "utils.h"
+
+static struct stats stats;
 
 static void trim(void)
 {
-	xtConsoleFillLine("-");
-	puts("-- TRIM TEST");
 	char test[] = "   Mah \t\t fat BOI\t\t  s\t ";
+	const char *ttest = "Mah \t\t fat BOI\t\t  s";
 	xtStringTrim(test);
-	printf("Trim: \"%s\"\n", test);
-	if (isspace(test[0]) || isspace(test[strlen(test) - 1]))
-		goto fail;
+	if (strcmp(test, ttest)) {
+		FAIL("xtStringTrim() - leading & trailing whitespace");
+		fprintf(stderr, "expected \"%s\", but got \"%s\"\n", ttest, test);
+	} else
+		PASS("xtStringTrim() - leading & trailing whitespace");
 	char test2[] = "     What's the    most \t fucking  important   ASSpect?";
+	const char *ttest2 = "What's the    most \t fucking  important   ASSpect?";
 	xtStringTrim(test2);
-	printf("Trim: \"%s\"\n", test2);
-	if (isspace(test2[0]) || isspace(test2[strlen(test2) - 1]))
-		goto fail;
+	if (strcmp(test2, ttest2)) {
+		FAIL("xtStringTrim() - leading whitespace xtStringTrim()");
+		fprintf(stderr, "expected \"%s\", but got \"%s\"\n", ttest2, test2);
+	} else
+		PASS("xtStringTrim() - leading whitespace xtStringTrim()");
 	char test3[] = "This is   againsed      \t law, reported   \t ";
+	const char *ttest3 = "This is   againsed      \t law, reported";
 	xtStringTrim(test3);
-	printf("Trim: \"%s\"\n", test3);
-	if (isspace(test3[0]) || isspace(test3[strlen(test3) - 1]))
-		goto fail;
+	if (strcmp(test3, ttest3)) {
+		FAIL("xtStringTrim() - trailing whitespace");
+		fprintf(stderr, "expected \"%s\", but got \"%s\"\n", ttest3, test3);
+	} else
+		PASS("xtStringTrim() - trailing whitespace");
 	char test4[] = "";
+	const char *ttest4 = "";
 	xtStringTrim(test4);
-	printf("Trim: \"%s\"\n", test4);
-	if (*test4)
-		goto fail;
-	return;
-fail:
-	fputs("Trim failed\n", stderr);
-	exit(EXIT_FAILURE);
+	if (strcmp(test4, ttest4)) {
+		FAIL("xtStringTrim() - empty string");
+		fprintf(stderr, "expected \"%s\", but got \"%s\"\n", ttest4, test4);
+	} else
+		PASS("xtStringTrim() - empty string");
 }
 
 static void trimWords(void)
 {
-	xtConsoleFillLine("-");
-	puts("-- TRIM WORDS TEST");
 	const char *orig = "     What's the    most \t fucking  important   ASSpect?";
+	const char *trim = "What's the most fucking important ASSpect?";
 	char buf[256];
-	printf("Original: \"%s\"\n", orig);
-	strcpy(buf, orig);
-	xtStringTrim(buf);
-	printf("Trimmed: \"%s\"\n", buf);
 	strcpy(buf, orig);
 	xtStringTrimWords(buf);
-	printf("Trim words: \"%s\"\n", buf);
+	if (strcmp(buf, trim)) {
+		FAIL("xtStringTrimWords()");
+		fprintf(stderr, "expected \"%s\", but got \"%s\"\n", trim, buf);
+	} else
+		PASS("xtStringTrimWords()");
 }
 
 #define SPACE_DELIM " \f\n\r\t\v"
@@ -73,100 +81,97 @@ static void split(void)
 
 static void rot13(void)
 {
-	xtConsoleFillLine("-");
-	puts("-- ROT13 TEST");
 	const char *test = "FuCkEd CaSe";
 	char buf[256];
 	strcpy(buf, test);
 	xtRot13(buf, strlen(buf));
-	puts(buf);
+	const char *testr = "ShPxRq PnFr";
+	if (strcmp(buf, testr)) {
+		FAIL("xtRot13() - encode");
+		fprintf(stderr, "expected \"%s\", but got \"%s\"\n", testr, buf);
+	} else
+		PASS("xtRot13() - encode");
 	xtRot13(buf, strlen(buf));
-	puts(buf);
-	if (strcmp(test, buf)) {
-		fputs("ROT13 failed\n", stderr);
-		exit(EXIT_FAILURE);
-	}
+	if (strcmp(buf, test)) {
+		FAIL("xtRot13() - decode");
+		fprintf(stderr, "expected \"%s\", but got \"%s\"\n", test, buf);
+	} else
+		PASS("xtRot13() - decode");
 }
 
 static void reverse(void)
 {
-	xtConsoleFillLine("-");
-	puts("-- REVERSE TEST");
 	const char *test = "Mah boi, this is what all true warriors strive for";
+	const char *rtest = "rof evirts sroirraw eurt lla tahw si siht ,iob haM";
 	char buf[256];
 	strcpy(buf, test);
 	xtStringReverse(buf);
-	puts(buf);
+	if (strcmp(buf, rtest)) {
+		FAIL("xtStringReverse()");
+		fprintf(stderr, "expected  \"%s\", but got \"%s\"\n", rtest, buf);
+	} else
+		PASS("xtStringReverse()");
 	xtStringReverse(buf);
-	puts(buf);
 	if (strcmp(buf, test)) {
-		fputs("Reverse failed\n", stderr);
-		exit(EXIT_FAILURE);
-	}
+		FAIL("xtStringReverse() - reverse");
+		fprintf(stderr, "expected  \"%s\", but got \"%s\"\n", test, buf);
+	} else
+		PASS("xtStringReverse() - reverse");
 }
 
 static void contains(void)
 {
-	xtConsoleFillLine("-");
-	puts("-- CONTAINS TEST");
-	puts("Contains end test");
-	if (!xtStringContains("mah fatboi", "boi"))
-		goto fail;
-	puts("Contains start test");
-	if (!xtStringContains("mah fatboi", "mah"))
-		goto fail;
-	puts("Contains middle test");
-	if (!xtStringContains("mah fatboi", "fat"))
-		goto fail;
-	return;
-fail:
-	fputs("String contains failed\n", stderr);
-	exit(EXIT_FAILURE);
+	if (xtStringContains("mah fatboi", "boi"))
+		PASS("xtStringContains() - ending");
+	else
+		FAIL("xtStringContains() - ending");
+	if (xtStringContains("mah fatboi", "mah"))
+		PASS("xtStringContains() - starting");
+	else
+		FAIL("xtStringContains() - starting");
+	if (xtStringContains("mah fatboi", "fat"))
+		PASS("xtStringContains() - middle");
+	else
+		FAIL("xtStringContains() - middle");
 }
 
 static void start(void)
 {
-	xtConsoleFillLine("-");
-	puts("-- STARTS WITH TEST");
-	if (!xtStringStartsWith("Mah boi", "Mah ")) {
-		fputs("Starts with failed\n", stderr);
-		exit(EXIT_FAILURE);
-	}
-	if (!xtStringStartsWith("Mah boi", "Mah boi")) {
-		fputs("Starts with failed\n", stderr);
-		exit(EXIT_FAILURE);
-	}
-	puts("Success");
+	if (xtStringStartsWith("Mah boi", "Mah "))
+		PASS("xtStringStartsWith() - partial");
+	else
+		FAIL("xtStringStartsWith() - partial");
+	if (xtStringStartsWith("Mah boi", "Mah boi"))
+		PASS("xtStringStartsWith() - full");
+	else
+		FAIL("xtStringStartsWith() - full");
 }
 
 static void end(void)
 {
-	xtConsoleFillLine("-");
-	puts("-- ENDS WITH TEST");
-	if (!xtStringEndsWith("Mah boi", " boi")) {
-		fputs("Ends with failed\n", stderr);
-		exit(EXIT_FAILURE);
-	}
-	if (!xtStringEndsWith("Mah boi", "Mah boi")) {
-		fputs("Ends with failed\n", stderr);
-		exit(EXIT_FAILURE);
-	}
-	puts("Success");
+	if (xtStringEndsWith("Mah boi", " boi"))
+		PASS("xtStringEndsWith() - partial");
+	else
+		FAIL("xtStringEndsWith() - partial");
+	if (xtStringEndsWith("Mah boi", "Mah boi"))
+		PASS("xtStringEndsWith() - full");
+	else
+		FAIL("xtStringEndsWith() - full");
 }
 
 static void copy(void)
 {
-	xtConsoleFillLine("-");
-	puts("-- STRING COPY TEST");
 	char small[8];
 	const char *str9 = "1234567!"; // strlen > 8
 	xtstrncpy(small, str9, sizeof small);
-	xtprintf("Exclamation mark should not be visible: %s\n", small);
+	if (strcmp(small, "1234567"))
+		FAIL("xtstrncpy");
+	else
+		PASS("xtstrncpy");
 }
 
 static void formatSI(void)
 {
-	xtConsoleFillLine("-");
 	puts("-- FORMAT SI TEST");
 	char buf[256];
 	puts(" D B  Number                Value");
@@ -183,18 +188,31 @@ static void formatSI(void)
 
 static void printFormat(void)
 {
-	xtConsoleFillLine("-");
-	puts("-- PRINT FORMAT TEST");
 	char buf[256];
+	const char *match = "perfectly normal & simple     format";
 	xtsnprintf(buf, sizeof buf, "%s normal & simple %10s", "perfectly", "format");
-	puts(buf);
+	if (strcmp(buf, match)) {
+		FAIL("xtvsnprintf() - strings");
+		fprintf(stderr, "expected \"%s\", but got \"%s\"\n", match, buf);
+	} else
+		PASS("xtvsnprintf() - strings");
 	long long lnum = 3419803901L;
 	unsigned unum = 30;
 	size_t znum = ~0xcafebabe;
 	xtsnprintf(buf, sizeof buf, "wide test: %lld %04u %20zu", lnum, unum, znum);
-	puts(buf);
+	match = "wide test: 3419803901 0030            889275713";
+	if (strcmp(buf, match)) {
+		FAIL("xtvsnprintf() - (wide) integers");
+		fprintf(stderr, "expected \"%s\", but got \"%s\"\n", match, buf);
+	} else
+		PASS("xtvsnprintf() - (wide) integers");
 	xtsnprintf(buf, sizeof buf, "float test: %+.2f %g %lf", .42f, -4e3 + 1.0, 0.0001);
-	puts(buf);
+	match = "float test: +0.42 -3999 0.000100";
+	if (strcmp(buf, match)) {
+		FAIL("xtvsnprintf() - float");
+		fprintf(stderr, "expected \"%s\", but got \"%s\"\n", match, buf);
+	} else
+		PASS("xtvsnprintf() - float");
 	xtsnprintf(buf, sizeof buf, "int_t variants:"
 		"% +6I8d %I8u\n"
 		"%I16d %08I16o\n"
@@ -205,14 +223,20 @@ static void printFormat(void)
 		INT32_MIN, INT32_MAX,
 		INT64_MIN, UINT64_MAX
 	);
-	puts(buf);
-	xtprintf("Custom error format: message=%s, code=%d\n", xtGetErrorStr(errno), errno);
+	match =
+		"int_t variants:  -128 255\n"
+		"-32768 00077777\n"
+		"-2147483648 0x7fffffff\n"
+		"          -9223372036854775808 18446744073709551615";
+	if (strcmp(buf, match)) {
+		FAIL("xtvsnprintf() - intXX_t");
+		fprintf(stderr, "expected \"%s\", but got \"%s\"\n", match, buf);
+	} else
+		PASS("xtvsnprintf() - intXX_t");
 }
 
 static void formatTime(void)
 {
-	xtConsoleFillLine("-");
-	puts("-- FORMAT TIME TEST");
 	char buf[1024];
 	struct xtTimestamp start, end;
 	start.sec  = 432840;
@@ -220,18 +244,38 @@ static void formatTime(void)
 	end.sec    = 723480;
 	end.nsec   = 347298107LLU;
 	xtFormatTimeDuration(buf, sizeof buf, "diff.sec : %w %d %h %m %s", &start, &end);
-	puts(buf);
+	const char *match = "diff.sec : 0 weeks 3 days 8 hours 44 minutes 0 seconds";
+	if (strcmp(buf, match)) {
+		FAIL("xtFormatTimeDuration() - diff.sec");
+		fprintf(stderr, "expected \"%s\", but got \"%s\"\n", match, buf);
+	} else
+		PASS("xtFormatTimeDuration() - diff.sec");
 	xtFormatTimeDuration(buf, sizeof buf, "diff.nsec: %t.%u.%n", &start, &end);
-	puts(buf);
+	match = "diff.nsec: 309 milliseconds.355 microseconds.299 nanoseconds";
+	if (strcmp(buf, match)) {
+		FAIL("xtFormatTimeDuration() - diff.nsec");
+		fprintf(stderr, "expected \"%s\", but got \"%s\"\n", match, buf);
+	} else
+		PASS("xtFormatTimeDuration() - diff.nsec");
 	xtFormatTimeDuration(buf, sizeof buf, "diff     : %g", &start, &end);
-	puts(buf);
+	match = "diff     : 3 days 8 hours 44 minutes 0 seconds 309 milliseconds 355 microseconds 299 nanoseconds";
+	if (strcmp(buf, match)) {
+		FAIL("xtFormatTimeDuration() - diff");
+		fprintf(stderr, "expected \"%s\", but got \"%s\"\n", match, buf);
+	} else
+		PASS("xtFormatTimeDuration() - diff");
 	xtFormatTimeDuration(buf, sizeof buf, "DIFF     : %G", &start, &end);
-	puts(buf);
+	match = "DIFF     : 3 days 8 hours 44 minutes 309 milliseconds 355 microseconds 299 nanoseconds";
+	if (!strcmp(buf, match)) {
+		FAIL("xtFormatTimeDuration() - DIFF");
+		fprintf(stderr, "expected \"%s\", but got \"%s\"\n", match, buf);
+	} else
+		PASS("xtFormatTimeDuration() - DIFF");
 	end.sec  = xtRandLLU() % (604800U * 52);
 	end.nsec = xtRandLLU() % 1000000000LLU;
-	xtFormatTimeDuration(buf, sizeof buf, "random   : %G", &start, &end);
+	xtFormatTimeDuration(buf, sizeof buf, "Random time: %G", &start, &end);
 	puts(buf);
-	xtFormatTimeDuration(buf, sizeof buf, "random   : %W-%D %H:%M:%S %T.%U.%N", &start, &end);
+	xtFormatTimeDuration(buf, sizeof buf, "Random time: %W-%D %H:%M:%S %T.%U.%N", &start, &end);
 	puts(buf);
 }
 
@@ -256,8 +300,8 @@ static void putString(void)
 
 int main(void)
 {
+	stats_init(&stats, "string");
 	srand(time(NULL));
-	xtConsoleFillLine("-");
 	puts("-- STRING TEST");
 	start();
 	end();
@@ -272,5 +316,6 @@ int main(void)
 	formatSI();
 	formatTime();
 	putString();
-	return EXIT_SUCCESS;
+	stats_info(&stats);
+	return stats_status(&stats);
 }

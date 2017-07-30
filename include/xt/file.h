@@ -60,8 +60,9 @@ int xtFileCopy(const char *restrict src, const char *restrict dst);
 /**
  * Copies the file from \a src to \dst by their handle.
  * @return Zero if the file has been copied, otherwise an error code.
- * @remarks On success the stream position indicator is set to the beginning of both files.
- * On error, the position of the indicator is undefined for both files.
+ * @remarks On success the stream position indicator is set to the beginning of
+ * both files. On error, the position of the indicator is undefined. The file
+ * handles are NEVER closed by this function!
  */
 int xtFileCopyByHandle(FILE *restrict src, FILE *restrict dst);
 /**
@@ -71,9 +72,13 @@ int xtFileCopyByHandle(FILE *restrict src, FILE *restrict dst);
 int xtFileCreateDir(const char *path);
 /**
  * Opens the file with the default associated program.
- * This program should be executed as new process, so keep in mind that the caller thread should return immidiately.
+ * This program is executed as new process, so keep in mind that the
+ * caller thread should return immidiately.
+ * @return Zero if the file has been executed, otherwise an error code.
+ * XT_EUNKNOWN is returned if the file was executed but returned an error
+ * code afterwards.
  */
-void xtFileExecute(const char *path);
+int xtFileExecute(const char *path);
 /**
  * Tells you whether the specified file or directory exists.
  * It should be noted that it is possible that because of permissions

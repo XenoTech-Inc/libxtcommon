@@ -12,71 +12,109 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "utils.h"
+
+static struct stats stats;
+
 static void fileTest(void)
 {
-	char sbuf[256], sbuf2[256];
-	if (xtFileGetExecutablePath(sbuf, sizeof(sbuf)) != 0) {
-		xtfprintf(stderr, "Failed to retrieve the path of myself\n");
-		xtsnprintf(sbuf, sizeof(sbuf), "./general.o");
-	}
-	xtprintf("Executable path: %s\n", sbuf);
-
 	bool result;
-	int ret;
 	unsigned long long size;
-	result = false;
-	ret = xtFileExists(sbuf, &result);
-	xtprintf("File exists: %d - %s\n", ret, (result ? "Yes" : "No"));
+	char sbuf[256], sbuf2[256];
+	if (xtFileGetExecutablePath(sbuf, sizeof(sbuf)) == 0) {
+		PASS("xtFileGetExecutablePath()");
+	} else
+		FAIL("xtFileGetExecutablePath()");
+
+	if (xtFileExists(sbuf, &result) == 0) {
+		PASS("xtFileExists()");
+	} else
+		FAIL("xtFileExists()");
 	FILE *f = fopen(sbuf, "r");
-	size = 0;
-	ret = xtFileGetSizeByHandle(f, &size);
-	xtprintf("File size by handle: %d - %llu\n", ret, size);
-	if (f)
+	if (f) {
+		PASS("fopen()");
+		size = 0;
+		if (xtFileGetSizeByHandle(f, &size) == 0) {
+			PASS("xtFileGetSizeByHandle()");
+		} else
+			FAIL("xtFileGetSizeByHandle()");
 		fclose(f);
-	size = 0;
-	ret = xtFileGetSizeByName(sbuf, &size);
-	xtprintf("File size by path: %d - %llu\n", ret, size);
-	result = false;
-	ret = xtFileGetRealPath(sbuf2, 256, sbuf);
-	xtprintf("Absolute path of file: %d - %s\n", ret, sbuf2);
-	xtprintf("Base name of file: %s\n", xtFileGetBaseName(sbuf2));
-	xtprintf("File extension: %s\n", xtFileGetExtension(sbuf2));
-	result = false;
-	ret = xtFileIsDir(sbuf, &result);
-	xtprintf("Is file a directory?: %d - %s\n", ret, (result ? "Yes" : "No"));
+	} else {
+		FAIL("fopen()");
+		XFAIL("xtFileGetSizeByHandle()");
+	}
 
-	xtprintf("Home dir: %s\n", xtFileGetHomeDir(sbuf2, sizeof(sbuf2)));
+	if (xtFileGetSizeByName(sbuf, &size) == 0) {
+		PASS("xtFileGetSizeByName()");
+	} else
+		FAIL("xtFileGetSizeByName()");
 
-	ret = xtFileGetTempDir(sbuf2, sizeof(sbuf2));
-	xtprintf("System temp dir: %d - %s\n", ret, sbuf2);
+	if (xtFileGetRealPath(sbuf2, 256, sbuf) == 0) {
+		PASS("xtFileGetRealPath()");
+	} else
+		FAIL("xtFileGetRealPath()");
 
-	ret = xtFileGetCWD(sbuf2, sizeof(sbuf2));
-	xtprintf("CWD before: %d - %s\n", ret, sbuf2);
-	ret = xtFileSetCWD(sbuf2);
-	xtprintf("CWD change: %d\n", ret);
-	ret = xtFileGetCWD(sbuf2, sizeof(sbuf2));
-	xtprintf("CWD after : %d - %s\n", ret, sbuf2);
+	if (xtFileIsDir(sbuf, &result) == 0) {
+		PASS("xtFileIsDir()");
+	} else
+		FAIL("xtFileIsDir()");
 
-	xtprintf("Creation of dir: %d\n", xtFileCreateDir("test_dir"));
-	xtprintf("Removal of dir: %d\n", xtFileRemoveDir("test_dir"));
+	if (xtFileGetHomeDir(sbuf2, sizeof(sbuf2))) {
+		PASS("xtFileGetHomeDir()");
+	} else
+		FAIL("xtFileGetHomeDir()");
+
+	if (xtFileGetTempDir(sbuf2, sizeof(sbuf2)) == 0) {
+		PASS("xtFileGetTempDir()");
+	} else
+		FAIL("xtFileGetTempDir()");
+
+	if (xtFileGetCWD(sbuf2, sizeof(sbuf2)) == 0 && xtFileSetCWD(sbuf2) == 0
+		&& xtFileGetCWD(sbuf2, sizeof(sbuf2)) == 0)
+		PASS("xtFileGetCWD() & xtFileSetCWD()");
+	else
+		FAIL("xtFileGetCWD() & xtFileSetCWD()");
+
+	if (xtFileCreateDir("test_dir") == 0) {
+		PASS("xtFileCreateDir()");
+		if (xtFileRemoveDir("test_dir") == 0)
+			PASS("xtFileRemoveDir()");
+		else
+			FAIL("xtFileRemoveDir()");
+	} else {
+		FAIL("xtFileCreateDir()");
+		XFAIL("xtFileRemoveDir()");
+	}
 
 	FILE *tmpFile;
 	char tmpFilePath[1024];
-	xtprintf("Creation of tmpfile: %d\n", xtFileTempFile(tmpFilePath, sizeof(tmpFilePath), &tmpFile));
-	if (tmpFile) {
-		xtprintf("Path of tmpfile: %s\n", tmpFilePath);
-		fputs("HEY!", tmpFile);
+	if (xtFileTempFile(tmpFilePath, sizeof(tmpFilePath), &tmpFile) == 0) {
+		PASS("xtFileTempFile()");
+		fputs("Yo!", tmpFile);
 		fflush(tmpFile);
 		fclose(tmpFile);
-		xtprintf("Executing temporary file\n");
-		xtFileExecute(tmpFilePath);
-		puts("Giving the program a couple of seconds to open it...");
+		if (xtFileExecute(tmpFilePath) == 0)
+			PASS("xtFileExecute()");
+		else
+			FAIL("xtFileExecute()");
 		xtSleepMS(3000);
 		char newPath[256];
 		xtsnprintf(newPath, sizeof(newPath), "%s/tmp_file.txt", sbuf2);
-		xtprintf("Copy tmp file: %d\n", xtFileCopy(tmpFilePath, newPath));
-		xtprintf("Remove tmp file: %d\n", xtFileRemove(tmpFilePath));
-		xtprintf("Remove tmp copy file: %d\n", xtFileRemove(newPath));
+
+		if (xtFileCopy(tmpFilePath, newPath) == 0)
+			PASS("xtFileCopy()");
+		else
+			FAIL("xtFileCopy()");
+
+		if (xtFileRemove(tmpFilePath) == 0 && xtFileRemove(newPath) == 0)
+			PASS("xtFileRemove()");
+		else
+			FAIL("xtFileRemove()");
+	} else {
+		FAIL("xtFileTempFile()");
+		XFAIL("xtFileExecute()");
+		XFAIL("xtFileCopy()");
+		XFAIL("xtFileRemove()");
 	}
 }
 
@@ -84,40 +122,54 @@ static void osTest(void)
 {
 	char sbuf[256];
 	xtConsoleSetTitle("New console title!");
-	xtprintf("OS name: %s\n", xtGetOSName(sbuf, 256));
-	xtprintf("Uptime in seconds: %u\n", xtGetUptime());
-	xtprintf("RAM total: %llu bytes\nRAM available: %llu bytes\n", xtRAMGetAmountTotal(), xtRAMGetAmountFree());
+	if (xtGetOSName(sbuf, 256)) {
+		PASS("xtGetOSName()");
+	} else
+		FAIL("xtGetOSName()");
+
+	struct xtRAMInfo ramInfo;
+	if (xtRAMGetInfo(&ramInfo) == 0) {
+		PASS("xtRAMGetInfo()");
+	} else
+		FAIL("xtRAMGetInfo()");
+
 	unsigned width, height;
-	int ret = xtConsoleGetSize(&width, &height);
-	xtprintf("Is a console available?: %s\n", (xtConsoleIsAvailable() ? "Yes" : "No"));
-	xtprintf("Console size retval=%d, size: w=%u, h=%u\n", ret, width, height);
-	xtConsoleFillLine("#");
-	puts("## CPU info");
-	struct xtTimestamp end, start;
-	xtClockGetTime(&start, XT_CLOCK_MONOTONIC);
+	if (xtConsoleGetSize(&width, &height) == 0) {
+		PASS("xtConsoleGetSize()");
+	} else
+		FAIL("xtConsoleGetSize()");
+
+	if (xtConsoleFillLine("#") == 0)
+		PASS("xtConsoleFillLine()");
+	else
+		FAIL("xtConsoleFillLine()");
+
 	struct xtCPUInfo info;
-	bool retval = xtCPUGetInfo(&info);
-	xtClockGetTime(&end, XT_CLOCK_MONOTONIC);
-	xtprintf("All CPU info retrieved?: %s\n", (retval ? "Yes" : "No"));
-	xtprintf(
-		"CPU info retrieval time taken : %llu usecs\n",
-		xtTimestampToUS(&end) - xtTimestampToUS(&start)
-	);
-	xtCPUDump(&info, stdout);
+	if (xtCPUGetInfo(&info)) {
+		PASS("xtCPUGetInfo()");
+	} else
+		FAIL("xtCPUGetInfo()");
+
 }
 
 static void tMainTask(struct xtThread *restrict t1, struct xtThread *restrict t2)
 {
+	(void)t1;
+	(void)t2;
+#if 0
 	xtprintf("TMain: Does T1 equal T2?: %s\n", (xtThreadGetID(t1) == xtThreadGetID(t2) ? "Yes" : "No"));
 	xtprintf("TMain: ID of T1: %zu\n", xtThreadGetID(t1));
 	xtprintf("TMain: ID of T2: %zu\n", xtThreadGetID(t2));
 	xtprintf("TMain: Is T1 alive?: %s\n", (xtThreadIsAlive(t1) ? "Yes" : "No"));
 	xtprintf("TMain: Is T2 alive?: %s\n", (xtThreadIsAlive(t2) ? "Yes" : "No"));
+#endif
 }
 
 static void *t1Task(struct xtThread *t, void *arg)
 {
-	(void) t;
+	(void)t;
+	(void)arg;
+#if 0
 	int ret;
 	xtMutex *m = arg;
 	xtprintf("T1: My ID is %zu\n", xtThreadGetID(NULL));
@@ -130,12 +182,15 @@ static void *t1Task(struct xtThread *t, void *arg)
 		xtprintf("T1: The other thread obtained the lock first\n");
 	if (ret == 0)
 		xtMutexUnlock(m);
+#endif
 	return (void*) 1;
 }
 
 static void *t2Task(struct xtThread *t, void *arg)
 {
-	(void) t;
+	(void)t;
+	(void)arg;
+#if 0
 	int ret;
 	xtMutex *m = arg;
 	xtprintf("T2: My ID is %zu\n", xtThreadGetID(NULL));
@@ -148,163 +203,164 @@ static void *t2Task(struct xtThread *t, void *arg)
 		xtprintf("T2: The other thread obtained the lock first\n");
 	if (ret == 0)
 		xtMutexUnlock(m);
+#endif
 	return (void*) 2;
 }
 
 static void threadTest(void)
 {
 	char sbuf[256];
-	int ret;
 	xtMutex m;
 	struct xtThread t1, t2;
-	printf("TMain: My name is \"%s\"\n", xtThreadGetName(sbuf, sizeof(sbuf)));
+	if (xtThreadGetName(sbuf, sizeof(sbuf)))
+		PASS("xtThreadGetName()");
+	else
+		FAIL("xtThreadGetName()");
 	xtThreadSetName("thread_worker");
-	printf("TMain: My name is now \"%s\"\n", xtThreadGetName(sbuf, sizeof(sbuf)));
-	if ((ret = xtMutexCreate(&m)) != 0)
-		goto err;
-	if ((ret = xtThreadCreate(&t1, t1Task, &m, 0, 0)) != 0)
-		goto err;
-	if ((ret = xtThreadCreate(&t2, t2Task, &m, 0, 0)) != 0)
-		goto err;
-	tMainTask(&t1, &t2);
-	printf("T1 ret: %p\n", xtThreadJoin(&t1));
-	printf("T2 ret: %p\n", xtThreadJoin(&t2));
-	xtMutexDestroy(&m);
-	return;
-err:
-	xtDie(xtStrError(sbuf, sizeof(sbuf), ret));
+	if (xtMutexCreate(&m) == 0) {
+		PASS("xtMutexCreate()");
+		if (xtMutexLock(&m) == 0 && xtMutexUnlock(&m) == 0)
+			PASS("xtMutexLock() & xtMutexUnlock()");
+		else
+			FAIL("xtMutexLock() & xtMutexUnlock()");
+		if (xtThreadCreate(&t1, t1Task, &m, 0, 0) == 0 && xtThreadCreate(&t2, t2Task, &m, 0, 0) == 0) {
+			PASS("xtThreadCreate()");
+			tMainTask(&t1, &t2);
+			void *ret1, *ret2;
+			if (xtThreadJoin(&t1, &ret1) == 0 && xtThreadJoin(&t2, &ret2) == 0)
+				PASS("xtThreadJoin()");
+			else
+				FAIL("xtThreadJoin()");
+		} else {
+			FAIL("xtThreadCreate()");
+			XFAIL("xtThreadJoin()");
+		}
+		xtMutexDestroy(&m);
+	} else {
+		FAIL("xtMutexCreate()");
+	}
 }
 
 static void timeTest(void)
 {
 	char sbuf[256];
-	struct xtTimestamp ts, timeNow, timeLater;
-	int ret;
+	struct xtTimestamp ts, timeNow;
+	if (xtClockGetRes(&ts, XT_CLOCK_MONOTONIC) == 0)
+		PASS("xtClockGetRes(XT_CLOCK_MONOTONIC)");
+	else
+		FAIL("xtClockGetRes(XT_CLOCK_MONOTONIC)");
+	if (xtClockGetRes(&ts, XT_CLOCK_MONOTONIC_COARSE) == 0)
+		PASS("xtClockGetRes(XT_CLOCK_MONOTONIC_COARSE)");
+	else
+		FAIL("xtClockGetRes(XT_CLOCK_MONOTONIC_COARSE)");
+	if (xtClockGetRes(&ts, XT_CLOCK_MONOTONIC_RAW) == 0)
+		PASS("xtClockGetRes(XT_CLOCK_MONOTONIC_RAW)");
+	else
+		FAIL("xtClockGetRes(XT_CLOCK_MONOTONIC_RAW)");
+	if (xtClockGetRes(&ts, XT_CLOCK_REALTIME) == 0)
+		PASS("xtClockGetRes(XT_CLOCK_REALTIME)");
+	else
+		FAIL("xtClockGetRes(XT_CLOCK_REALTIME)");
+	if (xtClockGetRes(&ts, XT_CLOCK_REALTIME_COARSE) == 0)
+		PASS("xtClockGetRes(XT_CLOCK_REALTIME_COARSE)");
+	else
+		FAIL("xtClockGetRes(XT_CLOCK_REALTIME_COARSE)");
+	if (xtClockGetRes(&ts, XT_CLOCK_REALTIME_NOW) == 0)
+		PASS("xtClockGetRes(XT_CLOCK_REALTIME_NOW)");
+	else
+		FAIL("xtClockGetRes(XT_CLOCK_REALTIME_NOW)");
 
-#define TEST_CLOCK(clockId, clockName)\
-	ret = xtClockGetRes(&ts, clockId);\
-	xtprintf("%s res: %d - %uNS\n", clockName, ret, ts.nsec);\
-	ret = xtClockGetTime(&ts, clockId);\
-	xtprintf("%s: %d - %s\n", clockName, ret, xtFormatTimePrecise(sbuf, 255, &ts));
+	if (xtClockGetTime(&ts, XT_CLOCK_MONOTONIC) == 0)
+		PASS("xtClockGetTime(XT_CLOCK_MONOTONIC)");
+	else
+		FAIL("xtClockGetTime(XT_CLOCK_MONOTONIC)");
+	if (xtClockGetTime(&ts, XT_CLOCK_MONOTONIC_COARSE) == 0)
+		PASS("xtClockGetTime(XT_CLOCK_MONOTONIC_COARSE)");
+	else
+		FAIL("xtClockGetTime(XT_CLOCK_MONOTONIC_COARSE)");
+	if (xtClockGetTime(&ts, XT_CLOCK_MONOTONIC_RAW) == 0)
+		PASS("xtClockGetTime(XT_CLOCK_MONOTONIC_RAW)");
+	else
+		FAIL("xtClockGetTime(XT_CLOCK_MONOTONIC_RAW)");
+	if (xtClockGetTime(&ts, XT_CLOCK_REALTIME) == 0)
+		PASS("xtClockGetTime(XT_CLOCK_REALTIME)");
+	else
+		FAIL("xtClockGetTime(XT_CLOCK_REALTIME)");
+	if (xtClockGetTime(&ts, XT_CLOCK_REALTIME_COARSE) == 0)
+		PASS("xtClockGetTime(XT_CLOCK_REALTIME_COARSE)");
+	else
+		FAIL("xtClockGetTime(XT_CLOCK_REALTIME_COARSE)");
+	if (xtClockGetTime(&ts, XT_CLOCK_REALTIME_NOW) == 0)
+		PASS("xtClockGetTime(XT_CLOCK_REALTIME_NOW)");
+	else
+		FAIL("xtClockGetTime(XT_CLOCK_REALTIME_NOW)");
 
-	TEST_CLOCK(XT_CLOCK_MONOTONIC, "Monotonic");
-	TEST_CLOCK(XT_CLOCK_MONOTONIC_COARSE, "Monotonic coarse");
-	TEST_CLOCK(XT_CLOCK_MONOTONIC_RAW, "Monotonic raw");
-	TEST_CLOCK(XT_CLOCK_REALTIME, "Realtime");
-	TEST_CLOCK(XT_CLOCK_REALTIME_COARSE, "Realtime coarse");
-	TEST_CLOCK(XT_CLOCK_REALTIME_NOW, "Realtime now");
-
-	xtClockGetTime(&timeNow, XT_CLOCK_REALTIME);
-	xtprintf("Time now in msecs non-gmt corrected raw: %llu\n", xtTimestampToMS(&timeNow));
-	xtprintf("Time now in msecs non-gmt corrected: %s\n", xtFormatTimePrecise(sbuf, 255, &timeNow));
-	xtClockGetTime(&timeNow, XT_CLOCK_REALTIME_NOW);
-	xtprintf("Time now in msecs gmt (with any dst) corrected: %s\n", xtFormatTimePrecise(sbuf, 255, &timeNow));
-
-	const unsigned sleepTimeMS = 100;
-	xtClockGetTime(&timeNow, XT_CLOCK_MONOTONIC);
-	xtprintf("Time mono in usecs: %llu\n", xtTimestampToUS(&timeNow));
-	xtSleepMS(sleepTimeMS);
-	xtClockGetTime(&timeLater, XT_CLOCK_MONOTONIC);
-	xtprintf(
-		"Time mono diff %u msecs later (in usecs): %llu\n", sleepTimeMS,
-		xtTimestampToUS(&timeLater) - xtTimestampToUS(&timeNow)
-	);
-}
-
-static void *socketTestT2(struct xtThread *t, void *arg)
-{
-	(void) t;
-	(void) arg;
-	char sbuf[256];
-	int ret;
-	struct xtSockaddr sa;
-	xtSocket s;
-	ret = xtSocketCreate(&s, XT_SOCKET_PROTO_TCP);
-	xtprintf("Socket creation: %s\n", xtGetErrorStr(ret));
-
-	xtSockaddrFromString(&sa, "127.0.0.1:25659", 0);
-	const int maxTries = 10;
-	for (int i = 0; i < maxTries; ++i) {
-		xtprintf("Connecting %d/%d\n", i + 1, maxTries);
-		ret = xtSocketConnect(s, &sa);
-		xtprintf("Socket connect to %s: %s\n", xtSockaddrToString(&sa, sbuf, sizeof(sbuf)), xtGetErrorStr(ret));
-		if (ret == 0)
-			break;
-	}
-	xtSocketClose(&s);
-	return NULL;
+	if (xtFormatTimePrecise(sbuf, sizeof(sbuf), &timeNow))
+		PASS("xtFormatTimePrecise()");
+	else
+		FAIL("xtFormatTimePrecise()");
 }
 
 static void socketTest(void)
 {
-	if (!xtSocketInit()) {
-		puts("Failure to initialize the socket system");
-		return;
-	}
-	char sbuf[256];
-	int ret;
 	struct xtSockaddr sa;
 	xtSocket serverSock;
-	ret = xtSocketCreate(&serverSock, XT_SOCKET_PROTO_TCP);
 
+	if (xtSocketInit())
+		PASS("xtSocketInit()");
+	else
+		FAIL("xtSocketInit()");
 
-	struct xtThread t;
-	xtThreadCreate(&t, socketTestT2, NULL, 64, 0);
+	if (xtSocketCreate(&serverSock, XT_SOCKET_PROTO_TCP) == 0)
+		PASS("xtSocketCreate()");
+	else
+		FAIL("xtSocketCreate()");
 
-	ret = xtSocketBindToAny(serverSock, 25659);
-	xtSocketGetLocalSocketAddress(serverSock, &sa);
-	xtprintf("Socket bind to %s: %s\n", xtSockaddrToString(&sa, sbuf, sizeof(sbuf)), xtGetErrorStr(ret));
+	if (xtSocketBindToAny(serverSock, 0) == 0)
+		PASS("xtSocketBindToAny()");
+	else
+		FAIL("xtSocketBindToAny()");
 
-	ret = xtSocketListen(serverSock, 10);
-	xtprintf("Socket listen: %s\n", xtGetErrorStr(ret));
+	if (xtSocketListen(serverSock, 64) == 0)
+		PASS("xtSocketListen()");
+	else
+		FAIL("xtSocketListen()");
 
-	struct xtSockaddr peerAddr;
-	xtSocket peerSocket;
+	if (xtSocketGetLocalSocketAddress(serverSock, &sa) == 0)
+		PASS("xtSocketGetLocalSocketAddress()");
+	else
+		FAIL("xtSocketGetLocalSocketAddress()");
 
-	const int maxTries = 10;
-	for (int i = 0; i < maxTries; ++i) {
-		xtprintf("Accepting %d/%d\n", i + 1, maxTries);
-		ret = xtSocketTCPAccept(serverSock, &peerSocket, &peerAddr);
-		xtSleepMS(0);
-		xtprintf("Socket accept: %s\n", xtGetErrorStr(ret));
-		if (ret == 0) {
-			xtprintf("Socket accept: %s has connected!\n", xtSockaddrToString(&peerAddr, sbuf, sizeof(sbuf)));
-			xtSocketClose(&peerSocket);
-			break;
-		}
-	}
-	xtSocketClose(&serverSock);
-
-	xtThreadJoin(&t);
+	if (xtSocketClose(&serverSock) == 0)
+		PASS("xtSocketClose()");
+	else
+		FAIL("xtSocketClose()");
 	xtSocketDestruct();
 }
 
 static void stringTest(void)
 {
-	puts("The following 2 numbers are supposed to be the same and equal 18446744073709551615");
-	xtprintf("Max LLU value raw llu: %llu\n", ULLONG_MAX);
-	xtprintf("Max LLU value uint64 to string : %I64u\n", (uint64_t)(ULLONG_MAX));
 	char buf[256];
 	const char *text = "The pope uses dope";
-	xtprintf("Hexdump of \"%s\": ", text);
-	if (!xtFormatHex(buf, sizeof buf, text, strlen(text), ' ', false)) {
-		fputs("oops\n", stderr);
-		return;
-	}
-	puts(buf);
+	if (xtFormatHex(buf, sizeof buf, text, strlen(text), ' ', false)) {
+		PASS("xtFormatHex()");
+	} else
+		FAIL("xtFormatHex()");
 }
 
 static void *threadTestSleep(struct xtThread *t, void *arg)
 {
 	(void) arg;
-	puts("Going to suspend soon!");
-	xtThreadSuspend(t);
-	puts("Awoken!");
+	if (xtThreadSuspend(t) == 0)
+		PASS("xtThreadSuspend()");
+	else
+		FAIL("xtThreadSuspend()");
 	return NULL;
 }
 
 int main(void)
 {
+	stats_init(&stats, "general");
 	xtConsoleFillLine("-");
 	puts("-- CONFIGURE TEST");
 	xtprintf(
@@ -333,7 +389,7 @@ int main(void)
 	xtThreadCreate(&t, threadTestSleep, NULL, 64, 0);
 	xtSleepMS(500);
 	xtThreadContinue(&t);
-	xtThreadJoin(&t);
+	xtThreadJoin(&t, NULL);
 	xtConsoleFillLine("-");
 	puts("-- TIME TEST");
 	timeTest();
@@ -343,5 +399,6 @@ int main(void)
 	xtConsoleFillLine("-");
 	puts("-- STRING TEST");
 	stringTest();
-	return EXIT_SUCCESS;
+	stats_info(&stats);
+	return stats_status(&stats);
 }

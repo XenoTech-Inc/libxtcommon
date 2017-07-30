@@ -324,22 +324,15 @@ char *xtGetOSName(char *buf, size_t buflen)
 	return buf;
 }
 
-unsigned long long xtRAMGetAmountFree(void)
+int xtRAMGetInfo(struct xtRAMInfo *ramInfo)
 {
 	MEMORYSTATUSEX statex;
 	statex.dwLength = sizeof(statex);
 	// Cannot fail, as we are setting this all up correctly
 	GlobalMemoryStatusEx(&statex);
-	return statex.ullAvailPhys;
-}
-
-unsigned long long xtRAMGetAmountTotal(void)
-{
-	MEMORYSTATUSEX statex;
-	statex.dwLength = sizeof(statex);
-	// Cannot fail, as we are setting this all up correctly
-	GlobalMemoryStatusEx(&statex);
-	return statex.ullTotalPhys;
+	ramInfo->free = statex.ullAvailPhys;
+	ramInfo->total = statex.ullTotalPhys;
+	return 0;
 }
 
 char *xtGetUsername(char *buf, size_t buflen)

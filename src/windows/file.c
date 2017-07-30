@@ -8,6 +8,7 @@
 #include <windows.h>
 
 // STD headers
+#include <stdint.h>
 #include <string.h>
 
 int xtFileCopy(const char *restrict src, const char *restrict dst)
@@ -53,9 +54,10 @@ int xtFileCreateDir(const char *path)
 	return CreateDirectory((LPCTSTR) path, NULL) != 0 ? 0 : _xtTranslateSysError(GetLastError());
 }
 
-void xtFileExecute(const char *path)
+int xtFileExecute(const char *path)
 {
-	ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOW);
+	intptr_t ret = (intptr_t)ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOW);
+	return ret > 32 ? 0 : _xtTranslateSysError(ret);
 }
 
 int xtFileExists(const char *restrict path, bool *restrict exists)
