@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 CC="gcc"
 # This configure file, as well as the Makefile, need to be run trough Cygwin, because of commands and such, so be
