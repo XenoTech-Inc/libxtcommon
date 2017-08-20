@@ -7,12 +7,19 @@ CC="gcc"
 # The (Path) name for the .a file
 LIBPATH="lib"
 LIBNAME="libxtcommon.a"
+PREFIX=/usr
+LOCALPREFIX=$PREFIX/local
+INCLUDEDIR=$PREFIX/include
+LIBDIR=$PREFIX/lib
+LOCALLIBDIR=$LOCALPREFIX/lib
+GNULIBDIR=$LOCALLIBDIR
 FINALLIBPATH="$LIBPATH/$LIBNAME"
 
 SYSTEM=`uname -s 2>/dev/null`
 
 WINARCH=w64-mingw32
 win=no
+is32bit=no
 
 for i in "$@"; do
 	case "$i" in
@@ -48,10 +55,13 @@ if [ "$win" == no ]; then
 		Linux*)
 			OS_DIR="src/linux"
 			CFLAGS="-std=gnu99 -Wall -Wextra -pedantic"
-			MACHINE_ARCH=`uname -m`
+			MACHINE_ARCH="$(uname -m)"
 			if [ "$MACHINE_ARCH" != "x86_64" ]; then
 				# Enable large file support if we're not on 64 bit
 				CFLAGS="$CFLAGS -D_FILE_OFFSET_BITS=64"
+				is32bit=yes
+				# Use different directory for pkg-config
+				GNULIBDIR=$LIBDIR/i386-linux-gnu
 			fi
 			;;
 		CYGWIN*)
@@ -65,6 +75,24 @@ if [ "$win" == no ]; then
 			exit 1
 			;;
 	esac
+fi
+
+# Sanity check variables
+if [ ! -d "$PREFIX" ]; then
+	echo "Bad prefix $PREFIX: no directory" 2>&1
+	exit 1
+fi
+if [ ! -d "$INCLUDEDIR" ]; then
+	echo "Bad includedir $INCLUDEDIR: no directory" 2>&1
+	exit 1
+fi
+if [ ! -d "$LIBDIR" ]; then
+	echo "Bad libdir $LIBDIR: no directory" 2>&1
+	exit 1
+fi
+if [ ! -d "$GNULIBDIR" ]; then
+	echo "Bad gnulibdir $GNULIBDIR: no directory" 2>&1
+	exit 1
 fi
 
 CFLAGS="$CFLAGS $*"
@@ -113,9 +141,14 @@ cat <<EOF >>$MAKEFILE
 
 default: $FINALLIBPATH \$(OBJECTS)
 
-install: $FINALLIBPATH
-	sudo cp -R include/* /usr/include
-	sudo cp lib/$LIBNAME /usr/lib
+EOF
+cat <<EOF >>$MAKEFILE
+xtcommon.pc: create_pkgconfig
+	./create_pkgconfig
+install: $FINALLIBPATH xtcommon.pc
+	sudo cp -R include/* $INCLUDEDIR
+	sudo cp lib/$LIBNAME $LIBDIR
+	sudo cp xtcommon.pc $GNULIBDIR/pkgconfig
 
 $FINALLIBPATH: \$(OBJECTS)
 	mkdir -p $LIBPATH

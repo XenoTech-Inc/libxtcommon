@@ -8,6 +8,9 @@ This library is cross platform, however there are some problems.
 All functions which exhibit problems on certain platforms have this
 noted in their documentation.
 
+Once the library is installed, you can use pkg-config on linux like
+this: pkg-config --cflags --libs xtcommon
+
 Dependencies:
 When using this library, you need to link with other libraries as
 well... This is explained below.
