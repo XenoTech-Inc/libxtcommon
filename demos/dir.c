@@ -7,46 +7,55 @@
 #include <stdlib.h>
 #include "utils.h"
 
-static struct stats stats;
-
-const char *getFileType(unsigned type)
+static const char *get_file_type(enum xtFileType type, char *buf, size_t buflen)
 {
-	switch (type) {
-	case XT_FILE_DIR: return "DIR";
-	case XT_FILE_REG: return "REG";
-	case XT_FILE_LNK: return "LINK";
-	default: return "Unknown";
+	char *currBuf = buf;
+	*currBuf = '\0';
+	#define APPEND(str) currBuf += snprintf(currBuf, buflen - (currBuf - buf), str)
+	#define STR(x) #x
+
+	if (type & XT_FILE_BLK)  APPEND(" "STR(XT_FILE_BLK));
+	if (type & XT_FILE_CHR)  APPEND(" "STR(XT_FILE_CHR));
+	if (type & XT_FILE_DIR)  APPEND(" "STR(XT_FILE_DIR));
+	if (type & XT_FILE_FIFO) APPEND(" "STR(XT_FILE_FIFO));
+	if (type & XT_FILE_LNK)  APPEND(" "STR(XT_FILE_LNK));
+	if (type & XT_FILE_REG)  APPEND(" "STR(XT_FILE_REG));
+	if (type & XT_FILE_SOCK) APPEND(" "STR(XT_FILE_SOCK));
+
+	return buf;
+}
+
+static void dump_file(const char *path)
+{
+	int ret;
+	char sbuf[256];
+	struct xtFileInfo fileInfo;
+	if ((ret = xtFileGetInfo(&fileInfo, path) != 0)) {
+		xtprintf("Failure to retrieve info for file %s, error: %s\n", path, xtGetErrorStr(ret));
+		return;
 	}
+	puts("------------------------------");
+	xtprintf("Name: %s\n", path);
+	xtprintf("Type:%s\n", get_file_type(fileInfo.type, sbuf, sizeof sbuf));
+	xtprintf("Creation time: %s\n", xtFormatTime(sbuf, sizeof sbuf, fileInfo.creationTime));
+	xtprintf("Access time: %s\n", xtFormatTime(sbuf, sizeof sbuf, fileInfo.accessTime));
+	xtprintf("Modification time: %s\n", xtFormatTime(sbuf, sizeof sbuf, fileInfo.modificationTime));
+	xtprintf("Size: %llu\n", fileInfo.size);
 }
 
 int main(void)
 {
-	int ret;
-	struct xtListP list;
-	stats_init(&stats, "directory");
 	puts("-- DIRECTORY TEST");
-	if ((ret = xtListPCreate(&list, 256))) {
-		FAIL("xtListPCreate()");
-		xtfprintf(stderr, "Unable to create the list: %s\n", xtGetErrorStr(ret));
-		return EXIT_FAILURE;
-	} else
-		PASS("xtListPCreate()");
-	ret = xtFileGetFiles(".", &list);
-	if (ret)
-		FAIL("xtFileGetFiles()");
-	else
-		PASS("xtFileGetFiles()");
-	xtprintf("File list retrieval: %s\n", xtGetErrorStr(ret));
-	xtprintf("Amount of files: %zu\n", xtListPGetCount(&list));
-	struct xtFile *file;
-	size_t n = xtListPGetCount(&list);
-	for (size_t i = 0; i < n; ++i) {
-		xtListPGet(&list, i, (void**) &file);
-		xtprintf("%s - %s\n", getFileType(file->type), file->path);
-		free(file->path);
-		free(file);
-	}
-	xtListPDestroy(&list);
-	stats_info(&stats);
-	return stats_status(&stats);
+	char path[256];
+	struct xtFileFind find;
+	unsigned i = 0;
+
+	if (xtFileFindFirstFile(&find, ".", path, sizeof path))
+		return 1;
+	dump_file(path);
+	for (++i; !xtFileFindNextFile(&find, path, sizeof path); ++i)
+		dump_file(path);
+
+	printf("%d files found\n", i);
+	return xtFileFindClose(&find) == 0;
 }

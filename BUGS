@@ -19,6 +19,11 @@ Windows's major suckage. They do not honor the C standard.
 
 # Linux
 
+## File API
+
+xtFileGetInfo(): creationTime is not available on Linux and always uses the
+  UNIX epoch time in UTC instead.
+
 ## Proc API
 
 xtProcGetName(): The parameters for the process (e.g. --width 50) are included

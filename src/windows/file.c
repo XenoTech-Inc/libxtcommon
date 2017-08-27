@@ -11,6 +11,36 @@
 #include <stdint.h>
 #include <string.h>
 
+#define FileTimeToLLU(x) ((((ULONGLONG) (x).dwHighDateTime) << 32) | (x).dwLowDateTime)
+
+int xtFileFindFirstFile(
+	struct xtFileFind *restrict handle,
+	const char *restrict path,
+	char *restrict buf, size_t buflen)
+{
+	char sbuf[PATH_MAX];
+	snprintf(sbuf, sizeof sbuf, "%s\\*.*", path);
+	WIN32_FIND_DATA wfd;
+	if ((handle->handle = FindFirstFile(sbuf, &wfd)) == INVALID_HANDLE_VALUE)
+		return _xtTranslateSysError(GetLastError());
+	xtsnprintf(buf, buflen, "%s", wfd.cFileName);
+	return 0;
+}
+
+int xtFileFindNextFile(struct xtFileFind *restrict handle, char *restrict buf, size_t buflen)
+{
+	WIN32_FIND_DATA wfd;
+	if (!FindNextFile(handle->handle, &wfd))
+		return _xtTranslateSysError(GetLastError());
+	xtstrncpy(buf, wfd.cFileName, buflen);
+	return 0;
+}
+
+int xtFileFindClose(struct xtFileFind *handle)
+{
+	return FindClose(handle->handle) ? 0 : _xtTranslateSysError(GetLastError());
+}
+
 int xtFileCopy(const char *restrict src, const char *restrict dst)
 {
 	if (!src || !dst)
@@ -112,31 +142,6 @@ const char *xtFileGetExtension(const char *path)
 	return *dotPlus != '\0' ? dotPlus : NULL;
 }
 
-int xtFileFindFirstFile(struct xtFileFind *restrict handle, const char *restrict path, char *restrict buf, size_t buflen)
-{
-	char sbuf[MAX_PATH];
-	snprintf(sbuf, sizeof sbuf, "%s\\*.*", path);
-	WIN32_FIND_DATA wfd;
-	if ((handle->handle = FindFirstFile(sbuf, &wfd)) == INVALID_HANDLE_VALUE)
-		return _xtTranslateSysError(GetLastError());
-	xtsnprintf(buf, buflen, "%s", wfd.cFileName);
-	return 0;
-}
-
-int xtFileFindNextFile(struct xtFileFind *restrict handle, char *restrict buf, size_t buflen)
-{
-	WIN32_FIND_DATA wfd;
-	if (!FindNextFile(handle->handle, &wfd))
-		return _xtTranslateSysError(GetLastError());
-	xtstrncpy(buf, wfd.cFileName, buflen);
-	return 0;
-}
-
-int xtFileFindClose(struct xtFileFind *handle)
-{
-	return FindClose(handle->handle) ? 0 : _xtTranslateSysError(GetLastError());
-}
-
 char *xtFileGetHomeDir(char *buf, size_t buflen)
 {
 	char *homeDrive = getenv("HOMEDRIVE"), *homePath = getenv("HOMEPATH");
@@ -145,6 +150,32 @@ char *xtFileGetHomeDir(char *buf, size_t buflen)
 	snprintf(buf, buflen, "%s%s", homeDrive, homePath);
 	xtStringReplaceAll(buf, '\\', '/');
 	return buf;
+}
+
+static enum xtFileType ftype_to_xt(DWORD attributes)
+{
+	enum xtFileType type = XT_FILE_UNKNOWN;
+
+	if (attributes & FILE_ATTRIBUTE_ARCHIVE)       type |= XT_FILE_REG;
+	if (attributes & FILE_ATTRIBUTE_DIRECTORY)     type |= XT_FILE_DIR;
+	if (attributes & FILE_ATTRIBUTE_REPARSE_POINT) type |= XT_FILE_LNK;
+
+	if (type != XT_FILE_UNKNOWN)                   type &= ~XT_FILE_UNKNOWN;
+	return type;
+}
+
+int xtFileGetInfo(struct xtFileInfo *restrict fileInfo, const char *restrict path)
+{
+	WIN32_FILE_ATTRIBUTE_DATA fad;
+	// Cannot request the max info standard, then this won't work
+	if (!GetFileAttributesEx(path, GetFileExInfoStandard, &fad))
+		return _xtTranslateSysError(GetLastError());
+	fileInfo->type = ftype_to_xt(fad.dwFileAttributes);
+	fileInfo->creationTime = (FileTimeToLLU(fad.ftCreationTime) / 10000000 - 11644473600LLU);
+	fileInfo->accessTime = (FileTimeToLLU(fad.ftLastAccessTime) / 10000000 - 11644473600LLU);
+	fileInfo->modificationTime = (FileTimeToLLU(fad.ftLastWriteTime) / 10000000 - 11644473600LLU);
+	fileInfo->size = ((ULONGLONG)fad.nFileSizeHigh << 32) | fad.nFileSizeLow;
+	return 0;
 }
 
 int xtFileGetRealPath(char *restrict buf, size_t buflen, const char *restrict path)

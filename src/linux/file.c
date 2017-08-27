@@ -17,6 +17,37 @@
 #include <stdlib.h>
 #include <string.h>
 
+int xtFileFindFirstFile(
+	struct xtFileFind *restrict handle,
+	const char *restrict path,
+	char *restrict buf, size_t buflen)
+{
+	int ret;
+	if (!(handle->dir = opendir(path))) {
+		ret = _xtTranslateSysError(errno);
+		goto cleanup;
+	}
+	if ((ret = xtFileFindNextFile(handle, buf, buflen) == 0)
+		return ret;
+cleanup:
+	closedir(handle->dir);
+	return ret;
+}
+
+int xtFileFindNextFile(struct xtFileFind *restrict handle, char *restrict buf, size_t buflen)
+{
+	int ret;
+	if ((ret = readdir_r(handle->dir, &handle->entry, &handle->result)) != 0 || !handle->result)
+		return ret == 0 && !handle->result ? XT_ENOENT : _xtTranslateSysError(ret);
+	xtstrncpy(buf, handle->entry.d_name, buflen);
+	return 0;
+}
+
+int xtFileFindClose(struct xtFileFind *handle)
+{
+	return closedir(handle->dir) == 0 ? 0 : _xtTranslateSysError(errno);
+}
+
 int xtFileCopy(const char *restrict src, const char *restrict dst)
 {
 	if (!src || !dst)
@@ -137,36 +168,6 @@ const char *xtFileGetExtension(const char *path)
 	return *dotPlus != '\0' ? dotPlus : NULL;
 }
 
-int xtFileFindFirstFile(
-	struct xtFileFind *restrict handle,
-	const char *restrict path,
-	char *restrict buf, size_t buflen)
-{
-	int ret;
-	if (!(handle->dir = opendir(path))) {
-		ret = _xtTranslateSysError(errno);
-		goto cleanup;
-	}
-	return xtFileFindNextFile(handle, buf, buflen);
-cleanup:
-	closedir(handle->dir);
-	return ret;
-}
-
-int xtFileFindNextFile(struct xtFileFind *restrict handle, char *restrict buf, size_t buflen)
-{
-	int ret;
-	if ((ret = readdir_r(handle->dir, &handle->entry, &handle->result)) != 0 || !handle->result)
-		return ret == 0 && !handle->result ? XT_ENOENT : _xtTranslateSysError(ret);
-	xtstrncpy(buf, handle->entry.d_name, buflen);
-	return 0;
-}
-
-int xtFileFindClose(struct xtFileFind *handle)
-{
-	return closedir(handle->dir) == 0 ? 0 : _xtTranslateSysError(errno);
-}
-
 char *xtFileGetHomeDir(char *buf, size_t buflen)
 {
 	char *dir = getenv("HOME");
@@ -176,9 +177,37 @@ char *xtFileGetHomeDir(char *buf, size_t buflen)
 	return buf;
 }
 
+static enum xtFileType ftype_to_xt(mode_t st_mode)
+{
+	// It seems that a file on Linux can only be one type at a time
+	switch (st_mode & S_IFMT) {
+	case S_IFBLK:  return XT_FILE_BLK;
+	case S_IFCHR:  return XT_FILE_CHR;
+	case S_IFDIR:  return XT_FILE_DIR;
+	case S_IFIFO:  return XT_FILE_FIFO;
+	case S_IFLNK:  return XT_FILE_LNK;
+	case S_IFREG:  return XT_FILE_REG;
+	case S_IFSOCK: return XT_FILE_SOCK;
+	default:       return XT_FILE_UNKNOWN;
+	}
+}
+
+int xtFileGetInfo(struct xtFileInfo *restrict fileInfo, const char *restrict path)
+{
+	struct stat stats;
+	if (lstat(path, &stats) == -1)
+		return _xtTranslateSysError(errno);
+	fileInfo->type = ftype_to_xt(stats.st_mode);
+	fileInfo->creationTime = 0; // Unsupported unfortunately
+	fileInfo->accessTime = stats.st_atime;
+	fileInfo->modificationTime = stats.st_mtime;
+	fileInfo->size = stats.st_size;
+	return 0;
+}
+
 int xtFileGetRealPath(char *restrict buf, size_t buflen, const char *restrict path)
 {
-	(void) buflen; // Future use hopefully
+	(void)buflen; // Future use hopefully
 	return realpath(path, buf) ? 0 : _xtTranslateSysError(errno);
 }
 

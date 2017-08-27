@@ -30,33 +30,43 @@ extern "C" {
 #endif
 
 /**
- * @brief All supported file types for this API.
+ * @brief Used to scan files in a directory.
  */
-enum xtFileType {
-	/** Unknown or unsupported file type. */
-	XT_FILE_UNKNOWN,
-	/* Block device. */
-	XT_FILE_BLK,
-	/* Character device. */
-	XT_FILE_CHR,
-	/** Directory. */
-	XT_FILE_DIR,
-	/* Named pipe. (FIFO) */
-	XT_FILE_FIFO,
-	/** Symbolic link or Hard link. */
-	XT_FILE_LNK,
-	/** Regular file. */
-	XT_FILE_REG,
-	/* Unix domain socket. */
-	XT_FILE_SOCK
+struct xtFileFind {
+#if XT_IS_LINUX
+	DIR *dir;
+	struct dirent entry;
+	struct dirent *result;
+#else
+	void *handle;
+#endif
 };
 /**
- * @brief Holds some information about a certain file.
+ * Opens the directory and fetches the first file name.
+ * The order in which the files are scanned is undefined.
+ * @param buf - Receives the name of the file.
+ * @return Zero if the directory was opened and the first file name was fetched,
+ * otherwise an error code.
+ * @remarks All resources are cleaned up automatically if the function call may
+ * fail.
  */
-struct xtFile {
-	char *path;
-	enum xtFileType type;
-};
+int xtFileFindFirstFile(
+	struct xtFileFind *restrict handle,
+	const char *restrict path,
+	char *restrict buf, size_t buflen
+);
+/**
+ * Advances to the next file in the list.
+ * @param buf - Receives the name of the file.
+ * @return Zero if the file name was fetched, otherwise an error code.
+ */
+int xtFileFindNextFile(
+	struct xtFileFind *restrict handle,
+	char *restrict buf, size_t buflen);
+/**
+ * Cleans up all resources belonging to \a handle.
+ */
+int xtFileFindClose(struct xtFileFind *handle);
 /**
  * Copies the file from \a src to \a dst.
  * @return Zero if the file has been copied, otherwise an error code.
@@ -117,47 +127,49 @@ int xtFileGetExecutablePath(char *buf, size_t buflen);
  */
 const char *xtFileGetExtension(const char *path);
 /**
- * @brief Used to scan files in a directory.
- */
-struct xtFileFind {
-#if XT_IS_LINUX
-	DIR *dir;
-	struct dirent entry;
-	struct dirent *result;
-#else
-	void *handle;
-#endif
-};
-/**
- * Opens the directory and fetches the first file name.
- * The order in which the files are scanned is undefined.
- * @param buf - Receives the name of the file.
- * @return Zero if the directory was opened and the first file name was fetched,
- * otherwise an error code.
- */
-int xtFileFindFirstFile(
-	struct xtFileFind *restrict handle,
-	const char *restrict path,
-	char *restrict buf, size_t buflen
-);
-/**
- * Advances to the next file in the list.
- * @param buf - Receives the name of the file.
- * @return Zero if the file name was fetched, otherwise an error code.
- */
-int xtFileFindNextFile(
-	struct xtFileFind *restrict handle,
-	char *restrict buf, size_t buflen);
-/**
- * Cleans up all resources belonging to \a handle.
- */
-int xtFileFindClose(struct xtFileFind *handle);
-/**
  * Tells you the home directory for the user that is currently running the
  * program.
  * @return A pointer to \a buf on success, otherwise NULL.
  */
 char *xtFileGetHomeDir(char *buf, size_t buflen);
+/**
+ * @brief All supported file types for this API.
+ */
+enum xtFileType {
+	/** Unknown or unsupported file type. */
+	XT_FILE_UNKNOWN = 0x01,
+	/* Block device. */
+	XT_FILE_BLK =     0x02,
+	/* Character device. */
+	XT_FILE_CHR =     0x04,
+	/** Directory. */
+	XT_FILE_DIR =     0x08,
+	/* Named pipe. (FIFO) */
+	XT_FILE_FIFO =    0x10,
+	/** Symbolic link or Hard link. */
+	XT_FILE_LNK =     0x20,
+	/** Regular file. */
+	XT_FILE_REG =     0x40,
+	/* Unix domain socket. */
+	XT_FILE_SOCK =    0x80
+};
+/**
+ * @brief Holds some information about a certain file.
+ *
+ * All timestamps are in milliseconds since the UNIX epoch time in UTC.
+ */
+struct xtFileInfo {
+	enum xtFileType type;
+	unsigned long long creationTime;
+	unsigned long long accessTime;
+	unsigned long long modificationTime;
+	unsigned long long size;
+};
+/**
+ * Retrieves information for \a path.
+ * @return Zero if the information has been fetched, otherwise an error code.
+ */
+int xtFileGetInfo(struct xtFileInfo *fileInfo, const char *path);
 /*
  * Tells you the absolute path of \a path. The absolute path shall be stored
  * in \a buf.
