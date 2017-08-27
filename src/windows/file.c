@@ -112,59 +112,29 @@ const char *xtFileGetExtension(const char *path)
 	return *dotPlus != '\0' ? dotPlus : NULL;
 }
 
-int xtFileGetFiles(const char *restrict path, struct xtListP *restrict files)
+int xtFileFindFirstFile(struct xtFileFind *restrict handle, const char *restrict path, char *restrict buf, size_t buflen)
 {
-	int ret;
-	WIN32_FIND_DATA fdFile;
-	HANDLE handle;
-	char sbuf[4096];
+	char sbuf[MAX_PATH];
 	snprintf(sbuf, sizeof sbuf, "%s\\*.*", path);
-	if ((handle = FindFirstFile(sbuf, &fdFile)) == INVALID_HANDLE_VALUE)
+	WIN32_FIND_DATA wfd;
+	if ((handle->handle = FindFirstFile(sbuf, &wfd)) == INVALID_HANDLE_VALUE)
 		return _xtTranslateSysError(GetLastError());
-	size_t fileNameLen;
-	unsigned cnt = 0;
-	for (; FindNextFile(handle, &fdFile); ++cnt) {
-		// Length of the file name including the null terminator
-		fileNameLen = strlen(fdFile.cFileName) + 1;
-		struct xtFile *file = malloc(sizeof *file);
-		if (!file) {
-			ret = XT_ENOMEM;
-			goto error;
-		}
-		file->path = malloc(fileNameLen);
-		if (!file->path) {
-			free(file);
-			ret = XT_ENOMEM;
-			goto error;
-		}
-		memcpy(file->path, fdFile.cFileName, fileNameLen);
-		// DO NOT change the order of these statements! Files can have multiple types.
-		// A link can have link as attribute and directory for example
-		if (fdFile.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
-			file->type = XT_FILE_LNK;
-		else if (fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-			file->type = XT_FILE_DIR;
-		else if (fdFile.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE)
-			file->type = XT_FILE_REG;
-		else
-			file->type = XT_FILE_UNKNOWN;
-		if ((ret = xtListPAdd(files, file)) != 0)
-			goto error;
-	}
-	ret = 0;
-error:
-	FindClose(handle);
-	if (ret != 0) {
-		for (int i = cnt - 1; i >= 0; --i) {
-			struct xtFile *file;
-			xtListPGet(files, i, (void**) &file);
-			free(file->path);
-			free(file);
-		}
-		// Just empty the whole list
-		xtListPClear(files);
-	}
-	return ret;
+	xtsnprintf(buf, buflen, "%s", wfd.cFileName);
+	return 0;
+}
+
+int xtFileFindNextFile(struct xtFileFind *restrict handle, char *restrict buf, size_t buflen)
+{
+	WIN32_FIND_DATA wfd;
+	if (!FindNextFile(handle->handle, &wfd))
+		return _xtTranslateSysError(GetLastError());
+	xtstrncpy(buf, wfd.cFileName, buflen);
+	return 0;
+}
+
+int xtFileFindClose(struct xtFileFind *handle)
+{
+	return FindClose(handle->handle) ? 0 : _xtTranslateSysError(GetLastError());
 }
 
 char *xtFileGetHomeDir(char *buf, size_t buflen)

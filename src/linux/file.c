@@ -136,66 +136,35 @@ const char *xtFileGetExtension(const char *path)
 	++dotPlus;
 	return *dotPlus != '\0' ? dotPlus : NULL;
 }
-/**
- * This function belongs to xtFileGetFiles().
- */
-static int caseCompare(const struct dirent **a, const struct dirent **b)
-{
-	return strcasecmp((*a)->d_name, (*b)->d_name);
-}
 
-int xtFileGetFiles(const char *restrict path, struct xtListP *restrict files)
+int xtFileFindFirstFile(
+	struct xtFileFind *restrict handle,
+	const char *restrict path,
+	char *restrict buf, size_t buflen)
 {
 	int ret;
-	struct dirent **namelist;
-	size_t fileNameLen;
-	int cnt = scandir(path, &namelist, NULL, caseCompare);
-	if (cnt < 0)
-		return _xtTranslateSysError(errno);
-	for (int i = 0; i < cnt; ++i) {
-		// Length of the file name including the null terminator
-		fileNameLen = strlen(namelist[i]->d_name) + 1;
-		struct xtFile *file = malloc(sizeof *file);
-		if (!file) {
-			ret = XT_ENOMEM;
-			goto error;
-		}
-		file->path = malloc(fileNameLen);
-		if (!file->path) {
-			free(file);
-			ret = XT_ENOMEM;
-			goto error;
-		}
-		memcpy(file->path, namelist[i]->d_name, fileNameLen);
-		switch (namelist[i]->d_type) {
-		case DT_BLK:  file->type = XT_FILE_BLK; break;
-		case DT_CHR:  file->type = XT_FILE_CHR; break;
-		case DT_DIR:  file->type = XT_FILE_DIR; break;
-		case DT_FIFO: file->type = XT_FILE_FIFO; break;
-		case DT_LNK:  file->type = XT_FILE_LNK; break;
-		case DT_REG:  file->type = XT_FILE_REG; break;
-		case DT_SOCK: file->type = XT_FILE_SOCK; break;
-		default: file->type = XT_FILE_UNKNOWN; break;
-		}
-		if ((ret = xtListPAdd(files, file)) != 0)
-			goto error;
+	if (!(handle->dir = opendir(path))) {
+		ret = _xtTranslateSysError(errno);
+		goto cleanup;
 	}
-	ret = 0;
-error:
-	for (int i = 0; i < cnt; ++i)
-		free(namelist[i]);
-	free(namelist);
-	if (ret != 0) {
-		for (int i = cnt - 1; i >= 0; --i) {
-			struct xtFile *file;
-			xtListPGet(files, i, (void**)&file);
-			free(file->path);
-			free(file);
-		}
-		// Just empty the whole list
-		xtListPClear(files);
-	}
+	return xtFileFindNextFile(handle, buf, buflen);
+cleanup:
+	closedir(handle->dir);
 	return ret;
+}
+
+int xtFileFindNextFile(struct xtFileFind *restrict handle, char *restrict buf, size_t buflen)
+{
+	int ret;
+	if ((ret = readdir_r(handle->dir, &handle->entry, &handle->result)) != 0 || !handle->result)
+		return ret == 0 && !handle->result ? XT_ENOENT : _xtTranslateSysError(ret);
+	xtstrncpy(buf, handle->entry.d_name, buflen);
+	return 0;
+}
+
+int xtFileFindClose(struct xtFileFind *handle)
+{
+	return closedir(handle->dir) == 0 ? 0 : _xtTranslateSysError(errno);
 }
 
 char *xtFileGetHomeDir(char *buf, size_t buflen)

@@ -17,12 +17,17 @@ extern "C" {
 
 // XT headers
 #include <xt/list.h>
+#include <xt/os_macros.h>
 
 // STD headers
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+
+#if XT_IS_LINUX
+	#include <dirent.h>
+#endif
 
 /**
  * @brief All supported file types for this API.
@@ -112,31 +117,50 @@ int xtFileGetExecutablePath(char *buf, size_t buflen);
  */
 const char *xtFileGetExtension(const char *path);
 /**
- * Tells you what files reside under \a path.
- * @param files - An initialized xtList, it should be empty. The list will be filled with xtFile's. They are always sorted alphabetically.
- * @return Zero if the file list has been retrieved, otherwise an error code.
- * @remarks You must free each element and clear the list. E.g.:
- * <pre>
- * struct xtListP list;
- * // Initialize list and get files
- * size_t n = xtListPGetCount(&list);
- * for (size_t i = 0; i < n; ++i) {
- * 	struct xtFile *file;
- * 	xtListPGet(&list, i, (void**) &file);
- * 	free(file->path);
- * 	free(file);
- * }
- * xtListPClear(&list);
- * </pre>
+ * @brief Used to scan files in a directory.
  */
-int xtFileGetFiles(const char *restrict path, struct xtListP *restrict files);
+struct xtFileFind {
+#if XT_IS_LINUX
+	DIR *dir;
+	struct dirent entry;
+	struct dirent *result;
+#else
+	void *handle;
+#endif
+};
 /**
- * Tells you the home directory for the user that is currently running the program.
+ * Opens the directory and fetches the first file name.
+ * The order in which the files are scanned is undefined.
+ * @param buf - Receives the name of the file.
+ * @return Zero if the directory was opened and the first file name was fetched,
+ * otherwise an error code.
+ */
+int xtFileFindFirstFile(
+	struct xtFileFind *restrict handle,
+	const char *restrict path,
+	char *restrict buf, size_t buflen
+);
+/**
+ * Advances to the next file in the list.
+ * @param buf - Receives the name of the file.
+ * @return Zero if the file name was fetched, otherwise an error code.
+ */
+int xtFileFindNextFile(
+	struct xtFileFind *restrict handle,
+	char *restrict buf, size_t buflen);
+/**
+ * Cleans up all resources belonging to \a handle.
+ */
+int xtFileFindClose(struct xtFileFind *handle);
+/**
+ * Tells you the home directory for the user that is currently running the
+ * program.
  * @return A pointer to \a buf on success, otherwise NULL.
  */
 char *xtFileGetHomeDir(char *buf, size_t buflen);
 /*
- * Tells you the absolute path of \a path. The absolute path shall be stored in \a buf.
+ * Tells you the absolute path of \a path. The absolute path shall be stored
+ * in \a buf.
  * @return Zero if the path has been fetched, otherwise an error code.
  */
 int xtFileGetRealPath(char *restrict buf, size_t buflen, const char *restrict path);
