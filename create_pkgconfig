@@ -1,0 +1,33 @@
+#!/bin/bash -e
+cleanup() {
+	rm -f xtcommon.c
+}
+trap cleanup EXIT
+
+PREFIX=/usr
+LIBDIR=$PREFIX/lib
+GNULIBDIR=$LIBDIR/x86_64-linux-gnu
+
+if [ "$(uname -m)" != "x86_64" ]; then
+	GNULIBDIR=$LIBDIR/i386-linux-gnu
+fi
+
+cat <<EOF >xtcommon.c
+#include "include/xt/utils.h"
+version=XT_VERSION_MAJOR,XT_VERSION_MINOR,XT_VERSION_PATCH
+EOF
+
+cpp xtcommon.c >xtcommon.pc
+sed -i -e '/version=[0-9]*,[0-9]*,[0-9]*/!d' -e 's/,/./g' xtcommon.pc
+
+cat << EOF >>xtcommon.pc
+
+Name: xtcommon
+Description: XenoTech common library
+Version: \${version}
+URL: https://www.xenotech.nl/
+Requires.private:
+Libs: -lm -ldl -lpthread -lxtcommon
+Libs.private:
+Cflags: -pthread -rdynamic
+EOF

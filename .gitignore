@@ -11,3 +11,5 @@ lib
 src/generic/_buildopts.c
 
 Makefile
+
+xtcommon.pc
