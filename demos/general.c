@@ -18,46 +18,21 @@ static struct stats stats;
 
 static void fileTest(void)
 {
-	bool result;
-	unsigned long long size;
 	char sbuf[256], sbuf2[256];
 	if (xtFileGetExecutablePath(sbuf, sizeof sbuf) == 0) {
 		PASS("xtFileGetExecutablePath()");
 	} else
 		FAIL("xtFileGetExecutablePath()");
 
-	if (xtFileExists(sbuf, &result) == 0) {
-		PASS("xtFileExists()");
+	if (xtFileAccess(sbuf, XT_FILE_F_OK) == 0) {
+		PASS("xtFileAccess()");
 	} else
-		FAIL("xtFileExists()");
-	FILE *f = fopen(sbuf, "r");
-	if (f) {
-		PASS("fopen()");
-		size = 0;
-		if (xtFileGetSizeByHandle(f, &size) == 0) {
-			PASS("xtFileGetSizeByHandle()");
-		} else
-			FAIL("xtFileGetSizeByHandle()");
-		fclose(f);
-	} else {
-		FAIL("fopen()");
-		XFAIL("xtFileGetSizeByHandle()");
-	}
-
-	if (xtFileGetSizeByName(sbuf, &size) == 0) {
-		PASS("xtFileGetSizeByName()");
-	} else
-		FAIL("xtFileGetSizeByName()");
+		FAIL("xtFileAccess()");
 
 	if (xtFileGetRealPath(sbuf2, 256, sbuf) == 0) {
 		PASS("xtFileGetRealPath()");
 	} else
 		FAIL("xtFileGetRealPath()");
-
-	if (xtFileIsDir(sbuf, &result) == 0) {
-		PASS("xtFileIsDir()");
-	} else
-		FAIL("xtFileIsDir()");
 
 	if (xtFileGetHomeDir(sbuf2, sizeof sbuf2)) {
 		PASS("xtFileGetHomeDir()");

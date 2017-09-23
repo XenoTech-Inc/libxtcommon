@@ -68,6 +68,25 @@ int xtFileFindNextFile(
  */
 int xtFileFindClose(struct xtFileFind *handle);
 /**
+ * All supported access modes for xtFileAccess().
+ */
+enum xtFileAccessMode {
+	/** File exists. */
+	XT_FILE_F_OK = 0x01,
+	/** File is readable. */
+	XT_FILE_R_OK = 0x02,
+	/** File is writeable. */
+	XT_FILE_W_OK = 0x04,
+	/** File is executable. */
+	XT_FILE_X_OK = 0x08
+};
+/**
+ * Checks if all accessibility checks in \a mode are granted by the file.
+ * @return Zero if all rights in \a mode are granted, otherwise an error code.
+ * @remarks If a platform does not support one of the modes, they are ignored.
+ */
+int xtFileAccess(const char *path, enum xtFileAccessMode mode);
+/**
  * Copies the file from \a src to \a dst.
  * @return Zero if the file has been copied, otherwise an error code.
  */
@@ -88,26 +107,20 @@ int xtFileCreateDir(const char *path);
 /**
  * Opens the file with the default associated program.
  * This program is executed as new process, so keep in mind that the
- * caller thread should return immidiately.
+ * caller thread should return immidiately. The file has to be readable for
+ * this function to work.
  * @return Zero if the file has been executed, otherwise an error code.
  * XT_EUNKNOWN is returned if the file was executed but returned an error
  * code afterwards.
  */
 int xtFileExecute(const char *path);
 /**
- * Tells you whether the specified file or directory exists.
- * It should be noted that it is possible that because of permissions
- * the function cannot check the path. This means that you should check the
- * return value of this function to be safe.
- * @return Zero if there was a successful check for the file, otherwise an error code.
- */
-int xtFileExists(const char *restrict path, bool *restrict exists);
-/**
  * Returns the filename from the complete path, including the extension.
  * @param path - A buffer which contains the complete path
- * @return NULL if \a path is an invalid path, otherwise a pointer to a substring of \a path.
- * @remark The file does not have to exist in order for this to work. This function
- * basically just strips the preceding files / folders in the path.
+ * @return NULL if \a path is an invalid path, otherwise a pointer to a
+ * substring of \a path.
+ * @remark The file does not have to exist in order for this to work. This
+ * function basically just strips the preceding files / folders in the path.
  */
 const char *xtFileGetBaseName(const char *path);
 /**
@@ -177,24 +190,10 @@ int xtFileGetInfo(struct xtFileInfo *fileInfo, const char *path);
  */
 int xtFileGetRealPath(char *restrict buf, size_t buflen, const char *restrict path);
 /**
- * Tells you the size of the specified file. Zero is returned on error.
- * @remark Suited for large files (2GB+)
- */
-int xtFileGetSizeByHandle(FILE *restrict f, unsigned long long *restrict size);
-/**
- * Tells you the size of the specified file. Zero is returned on error.
- * @remark Suited for large files (2GB+)
- */
-int xtFileGetSizeByName(const char *restrict path, unsigned long long *restrict size);
-/**
  * Tells you the path to the system's temporary directory.
  * @return Zero if the path has been fetched, otherwise an error code.
  */
 int xtFileGetTempDir(char *buf, size_t buflen);
-/**
- * Returns whether the specified path is a directory or not.
- */
-int xtFileIsDir(const char *restrict path, bool *restrict isDirectory);
 /**
  * Moves \a src to \a dst.
  * @return Zero if the file has been moved, otherwise an error code.

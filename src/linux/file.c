@@ -7,9 +7,7 @@
 // System headers
 #include <dirent.h>
 #include <errno.h>
-#include <fcntl.h> // for open() flags
 #include <strings.h>
-#include <sys/dir.h> // scandir
 #include <sys/stat.h> // for the "stat" call, to obtain a file's size
 #include <unistd.h> // necessary for the stat struct
 
@@ -27,7 +25,7 @@ int xtFileFindFirstFile(
 		ret = _xtTranslateSysError(errno);
 		goto cleanup;
 	}
-	if ((ret = xtFileFindNextFile(handle, buf, buflen) == 0)
+	if ((ret = xtFileFindNextFile(handle, buf, buflen)) == 0)
 		return ret;
 cleanup:
 	closedir(handle->dir);
@@ -46,6 +44,16 @@ int xtFileFindNextFile(struct xtFileFind *restrict handle, char *restrict buf, s
 int xtFileFindClose(struct xtFileFind *handle)
 {
 	return closedir(handle->dir) == 0 ? 0 : _xtTranslateSysError(errno);
+}
+
+int xtFileAccess(const char *path, enum xtFileAccessMode mode)
+{
+	int flags = 0;
+	if (mode & XT_FILE_F_OK) flags |= F_OK;
+	if (mode & XT_FILE_R_OK) flags |= R_OK;
+	if (mode & XT_FILE_W_OK) flags |= W_OK;
+	if (mode & XT_FILE_X_OK) flags |= X_OK;
+	return access(path, flags) == 0 ? 0 : _xtTranslateSysError(errno);
 }
 
 int xtFileCopy(const char *restrict src, const char *restrict dst)
@@ -93,32 +101,12 @@ int xtFileCreateDir(const char *path)
 
 int xtFileExecute(const char *path)
 {
-	bool fileExists;
-	int ret = xtFileExists(path, &fileExists);
+	int ret = xtFileAccess(path, XT_FILE_R_OK);
 	if (ret != 0)
 		return ret;
-	if (!fileExists)
-		return XT_ENOENT;
 	char buf[FILENAME_MAX];
 	snprintf(buf, FILENAME_MAX, "/usr/bin/xdg-open \"%s\"", path);
 	return system(buf) == 0 ? 0 : XT_EUNKNOWN; // We can't know what the retval means
-}
-
-int xtFileExists(const char *restrict path, bool *restrict exists)
-{
-	if (!path)
-		return XT_EINVAL;
-	struct stat statbuf;
-	if (stat(path, &statbuf) == -1) {
-		int err = errno;
-		if (err == ENOENT) {
-			*exists = false;
-			return 0;
-		}
-		return _xtTranslateSysError(errno);
-	}
-	*exists = true;
-	return 0;
 }
 
 const char *xtFileGetBaseName(const char *path)
@@ -211,28 +199,6 @@ int xtFileGetRealPath(char *restrict buf, size_t buflen, const char *restrict pa
 	return realpath(path, buf) ? 0 : _xtTranslateSysError(errno);
 }
 
-int xtFileGetSizeByHandle(FILE *restrict f, unsigned long long *restrict size)
-{
-	if (!f)
-		return XT_EINVAL;
-	struct stat statbuf;
-	if (fstat(fileno(f), &statbuf) == -1)
-		return _xtTranslateSysError(errno);
-	*size = statbuf.st_size;
-	return 0;
-}
-
-int xtFileGetSizeByName(const char *restrict path, unsigned long long *restrict size)
-{
-	if (!path)
-		return XT_EINVAL;
-	struct stat statbuf;
-	if (stat(path, &statbuf) == -1)
-		return _xtTranslateSysError(errno);
-	*size = statbuf.st_size;
-	return 0;
-}
-
 int xtFileGetTempDir(char *buf, size_t buflen)
 {
 #if defined(P_tmpdir)
@@ -240,15 +206,6 @@ int xtFileGetTempDir(char *buf, size_t buflen)
 #else
 	snprintf(buf, buflen, "%s", "/tmp");
 #endif
-	return 0;
-}
-
-int xtFileIsDir(const char *restrict path, bool *restrict isDirectory)
-{
-	struct stat buf;
-	if (stat(path, &buf) == -1)
-		return _xtTranslateSysError(errno);
-	*isDirectory = S_ISDIR(buf.st_mode);
 	return 0;
 }
 

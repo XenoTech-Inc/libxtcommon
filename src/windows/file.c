@@ -5,6 +5,7 @@
 
 // System headers
 #include <dirent.h>
+#include <io.h>
 #include <windows.h>
 
 // STD headers
@@ -39,6 +40,23 @@ int xtFileFindNextFile(struct xtFileFind *restrict handle, char *restrict buf, s
 int xtFileFindClose(struct xtFileFind *handle)
 {
 	return FindClose(handle->handle) ? 0 : _xtTranslateSysError(GetLastError());
+}
+
+int xtFileAccess(const char *path, enum xtFileAccessMode mode)
+{
+	int flags = 0;
+	if (mode & XT_FILE_F_OK) flags |= 0x00;
+	if (mode & XT_FILE_R_OK) flags |= 0x04;
+	if (mode & XT_FILE_W_OK) flags |= 0x02;
+	// Executable mode is not supported on Windows so ignore it...
+	errno_t ret = _access_s(path, flags);
+	switch (ret) { // We must translate these right here
+	case 0:      return 0;
+	case EACCES: return XT_EACCES;
+	case EINVAL: return XT_EINVAL;
+	case ENOENT: return XT_ENOENT;
+	default:     return XT_EUNKNOWN;
+	}
 }
 
 int xtFileCopy(const char *restrict src, const char *restrict dst)
@@ -88,15 +106,6 @@ int xtFileExecute(const char *path)
 {
 	intptr_t ret = (intptr_t)ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOW);
 	return ret > 32 ? 0 : _xtTranslateSysError(ret);
-}
-
-int xtFileExists(const char *restrict path, bool *restrict exists)
-{
-	if (!path)
-		return XT_EINVAL;
-	DWORD ret = GetFileAttributes(path);
-	*exists = ret != INVALID_FILE_ATTRIBUTES;
-	return 0;
 }
 
 const char *xtFileGetBaseName(const char *path)
@@ -186,30 +195,6 @@ int xtFileGetRealPath(char *restrict buf, size_t buflen, const char *restrict pa
 	return 0;
 }
 
-int xtFileGetSizeByHandle(FILE *restrict f, unsigned long long *restrict size)
-{
-	if (!f)
-		return XT_EINVAL;
-	unsigned long long endPos, currPos = _ftelli64(f);
-	_fseeki64(f, 0, SEEK_END);
-	endPos = _ftelli64(f);
-	_fseeki64(f, currPos, SEEK_SET);
-	*size = endPos;
-	return 0;
-}
-
-int xtFileGetSizeByName(const char *restrict path, unsigned long long *restrict size)
-{
-	if (!path)
-		return XT_EINVAL;
-	FILE *f = fopen(path, "r");
-	if (!f)
-		return XT_ENOENT;
-	int ret = xtFileGetSizeByHandle(f, size);
-	fclose(f);
-	return ret;
-}
-
 int xtFileGetTempDir(char *buf, size_t buflen)
 {
 	if (buflen < 2)
@@ -219,17 +204,6 @@ int xtFileGetTempDir(char *buf, size_t buflen)
 		return _xtTranslateSysError(GetLastError());
 	buf[strlen(buf) - 1] = '\0'; // Replace trailing backslash with null-terminator
 	xtStringReplaceAll(buf, '\\', '/');
-	return 0;
-}
-
-int xtFileIsDir(const char *restrict path, bool *restrict isDirectory)
-{
-	WIN32_FILE_ATTRIBUTE_DATA f;
-	f.dwFileAttributes = 0;
-	// Cannot request the max info standard, then this won't work
-	if (GetFileAttributesEx(path, GetFileExInfoStandard, &f) == 0)
-		return _xtTranslateSysError(GetLastError());
-	*isDirectory = f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
 	return 0;
 }
 
