@@ -212,20 +212,21 @@ int xtFileRemoveDir(const char *path);
 /**
  * Changes the working directory to \a path.
  * @param path - The absolute path to the new working directory.
- * @return Zero if the working directory has changed successfully, otherwise an error code.
+ * @return Zero if the working directory has changed successfully, otherwise an
+ * error code.
  */
 int xtFileSetCWD(const char *path);
 /**
  * Creates a temporary binary file that is automatically removed when it is
- * closed or at program termination. The file is opened as in fopen() for update, in
- * binary mode (that is, "wb+").
- * @param buf - Receives the path of the new temp file on success. Set this to a null pointer
- * and it shall not be filled.
- * @param f - A pointer to a file pointer. It shall receive a valid file pointer on success.
- * On failure it shall be set to NULL.
+ * closed or at program termination. The file is opened as in fopen() for update
+ * in binary mode (that is, "wb+").
+ * @param buf - Receives the path of the new temp file on success. Set this to a
+ * null pointer and it shall not be filled.
+ * @param f - A pointer to a file pointer. It shall receive a valid file pointer
+ * on success. On failure it shall be set to NULL.
  * @return Zero if the temporary file has been created, otherwise an error code.
- * @remarks Depending on the platform, you might only be able to copy this file, not moving it.
- * This file is NOT deleted automatically! You must do this manually.
+ * @remarks Depending on the platform, you might only be able to copy this file,
+ * not moving it.
  */
 int xtFileTempFile(char *restrict buf, size_t buflen, FILE **restrict f);
 
