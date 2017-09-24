@@ -11,6 +11,7 @@ PREFIX=/usr
 LOCALPREFIX=$PREFIX/local
 INCLUDEDIR=$PREFIX/include
 LIBDIR=$PREFIX/lib
+LOCALINCLUDEDIR=$LOCALPREFIX/include
 LOCALLIBDIR=$LOCALPREFIX/lib
 GNULIBDIR=$LOCALLIBDIR
 FINALLIBPATH="$LIBPATH/$LIBNAME"
@@ -146,8 +147,8 @@ cat <<EOF >>$MAKEFILE
 xtcommon.pc: create_pkgconfig
 	./create_pkgconfig
 install: $FINALLIBPATH xtcommon.pc
-	sudo cp -R include/* $INCLUDEDIR
-	sudo cp lib/$LIBNAME $LIBDIR
+	sudo cp -R include/* $LOCALINCLUDEDIR
+	sudo cp lib/$LIBNAME $LOCALLIBDIR
 	sudo cp xtcommon.pc $GNULIBDIR/pkgconfig
 
 $FINALLIBPATH: \$(OBJECTS)
