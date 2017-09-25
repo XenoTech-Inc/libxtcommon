@@ -125,7 +125,7 @@ cat << EOF >$MAKEFILE
 .PHONY: default install clean
 
 CC=$CC
-INCS=-I"include/"
+INCS=-I"include/" -I"src/include/"
 CFLAGS=\$(INCS) $CFLAGS
 CXXFLAGS=\$(CFLAGS)
 

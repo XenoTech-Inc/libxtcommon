@@ -2,6 +2,7 @@
 #include <xt/os_macros.h>
 #include <xt/error.h>
 #include <xt/string.h>
+#include <_xt/time.h>
 
 // STD headers
 #include <ctype.h>

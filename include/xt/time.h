@@ -136,10 +136,6 @@ unsigned long long xtTimestampToMS(const struct xtTimestamp *timestamp);
  * @param timestamp - The timestamp in seconds and nanoseconds.
  */
 unsigned long long xtTimestampToUS(const struct xtTimestamp *timestamp);
-/**
- * Cross platform call to gmtime(). Internal use only.
- */
-struct tm *_xtGMTime(time_t *t, struct tm *tm);
 
 #ifdef __cplusplus
 }
