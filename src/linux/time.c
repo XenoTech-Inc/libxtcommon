@@ -1,6 +1,7 @@
 // XT headers
 #include <xt/time.h>
 #include <xt/error.h>
+#include <_xt/error.h>
 
 // System headers
 #include <errno.h>

@@ -1,7 +1,8 @@
 // XT headers
 #include <xt/socket.h>
-#include <xt/endian.h>
-#include <xt/error.h> // htobe16
+#include <xt/endian.h> // htobe16
+#include <xt/error.h>
+#include <_xt/error.h>
 #include <xt/time.h> // sleep
 
 // System headers
