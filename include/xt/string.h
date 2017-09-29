@@ -24,7 +24,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdio.h>
 
-int xtBase64Decode(void *buf, size_t buflen, const void *data);
+int xtBase64Decode(void *buf, size_t buflen, const void *data, size_t datalen);
 int xtBase64Encode(void *buf, size_t buflen, const void *data, size_t datalen);
 
 int xtCharToDigit(char c);
