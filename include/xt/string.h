@@ -24,6 +24,9 @@ extern "C" {
 #include <stdint.h>
 #include <stdio.h>
 
+void xtBase64Decode(void *buf, size_t buflen, const void *data);
+int xtBase64Encode(void *buf, size_t buflen, const void *src, size_t len);
+
 int xtCharToDigit(char c);
 /**
  * Format number in SI metric system and return power of prefix.

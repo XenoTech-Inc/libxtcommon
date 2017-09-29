@@ -137,7 +137,7 @@ static void bcrypt_salt(void)
 	uint8_t seed[XT_BCRYPT_MAXSALT];
 	for (unsigned i = 0; i < sizeof seed; ++i)
 		seed[i] = rand();
-	xtBcryptGenSalt(LOGROUNDS, seed, salt);
+	xtBcryptGenSalt(LOGROUNDS, seed, sizeof seed, salt, sizeof salt);
 	printf("salt: %s\n", salt);
 	xtBcrypt(passwd, salt, hash);
 	printf("hash: %s\n", hash);

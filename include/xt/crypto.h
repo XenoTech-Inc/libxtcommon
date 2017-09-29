@@ -150,7 +150,7 @@ void xtBlowfishDecryptCBC(struct xtBlowfish *ctx, uint8_t *iv, uint8_t *data, ui
  * @param seed - The random number source.
  * @param gsalt - The destination for the generated salt.
  */
-void xtBcryptGenSalt(uint8_t logRounds, uint8_t *seed, char *gsalt);
+void xtBcryptGenSalt(unsigned logRounds, const uint8_t *seed, size_t seedlen, char *gsalt, size_t saltlen);
 /**
  * Compute hashed credentials for \a key using \a salt and store this the result
  * in \a encrypted. It is sufficient to store just \a encrypted in a database
