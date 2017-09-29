@@ -66,13 +66,14 @@
 
 
 /**
- * Print \a csalt in base64 human-friendly format.
- * @param salt - The base64 destination for \a csalt
- * @param csalt - The computed salt
- * @param clen - The computed salt length in bytes
+ * Print \a seed in base64 human-friendly format.
+ * @param salt - The base64 destination for \a seed
+ * @param saltlen - Destination buffer size. Must be >= XT_BCRYPT_SALT_LENGTH
+ * @param seed - The computed salt
+ * @param seedlen - The computed salt length in bytes
  * @param logRounds - The log2 number of rounds used to compute the salt
  */
-void _xtEncodeSalt(char *salt, size_t saltlen, const uint8_t *csalt, uint16_t clen, uint8_t logRounds)
+void _xtEncodeSalt(char *salt, size_t saltlen, const uint8_t *seed, uint16_t seedlen, uint8_t logRounds)
 {
 	salt[0] = '$';
 	salt[1] = XT_BCRYPT_VERSION;
@@ -81,25 +82,30 @@ void _xtEncodeSalt(char *salt, size_t saltlen, const uint8_t *csalt, uint16_t cl
 
 	snprintf(salt + 4, 5, "%2.2u$", logRounds);
 
-	xtBase64Encode(salt + 7, saltlen, csalt, clen);
+	xtBase64Encode(salt + 7, saltlen - 7, seed, seedlen);
 }
 
-void xtBcryptGenSalt(unsigned log_rounds, const uint8_t *seed, size_t seedlen, char *gsalt, size_t saltlen)
+int xtBcryptGenSalt(unsigned log_rounds, const uint8_t *seed, size_t seedlen, char *gsalt, size_t saltlen)
 {
 	if (log_rounds < 4)
 		log_rounds = 4;
 	else if (log_rounds > 31)
 		log_rounds = 31;
 
+	if (saltlen < XT_BCRYPT_SALT_LENGTH)
+		return XT_EMSGSIZE;
+
 	_xtEncodeSalt(
 		gsalt, saltlen,
 		seed, seedlen, log_rounds
 	);
+
+	return 0;
 }
 
 /* We handle $Vers$log2(NumRounds)$salt+passwd$
    i.e. $2$04$iwouldntknowwhattosayetKdJ6iFtacBqJdKe6aW7ou */
-void xtBcrypt(const char *key, const char *salt, char *encrypted)
+int xtBcrypt(const char *key, const char *salt, char *encrypted, size_t hashlen)
 {
 	struct xtBlowfish state;
 	uint32_t rounds, i, k;
@@ -109,13 +115,16 @@ void xtBcrypt(const char *key, const char *salt, char *encrypted)
 	uint32_t cdata[XT_BCRYPT_BLOCKS];
 	int n;
 
+	if (hashlen < XT_BCRYPT_KEY_LENGTH)
+		return XT_EMSGSIZE;
+
 	/* Discard "$" identifier */
 	++salt;
 
 	if (*salt > XT_BCRYPT_VERSION) {
 		/* How do I handle errors ? Return ':' */
 		strcpy(encrypted, BCRYPT_ERROR);
-		return;
+		return XT_EINVAL;
 	}
 
 	/* Check for minor versions */
@@ -128,7 +137,7 @@ void xtBcrypt(const char *key, const char *salt, char *encrypted)
 			break;
 		default:
 			strcpy(encrypted, BCRYPT_ERROR);
-			return;
+			return XT_EINVAL;
 		}
 	else
 		minor = 0;
@@ -139,19 +148,19 @@ void xtBcrypt(const char *key, const char *salt, char *encrypted)
 	if (salt[2] != '$') {
 		/* Out of sync with passwd entry */
 		strcpy(encrypted, BCRYPT_ERROR);
-		return;
+		return XT_EINVAL;
 	}
 
 	/* Computer power doesn't increase linear, 2^x should be fine */
 	n = atoi(salt);
 	if (n > 31 || n < 0) {
 		strcpy(encrypted, BCRYPT_ERROR);
-		return;
+		return XT_EINVAL;
 	}
 	logr = (uint8_t)n;
 	if ((rounds = (uint32_t)1 << logr) < XT_BCRYPT_MIN_ROUNDS) {
 		strcpy(encrypted, BCRYPT_ERROR);
-		return;
+		return XT_EINVAL;
 	}
 
 	/* Discard num rounds + "$" identifier */
@@ -159,7 +168,7 @@ void xtBcrypt(const char *key, const char *salt, char *encrypted)
 
 	if (strlen(salt) * 3 / 4 < XT_BCRYPT_MAXSALT) {
 		strcpy(encrypted, BCRYPT_ERROR);
-		return;
+		return XT_EINVAL;
 	}
 
 	/* We dont want the base64 salt but the raw data */
@@ -203,9 +212,13 @@ void xtBcrypt(const char *key, const char *salt, char *encrypted)
 
 	snprintf(encrypted + i, 5, "%2.2u$", logr);
 
-	xtBase64Encode(encrypted + i + 3, 80, csalt, XT_BCRYPT_MAXSALT);
 	xtBase64Encode(
-		encrypted + strlen(encrypted), 80,
+		encrypted + i + 3, hashlen - i - 3, csalt, XT_BCRYPT_MAXSALT
+	);
+
+	size_t hashsz = strlen(encrypted);
+	xtBase64Encode(
+		encrypted + hashsz, hashlen - hashsz,
 		ciphertext, 4 * XT_BCRYPT_BLOCKS - 1
 	);
 
@@ -213,6 +226,8 @@ void xtBcrypt(const char *key, const char *salt, char *encrypted)
 	memset(ciphertext, 0, sizeof ciphertext);
 	memset(csalt, 0, sizeof csalt);
 	memset(cdata, 0, sizeof cdata);
+
+	return 0;
 }
 
 uint32_t xtBcryptGetRounds(const char *hash)

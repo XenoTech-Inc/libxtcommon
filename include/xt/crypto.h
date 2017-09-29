@@ -148,9 +148,14 @@ void xtBlowfishDecryptCBC(struct xtBlowfish *ctx, uint8_t *iv, uint8_t *data, ui
  * range (i.e. [4,31]).
  * @param logRounds - The log2 number of rounds (minimum 4, maximum 31).
  * @param seed - The random number source.
+ * @param seedlen - Random number source size. Must be >= XT_BCRYPT_MAXSALT
  * @param gsalt - The destination for the generated salt.
+ * @param saltlen - Destination buffer size. Must be >= XT_BCRYPT_SALT_LENGTH
  */
-void xtBcryptGenSalt(unsigned logRounds, const uint8_t *seed, size_t seedlen, char *gsalt, size_t saltlen);
+int xtBcryptGenSalt(
+	unsigned logRounds, const uint8_t *seed, size_t seedlen,
+	char *gsalt, size_t saltlen
+);
 /**
  * Compute hashed credentials for \a key using \a salt and store this the result
  * in \a encrypted. It is sufficient to store just \a encrypted in a database
@@ -158,9 +163,10 @@ void xtBcryptGenSalt(unsigned logRounds, const uint8_t *seed, size_t seedlen, ch
  * @param key - The credential key.
  * @param salt - The secure random salt to prevent password cracking using brute
  * force.
- * @param encrypted - The encrypted password hash.
+ * @param hash - The destination encrypted password hash.
+ * @param hashlen - The destination buffer size.
  */
-void xtBcrypt(const char *key, const char *salt, char *encrypted);
+int xtBcrypt(const char *key, const char *salt, char *hash, size_t hashlen);
 /**
  * Determine the number of rounds required to compute and verify \a hash.
  * @param - The encrypted password hash.
