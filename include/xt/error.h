@@ -72,7 +72,7 @@ const char *xtGetErrorStr(int errnum);
 /**
  * Acts exactly the same as perror() on Linux.
  * The error is printed to stderr, along with an optional error message.
- * @param msg - Optional message to be printed. This may be a null pointer.
+ * @param msg - Optional message to be printed. This may be a NULL pointer.
  * @param errnum - An XT error code.
  */
 void xtPerror(const char *msg, int errnum);

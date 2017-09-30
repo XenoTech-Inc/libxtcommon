@@ -99,7 +99,7 @@ void xtSockaddrSetAddress(struct xtSockaddr *sa, uint32_t addr);
 void xtSockaddrSetPort(struct xtSockaddr *sa, uint16_t port);
 /**
  * Returns this address as a string formatted as : [IP]:[PORT].
- * A null pointer is returned on failure to translate the address.
+ * A NULL pointer is returned on failure to translate the address.
  */
 char *xtSockaddrToString(const struct xtSockaddr *restrict sa, char *restrict buf, size_t buflen);
 /**
@@ -354,7 +354,7 @@ int xtSocketUDPRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t
 /**
  * Writes the data in \a buf to the address of \a dest.
  * @param bytesSent - Receives the amount of bytes that have been sent.
- * @param dest - Contains the address of the destination. For a connected UDP socket, you can specify a null pointer.
+ * @param dest - Contains the address of the destination. For a connected UDP socket, you can specify a NULL pointer.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
 int xtSocketUDPWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent, const struct xtSockaddr *restrict dest);
@@ -445,7 +445,7 @@ xtSocket xtSocketPollGetSocket(const struct xtSocketPoll *p, size_t index);
 int xtSocketPollMod(struct xtSocketPoll *p, xtSocket sock, enum xtSocketPollEvent events);
 /**
  * Removes the specified socket from monitoring. The socket will be invalidated in the ready array.
- * It's file descriptor will be set to XT_SOCKET_INVALID_FD and it's data set to null.
+ * It's file descriptor will be set to XT_SOCKET_INVALID_FD and it's data set to NULL.
  * Do note that this means it is still present in the ready array until the next call to xtSocketPollWait().
  * @returns Zero if the socket was found and is removed, otherwise an error code.
  */

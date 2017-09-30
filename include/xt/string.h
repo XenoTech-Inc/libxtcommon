@@ -171,7 +171,7 @@ bool xtStringEndsWith(const char *restrict haystack, const char *restrict needle
  * @param num - Maximum number of characters to be copied into str (including the terminating null-character).
  * @param bytesRead - A pointer which will receive the length of the string, excluding the null terminator. This pointer is optional.
  * @param f - File stream to read the data from.
- * @returns \a str on success, null pointer on failure.
+ * @returns \a str on success, NULL pointer on failure.
  */
 char *xtStringReadLine(char *restrict str, size_t num, size_t *restrict bytesRead, FILE *restrict f);
 /**

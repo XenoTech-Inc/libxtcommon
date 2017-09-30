@@ -221,7 +221,7 @@ int xtFileSetCWD(const char *path);
  * closed or at program termination. The file is opened as in fopen() for update
  * in binary mode (that is, "wb+").
  * @param buf - Receives the path of the new temp file on success. Set this to a
- * null pointer and it shall not be filled.
+ * NULL pointer and it shall not be filled.
  * @param f - A pointer to a file pointer. It shall receive a valid file pointer
  * on success. On failure it shall be set to NULL.
  * @return Zero if the temporary file has been created, otherwise an error code.
