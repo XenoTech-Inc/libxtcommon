@@ -25,6 +25,15 @@ extern "C" {
 #define XT_HASH_LARGEST_HASH_SIZE XT_HASH_SHA512_HASH_SIZE
 
 /**
+ * Compute Cyclic Redundancy Check code from specified data.
+ * @param chksum - The initial checksum.
+ * @param data - Source data.
+ * @param datalen - Source data length.
+ * @return The computed code.
+ */
+uint32_t xtHashCRC32(uint32_t chksum, const void *data, size_t datalen);
+
+/**
  * The MD5 context. It is not to be used externally.
  */
 struct _xtMD5Context {
