@@ -1,6 +1,7 @@
 // XT headers
 #include <xt/thread.h>
 #include <xt/error.h>
+#include <_xt/error.h>
 
 // System headers
 #include <ntstatus.h> // NTSTATUS and STATUS_XXX

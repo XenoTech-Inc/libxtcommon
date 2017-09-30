@@ -1,6 +1,7 @@
 // XT headers
 #include <xt/file.h>
 #include <xt/error.h>
+#include <_xt/error.h>
 #include <xt/sort.h>
 #include <xt/string.h>
 

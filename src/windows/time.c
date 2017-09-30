@@ -1,6 +1,7 @@
 // XT headers
 #include <xt/time.h>
 #include <xt/error.h>
+#include <_xt/time.h>
 
 // System headers
 #include <windows.h>
@@ -9,7 +10,19 @@
 #include <stdio.h>
 #include <time.h>
 
-static SYSTEMTIME _xtGetSystemTimeDiff(const SYSTEMTIME *st1, const SYSTEMTIME *st2)
+unsigned long long _xtFileTimeToLLU(const FILETIME *ft)
+{
+	return (((ULONGLONG) ft->dwHighDateTime) << 32) | ft->dwLowDateTime;
+}
+
+struct tm *_xtGMTime(const time_t *t, struct tm *tm)
+{
+	struct tm *lt = gmtime(t);
+	if (lt) *tm = *lt;
+	return tm;
+}
+
+static SYSTEMTIME get_system_time_diff(const SYSTEMTIME *st1, const SYSTEMTIME *st2)
 {
 	SYSTEMTIME stDiff;
 	FILETIME v_ftime;
@@ -34,14 +47,6 @@ static SYSTEMTIME _xtGetSystemTimeDiff(const SYSTEMTIME *st1, const SYSTEMTIME *
 	return stDiff;
 }
 
-struct tm *_xtGMTime(time_t *t, struct tm *tm)
-{
-	struct tm *lt = gmtime(t);
-	if (lt) *tm = *lt;
-	return lt;
-}
-
-
 int xtCalendarGetGMTOffset(int *offset)
 {
 	SYSTEMTIME gmtSystemTime, utcSystemTime;
@@ -52,9 +57,9 @@ int xtCalendarGetGMTOffset(int *offset)
 	GetSystemTime(&utcSystemTime);
 	SYSTEMTIME diff;
 	if (gmtSystemTime.wHour > utcSystemTime.wHour || gmtSystemTime.wDay > utcSystemTime.wDay) {
-		diff = _xtGetSystemTimeDiff(&gmtSystemTime, &utcSystemTime);
+		diff = get_system_time_diff(&gmtSystemTime, &utcSystemTime);
 	} else {
-		diff = _xtGetSystemTimeDiff(&utcSystemTime, &gmtSystemTime);
+		diff = get_system_time_diff(&utcSystemTime, &gmtSystemTime);
 	}
 	*offset = diff.wHour * 60 + diff.wMinute;
 	return 0;
@@ -90,7 +95,6 @@ int xtClockGetRes(struct xtTimestamp *timestamp, enum xtClock clock)
 
 int xtClockGetTime(struct xtTimestamp *timestamp, enum xtClock clock)
 {
-	int _xtClockGetTimeNow(struct xtTimestamp *timestamp);
 	switch (clock) {
 	case XT_CLOCK_MONOTONIC:
 	case XT_CLOCK_MONOTONIC_COARSE:

@@ -40,7 +40,7 @@ for i in "$@"; do
 			exit 1
 		fi
 		win=yes
-		LDLIBS=" -lntdll -lws2_32"
+		LDLIBS=" -lntdll -lpsapi -lws2_32"
 		;;
 	--)
 		break;;
