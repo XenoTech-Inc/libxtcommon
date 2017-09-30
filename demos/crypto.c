@@ -121,7 +121,7 @@ static void serpent_encrypt_decrypt()
 static int compare_salt(const char *passwd, const char *hash)
 {
 	char bcrypted[XT_BCRYPT_KEY_LENGTH];
-	xtBcrypt(passwd, hash, bcrypted);
+	xtBcrypt(passwd, hash, bcrypted, sizeof bcrypted);
 	/*
 	 * This does not check the whole string making it vulnerable to a timing attack,
 	 * but we don't care about that during test purposes.
@@ -137,9 +137,9 @@ static void bcrypt_salt(void)
 	uint8_t seed[XT_BCRYPT_MAXSALT];
 	for (unsigned i = 0; i < sizeof seed; ++i)
 		seed[i] = rand();
-	xtBcryptGenSalt(LOGROUNDS, seed, salt);
+	xtBcryptGenSalt(LOGROUNDS, seed, sizeof seed, salt, sizeof salt);
 	printf("salt: %s\n", salt);
-	xtBcrypt(passwd, salt, hash);
+	xtBcrypt(passwd, salt, hash, sizeof hash);
 	printf("hash: %s\n", hash);
 	if (!compare_salt("WhoahDinnur", hash))
 		FAIL("xtBcrypt() - wrong password");
