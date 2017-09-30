@@ -1,19 +1,19 @@
 // XT headers
 #include <xt/file.h>
-#include <xt/error.h>
 #include <_xt/error.h>
+#include <xt/error.h>
 #include <xt/string.h>
+#include <_xt/time.h>
 
 // System headers
 #include <dirent.h>
+#include <errno.h>
 #include <io.h>
 #include <windows.h>
 
 // STD headers
 #include <stdint.h>
 #include <string.h>
-
-#define FileTimeToLLU(x) ((((ULONGLONG) (x).dwHighDateTime) << 32) | (x).dwLowDateTime)
 
 int xtFileFindFirstFile(
 	struct xtFileFind *restrict handle,
@@ -25,7 +25,7 @@ int xtFileFindFirstFile(
 	WIN32_FIND_DATA wfd;
 	if ((handle->handle = FindFirstFile(sbuf, &wfd)) == INVALID_HANDLE_VALUE)
 		return _xtTranslateSysError(GetLastError());
-	xtsnprintf(buf, buflen, "%s", wfd.cFileName);
+	xtstrncpy(buf, wfd.cFileName, buflen);
 	return 0;
 }
 
@@ -181,9 +181,9 @@ int xtFileGetInfo(struct xtFileInfo *restrict fileInfo, const char *restrict pat
 	if (!GetFileAttributesEx(path, GetFileExInfoStandard, &fad))
 		return _xtTranslateSysError(GetLastError());
 	fileInfo->type = ftype_to_xt(fad.dwFileAttributes);
-	fileInfo->creationTime = (FileTimeToLLU(fad.ftCreationTime) / 10000000 - 11644473600LLU);
-	fileInfo->accessTime = (FileTimeToLLU(fad.ftLastAccessTime) / 10000000 - 11644473600LLU);
-	fileInfo->modificationTime = (FileTimeToLLU(fad.ftLastWriteTime) / 10000000 - 11644473600LLU);
+	fileInfo->creationTime = _xtFileTimeToLLU(&fad.ftCreationTime) / 10000000 - 11644473600LLU;
+	fileInfo->accessTime = _xtFileTimeToLLU(&fad.ftLastAccessTime) / 10000000 - 11644473600LLU;
+	fileInfo->modificationTime = _xtFileTimeToLLU(&fad.ftLastWriteTime) / 10000000 - 11644473600LLU;
 	fileInfo->size = ((ULONGLONG)fad.nFileSizeHigh << 32) | fad.nFileSizeLow;
 	return 0;
 }

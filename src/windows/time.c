@@ -17,7 +17,8 @@ unsigned long long _xtFileTimeToLLU(const FILETIME *ft)
 
 struct tm *_xtGMTime(const time_t *t, struct tm *tm)
 {
-	gmtime_s(tm, t);
+	struct tm *lt = gmtime(t);
+	if (lt) *tm = *lt;
 	return tm;
 }
 
