@@ -4,20 +4,42 @@ cleanup() {
 }
 trap cleanup EXIT
 
-PREFIX=/usr
-LIBDIR=$PREFIX/lib
-GNULIBDIR=$LIBDIR/x86_64-linux-gnu
+CPP=cpp
+LIBS='-lm -ldl -lpthread -lxtcommon'
+CFLAGS='-pthread -rdynamic'
 
-if [ "$(uname -m)" != "x86_64" ]; then
-	GNULIBDIR=$LIBDIR/i386-linux-gnu
-fi
+WINARCH=w64-mingw32
+
+for i in "$@"; do
+	case "$i" in
+	windows*)
+		shift 1
+		LIBS='-lxtcommon -lntdll -lpsapi -lws2_32'
+		CFLAGS=
+		case "$i" in
+		windows-x86)
+			WIN=i686-$WINARCH
+			;;
+		windows-x64)
+			WIN=x86_64-$WINARCH
+			;;
+		*)
+			echo Invalid target: $i 1>&2
+			exit 1;;
+		esac
+		CPP=$WIN-cpp
+		;;
+	--)
+		break;;
+	esac
+done
 
 cat <<EOF >xtcommon.c
 #include "include/xt/utils.h"
 version=XT_VERSION_MAJOR,XT_VERSION_MINOR,XT_VERSION_PATCH
 EOF
 
-cpp xtcommon.c >xtcommon.pc
+$CPP xtcommon.c >xtcommon.pc
 sed -i -e '/version=[0-9]*,[0-9]*,[0-9]*/!d' -e 's/,/./g' xtcommon.pc
 
 cat << EOF >>xtcommon.pc
@@ -27,7 +49,7 @@ Description: XenoTech common library
 Version: \${version}
 URL: https://www.xenotech.nl/
 Requires.private:
-Libs: -lm -ldl -lpthread -lxtcommon
+Libs: $LIBS
 Libs.private:
-Cflags: -pthread -rdynamic
+Cflags: $CFLAGS
 EOF

@@ -7,13 +7,10 @@ CC="gcc"
 # The (Path) name for the .a file
 LIBPATH="lib"
 LIBNAME="libxtcommon.a"
-PREFIX=/usr
-LOCALPREFIX=$PREFIX/local
+PREFIX=${PREFIX:-/usr/local}
 INCLUDEDIR=$PREFIX/include
 LIBDIR=$PREFIX/lib
-LOCALINCLUDEDIR=$LOCALPREFIX/include
-LOCALLIBDIR=$LOCALPREFIX/lib
-GNULIBDIR=$LOCALLIBDIR
+PKG_CONFIG_PATH="${PKG_CONFIG_PATH:-$LIBDIR/pkgconfig}"
 FINALLIBPATH="$LIBPATH/$LIBNAME"
 
 SYSTEM=`uname -s 2>/dev/null`
@@ -21,6 +18,7 @@ SYSTEM=`uname -s 2>/dev/null`
 WINARCH=w64-mingw32
 win=no
 is32bit=no
+pkgarg=
 
 for i in "$@"; do
 	case "$i" in
@@ -29,9 +27,11 @@ for i in "$@"; do
 		case "$i" in
 		windows-x86)
 			WIN=i686-$WINARCH
+			pkgarg=windows-x86
 			;;
 		windows-x64)
 			WIN=x86_64-$WINARCH
+			pkgarg=windows-x64
 			;;
 		*)
 			echo Invalid target: $i 1>&2
@@ -62,7 +62,7 @@ if [ "$win" == no ]; then
 				CFLAGS="$CFLAGS -D_FILE_OFFSET_BITS=64"
 				is32bit=yes
 				# Use different directory for pkg-config
-				GNULIBDIR=$LIBDIR/i386-linux-gnu
+				PKG_CONFIG_PATH="$PKG_CONFIG_PATH/i386-linux-gnu"
 			fi
 			;;
 		CYGWIN*)
@@ -91,8 +91,8 @@ if [ ! -d "$LIBDIR" ]; then
 	echo "Bad libdir $LIBDIR: no directory" 2>&1
 	exit 1
 fi
-if [ ! -d "$GNULIBDIR" ]; then
-	echo "Bad gnulibdir $GNULIBDIR: no directory" 2>&1
+if [ ! -d "$PKG_CONFIG_PATH" ]; then
+	echo "Bad pkg-config dir $PKG_CONFIG_PATH: no directory" 2>&1
 	exit 1
 fi
 
@@ -145,11 +145,11 @@ default: $FINALLIBPATH \$(OBJECTS)
 EOF
 cat <<EOF >>$MAKEFILE
 xtcommon.pc: create_pkgconfig
-	./create_pkgconfig
+	./create_pkgconfig $pkgarg
 install: $FINALLIBPATH xtcommon.pc
-	sudo cp -R include/* $LOCALINCLUDEDIR
-	sudo cp lib/$LIBNAME $LOCALLIBDIR
-	sudo cp xtcommon.pc $GNULIBDIR/pkgconfig
+	cp -R include/* $INCLUDEDIR
+	cp lib/$LIBNAME $LIBDIR
+	cp xtcommon.pc $PKG_CONFIG_PATH
 
 $FINALLIBPATH: \$(OBJECTS)
 	mkdir -p $LIBPATH

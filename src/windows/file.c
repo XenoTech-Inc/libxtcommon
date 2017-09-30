@@ -5,6 +5,7 @@
 
 // System headers
 #include <dirent.h>
+#include <errno.h>
 #include <io.h>
 #include <windows.h>
 
