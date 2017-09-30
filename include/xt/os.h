@@ -138,7 +138,7 @@ bool xtConsoleIsAvailable(void);
  */
 void xtConsoleSetTitle(const char *title);
 /**
- * Returns the hostname of this computer. On error a null pointer is returned.
+ * Returns the hostname of this computer. On error a NULL pointer is returned.
  */
 char *xtGetHostname(char *buf, size_t buflen);
 /**
@@ -170,7 +170,7 @@ struct xtRAMInfo {
 int xtRAMGetInfo(struct xtRAMInfo *ramInfo);
 /**
  * Returns the name of the user who is logged in on this session. On error a
- * null pointer is returned.
+ * NULL pointer is returned.
  */
 char *xtGetUsername(char *buf, size_t buflen);
 

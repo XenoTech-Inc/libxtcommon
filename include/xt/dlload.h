@@ -32,7 +32,7 @@ enum xtDLFlag {
  */
 typedef void (*xtGenericFuncPtr)(void*);
 /**
- * Attempts to load the dynamic library. If null is returned,
+ * Attempts to load the dynamic library. If NULL is returned,
  * you can call xtDLError() to get extended information about the error.
  * This function ALWAYS clears any previous errors!
  * @param flag - Specifies the behavior for symbol loading. On Windows this parameter is ignored.
@@ -48,13 +48,13 @@ void xtDLClose(void *handle);
 /**
  * Prints a human-readable string to the specified buffer should any error with xtDLOpen() or
  * xtDLSym() have occurred, then the pointer to that buffer is returned. If no error has occurred,
- * null is returned. Calling this function will result in the removal of any previous error.
+ * NULL is returned. Calling this function will result in the removal of any previous error.
  */
 char *xtDLError(char *buf, size_t buflen);
 /**
  * Returns the address of the function in the dynamic library. You should cast
  * the returned value to your target function.
- * If the handle is invalid, or the symbol is not found, null is returned.
+ * If the handle is invalid, or the symbol is not found, NULL is returned.
  * You can call xtDLError() to get extended information about the error.
  * You should call xtDLError() before calling this function to clear any previous error.
  */
