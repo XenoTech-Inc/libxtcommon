@@ -27,7 +27,13 @@ func_get_grow(xtQueueU)
 func_get_grow(xtQueueLU)
 func_get_grow(xtQueueZU)
 
-static inline int xt_queue_create(void **data, size_t elemsize, size_t n)
+#define queue_init(this, data, cap) \
+	this->data = data; \
+	this->count = this->front = this->rear = 0; \
+	this->capacity = cap; \
+	this->grow = -2;
+
+static inline int queue_create(void **data, size_t elemsize, size_t n)
 {
 	if (!n)
 		n = XT_QUEUE_CAPACITY_DEFAULT;
@@ -36,16 +42,10 @@ static inline int xt_queue_create(void **data, size_t elemsize, size_t n)
 	return 0;
 }
 
-#define queue_init(this, data, cap) \
-	this->data = data; \
-	this->count = this->front = this->rear = 0; \
-	this->capacity = cap; \
-	this->grow = -2;
-
 int xtQueueHDCreate(struct xtQueueHD *this, size_t capacity)
 {
 	void *data;
-	int ret = xt_queue_create(&data, sizeof(short), capacity);
+	int ret = queue_create(&data, sizeof(short), capacity);
 	if (ret)
 		return ret;
 	queue_init(this, data, capacity);
@@ -55,7 +55,7 @@ int xtQueueHDCreate(struct xtQueueHD *this, size_t capacity)
 int xtQueueDCreate(struct xtQueueD *this, size_t capacity)
 {
 	void *data;
-	int ret = xt_queue_create(&data, sizeof(int), capacity);
+	int ret = queue_create(&data, sizeof(int), capacity);
 	if (ret)
 		return ret;
 	queue_init(this, data, capacity);
@@ -65,7 +65,7 @@ int xtQueueDCreate(struct xtQueueD *this, size_t capacity)
 int xtQueueUCreate(struct xtQueueU *this, size_t capacity)
 {
 	void *data;
-	int ret = xt_queue_create(&data, sizeof(unsigned), capacity);
+	int ret = queue_create(&data, sizeof(unsigned), capacity);
 	if (ret)
 		return ret;
 	queue_init(this, data, capacity);
@@ -75,7 +75,7 @@ int xtQueueUCreate(struct xtQueueU *this, size_t capacity)
 int xtQueueLUCreate(struct xtQueueLU *this, size_t capacity)
 {
 	void *data;
-	int ret = xt_queue_create(&data, sizeof(unsigned long), capacity);
+	int ret = queue_create(&data, sizeof(unsigned long), capacity);
 	if (ret)
 		return ret;
 	queue_init(this, data, capacity);
@@ -85,7 +85,7 @@ int xtQueueLUCreate(struct xtQueueLU *this, size_t capacity)
 int xtQueueZUCreate(struct xtQueueZU *this, size_t capacity)
 {
 	void *data;
-	int ret = xt_queue_create(&data, sizeof(size_t), capacity);
+	int ret = queue_create(&data, sizeof(size_t), capacity);
 	if (ret)
 		return ret;
 	queue_init(this, data, capacity);

@@ -1,6 +1,7 @@
 // XT headers
 #include <xt/os_macros.h>
 #include <xt/error.h>
+#include "string.h"
 #include <xt/string.h>
 #include <_xt/time.h>
 
@@ -23,8 +24,6 @@
 #define dbgf(f,...) ((void)0)
 #define dbgs(s) ((void)0)
 #endif
-
-extern int _xt_vsnprintf(char *str, size_t size, char *format, char *end, va_list args);
 
 int xtCharToDigit(char c)
 {
@@ -410,7 +409,7 @@ put:
 	}
 	*ptr = '\0';
 	dbgf("format=%s\n", buf);
-	ret = _xt_vsnprintf(str, size, buf, end, args);
+	ret = _xtvsnprintf(str, size, buf, end, args);
 resize:
 	// FIXME try resize for all goto statements to this label
 fail:

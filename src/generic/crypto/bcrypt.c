@@ -44,9 +44,9 @@
  * 6. RETURN Concatenate (salt, ctext);
  *
  */
-#include "blowfish.h"
 
 // XT headers
+#include "blowfish.h"
 #include <xt/error.h>
 #include <xt/string.h>
 
@@ -73,7 +73,7 @@
  * @param seedlen - The computed salt length in bytes
  * @param logRounds - The log2 number of rounds used to compute the salt
  */
-void _xtEncodeSalt(char *salt, size_t saltlen, const uint8_t *seed, uint16_t seedlen, uint8_t logRounds)
+static void encode_salt(char *salt, size_t saltlen, const uint8_t *seed, uint16_t seedlen, uint8_t logRounds)
 {
 	salt[0] = '$';
 	salt[1] = XT_BCRYPT_VERSION;
@@ -95,7 +95,7 @@ int xtBcryptGenSalt(unsigned log_rounds, const uint8_t *seed, size_t seedlen, ch
 	if (saltlen < XT_BCRYPT_SALT_LENGTH)
 		return XT_EMSGSIZE;
 
-	_xtEncodeSalt(
+	encode_salt(
 		gsalt, saltlen,
 		seed, seedlen, log_rounds
 	);

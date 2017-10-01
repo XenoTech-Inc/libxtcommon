@@ -1,7 +1,7 @@
 /**
  * @brief Contains functions to hash data with various algorithms.
  *
- * It should be noted that these functions are only supported on Little-endian platforms.
+ * It should be noted that these functions are only supported on little-endian platforms.
  * @file hash.h
  * @author Tom Everaarts
  * @date 2017
@@ -114,7 +114,7 @@ void xtHashReset(struct xtHash *ctx);
 /**
  * Updates the state of the digest.
  */
-void xtHashUpdate(struct xtHash *restrict ctx, void *restrict buf, size_t len);
+void xtHashUpdate(struct xtHash *restrict ctx, const void *restrict buf, size_t buflen);
 
 #ifdef __cplusplus
 }

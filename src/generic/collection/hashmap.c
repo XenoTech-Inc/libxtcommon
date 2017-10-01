@@ -8,31 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static bool _xtHashmapIteratorStart(struct xtHashmap *map, struct xtHashmapIterator *it, void **key, void **value);
-static bool _xtHashmapIteratorNext(struct xtHashmap *map, struct xtHashmapIterator *it, void **key, void **value);
-
-/* Create internal copy and inherit all settings from old hashmap */
-static int _xtHashmapCopy(struct xtHashmap *new, const struct xtHashmap *orig, size_t size)
-{
-	int ret = xtHashmapCreate(new, size, orig->keyHash, orig->keyCompare);
-	if (ret)
-		return ret;
-	xtHashmapSetGrowthFactor(new, xtHashmapGetGrowthFactor(orig));
-	xtHashmapSetGrowthLimit(new, xtHashmapGetGrowthLimit(orig));
-	xtHashmapSetFlags(new, xtHashmapGetFlags(orig));
-	return 0;
-}
-
-static void _xtHashmapDeleteBucket(struct xtHashmap *map, struct xtHashBucket *bucket)
-{
-	unsigned flags = map->flags;
-	if (flags & XT_HASHMAP_FREE_VALUE)
-		free(bucket->value);
-	if (flags & XT_HASHMAP_FREE_KEY)
-		free(bucket->key);
-	free(bucket);
-}
-
 int xtHashmapAdd(struct xtHashmap *map, void *key, void *value)
 {
 	if (map->count >= map->capacity * map->grow_limit) {
@@ -95,6 +70,16 @@ int xtHashmapCreate(
 	return 0;
 }
 
+static void hashmap_delete_bucket(struct xtHashmap *map, struct xtHashBucket *bucket)
+{
+	unsigned flags = map->flags;
+	if (flags & XT_HASHMAP_FREE_VALUE)
+		free(bucket->value);
+	if (flags & XT_HASHMAP_FREE_KEY)
+		free(bucket->key);
+	free(bucket);
+}
+
 void xtHashmapDestroy(struct xtHashmap *map)
 {
 	size_t capacity = map->capacity;
@@ -104,7 +89,7 @@ void xtHashmapDestroy(struct xtHashmap *map)
 		if (map->buckets[i])
 			for (struct xtHashBucket *next, *b = map->buckets[i]; b; b = next) {
 				next = b->next;
-				_xtHashmapDeleteBucket(map, b);
+				hashmap_delete_bucket(map, b);
 			}
 	free(map->buckets);
 	map->buckets = NULL;
@@ -164,7 +149,7 @@ int xtHashmapGetValue(const struct xtHashmap *map, const void *key, void **value
 	return 0;
 }
 
-static bool _xtHashmapIteratorNext(struct xtHashmap *map, struct xtHashmapIterator *it, void **key, void **value)
+static bool hashmap_iterator_next(struct xtHashmap *map, struct xtHashmapIterator *it, void **key, void **value)
 {
 	/*
 	 * Iterate through all entries in one bucket
@@ -193,10 +178,10 @@ static bool _xtHashmapIteratorNext(struct xtHashmap *map, struct xtHashmapIterat
 
 static bool xtHashmapIteratorNext(struct xtHashmap *map, void **key, void **value)
 {
-	return _xtHashmapIteratorNext(map, &map->it, key, value);
+	return hashmap_iterator_next(map, &map->it, key, value);
 }
 
-static bool _xtHashmapIteratorStart(struct xtHashmap *map, struct xtHashmapIterator *it, void **key, void **value)
+static bool hashmap_iterator_start(struct xtHashmap *map, struct xtHashmapIterator *it, void **key, void **value)
 {
 	for (size_t i = 0; i < map->capacity; ++i)
 		if (map->buckets[i]) {
@@ -217,7 +202,7 @@ bool xtHashmapForeach(struct xtHashmap *map, void **key, void **value)
 {
 	if (!map->it.entry && map->it.nr >= map->capacity) {
 		map->it.nr = 0;
-		if (_xtHashmapIteratorStart(map, &map->it, key, value))
+		if (hashmap_iterator_start(map, &map->it, key, value))
 			return true;
 	} else if (xtHashmapIteratorNext(map, key, value))
 		return true;
@@ -246,7 +231,7 @@ int xtHashmapRemove(struct xtHashmap *map, void *key)
 				prev->next = b->next;
 			else
 				map->buckets[hash % map->capacity] = b->next;
-			_xtHashmapDeleteBucket(map, b);
+			hashmap_delete_bucket(map, b);
 			--map->count;
 			return 0;
 		}
@@ -254,6 +239,18 @@ int xtHashmapRemove(struct xtHashmap *map, void *key)
 		b = b->next;
 	} while (b);
 	return XT_ENOENT;
+}
+
+/* Create internal copy and inherit all settings from old hashmap */
+static int hashmap_copy(struct xtHashmap *new, const struct xtHashmap *orig, size_t size)
+{
+	int ret = xtHashmapCreate(new, size, orig->keyHash, orig->keyCompare);
+	if (ret)
+		return ret;
+	xtHashmapSetGrowthFactor(new, xtHashmapGetGrowthFactor(orig));
+	xtHashmapSetGrowthLimit(new, xtHashmapGetGrowthLimit(orig));
+	xtHashmapSetFlags(new, xtHashmapGetFlags(orig));
+	return 0;
 }
 
 int xtHashmapSetCapacity(struct xtHashmap *map, size_t capacity)
@@ -269,18 +266,18 @@ int xtHashmapSetCapacity(struct xtHashmap *map, size_t capacity)
 	void *okey = obuck ? obuck->key : NULL;
 	// Create a completely new hashmap and deep copy all data
 	struct xtHashmap new;
-	int ret = _xtHashmapCopy(&new, map, capacity);
+	int ret = hashmap_copy(&new, map, capacity);
 	if (ret)
 		return ret;
 	void *nkey, *nval;
 	struct xtHashmapIterator it;
-	if (_xtHashmapIteratorStart(map, &it, &nkey, &nval))
+	if (hashmap_iterator_start(map, &it, &nkey, &nval))
 		do {
 			if ((ret = xtHashmapAdd(&new, nkey, nval)) != 0) {
 				xtHashmapDestroy(&new);
 				return ret;
 			}
-		} while (_xtHashmapIteratorNext(map, &it, &nkey, &nval));
+		} while (hashmap_iterator_next(map, &it, &nkey, &nval));
 	else
 		abort();
 	// Clean up old hashmap and assign new one

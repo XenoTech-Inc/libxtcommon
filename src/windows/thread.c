@@ -43,15 +43,6 @@ int xtMutexUnlock(xtMutex *m)
 	return 0;
 }
 
-static unsigned __stdcall _xtThreadStart(void *arg)
-{
-	struct xtThread *t = arg;
-	// Execute the function
-	t->funcRet = t->func(t, t->arg);
-	SetEvent(t->exitEvent); // Signal that the thread has ended
-	return 0;
-}
-
 int xtThreadContinue(struct xtThread *t)
 {
 	if (xtThreadGetID(t) == xtThreadGetID(NULL))
@@ -61,6 +52,15 @@ int xtThreadContinue(struct xtThread *t)
 	xtMutexUnlock(&t->suspendMutex);
 	if (suspendCount <= 0)
 		ResumeThread(t->nativeThread);
+	return 0;
+}
+
+static unsigned __stdcall thread_start(void *arg)
+{
+	struct xtThread *t = arg;
+	// Execute the function
+	t->funcRet = t->func(t, t->arg);
+	SetEvent(t->exitEvent); // Signal that the thread has ended
 	return 0;
 }
 
@@ -78,7 +78,7 @@ int xtThreadCreate(struct xtThread *t, void *(*func)(struct xtThread *t, void *a
 		goto error;
 	t->suspendCount = 0;
 	// Specifying zero as stack size to _beginthreadex makes it use the main threads stack size
-	t->nativeThread = (HANDLE) _beginthreadex(NULL, stackSizeKB * 1024, _xtThreadStart, t, 0, &t->tid);
+	t->nativeThread = (HANDLE) _beginthreadex(NULL, stackSizeKB * 1024, thread_start, t, 0, &t->tid);
 	if (t->nativeThread == 0)
 		goto error;
 	return 0;

@@ -17,21 +17,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static int _xtProcSignalToSys(enum xtProcSignal signal)
-{
-	switch (signal) {
-	case XT_SIGHUP:  return SIGHUP;
-	case XT_SIGINT:  return SIGINT;
-	case XT_SIGKILL: return SIGKILL;
-	case XT_SIGTERM: return SIGTERM;
-	case XT_SIGUSR1: return SIGUSR1;
-	case XT_SIGUSR2: return SIGUSR2;
-	case XT_SIGCONT: return SIGCONT;
-	case XT_SIGSTOP: return SIGSTOP;
-	default:		 return 0;
-	}
-}
-
 float xtProcCPUTimeCalculate(const struct xtProcCPUTime *start,
 	const struct xtProcCPUTime *end)
 {
@@ -176,9 +161,24 @@ bool xtProcIsAlive(unsigned pid)
 	return kill(pid, 0) == 0 ? true : errno != ESRCH;
 }
 
+static int proc_signal_to_sys(enum xtProcSignal signal)
+{
+	switch (signal) {
+	case XT_SIGHUP:  return SIGHUP;
+	case XT_SIGINT:  return SIGINT;
+	case XT_SIGKILL: return SIGKILL;
+	case XT_SIGTERM: return SIGTERM;
+	case XT_SIGUSR1: return SIGUSR1;
+	case XT_SIGUSR2: return SIGUSR2;
+	case XT_SIGCONT: return SIGCONT;
+	case XT_SIGSTOP: return SIGSTOP;
+	default:		 return 0;
+	}
+}
+
 int xtProcKill(unsigned pid, enum xtProcSignal signal)
 {
-	int ret = kill(pid, _xtProcSignalToSys(signal));
+	int ret = kill(pid, proc_signal_to_sys(signal));
 	return ret == 0 ? 0 : _xtTranslateSysError(errno);
 }
 

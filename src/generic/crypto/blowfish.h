@@ -1,5 +1,5 @@
-#ifndef _XT_BLOWFISH_H
-#define _XT_BLOWFISH_H
+#ifndef ___XT_BLOWFISH_H
+#define ___XT_BLOWFISH_H
 
 #include <xt/crypto.h>
 

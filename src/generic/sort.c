@@ -19,28 +19,27 @@
 
 /* swap element routines are inlined so they
 have to be defined first before we can use it */
-static inline void _xtSwapD(int *a, int *b)
+static inline void swap_d(int *a, int *b)
 {
 	int tmp = *a;
 	*a = *b;
 	*b = tmp;
 }
-
-static inline void _xtSwapU(unsigned *a, unsigned *b)
+static inline void swap_u(unsigned *a, unsigned *b)
 {
 	unsigned tmp = *a;
 	*a = *b;
 	*b = tmp;
 }
 
-static inline void _xtSwapP(void *a, void *b, void *tmp, size_t size)
+static inline void swap_p(void *a, void *b, void *tmp, size_t size)
 {
 	memcpy(tmp, a  , size);
 	memcpy(a  , b  , size);
 	memcpy(b  , tmp, size);
 }
 
-static void _xtBubbleSortU(unsigned *a, size_t n, bool ascend)
+static void bubble_sort_u(unsigned *a, size_t n, bool ascend)
 {
 	size_t i, x;
 	if (ascend)
@@ -48,7 +47,7 @@ static void _xtBubbleSortU(unsigned *a, size_t n, bool ascend)
 			x = 0;
 			for (i = 1; i < n; ++i)
 				if (a[i - 1] > a[i])
-					_xtSwapU(&a[i - 1], &a[x = i]);
+					swap_u(&a[i - 1], &a[x = i]);
 			--n;
 		} while (x);
 	else
@@ -56,12 +55,12 @@ static void _xtBubbleSortU(unsigned *a, size_t n, bool ascend)
 			x = 0;
 			for (i = 1; i < n; ++i)
 				if (a[i - 1] < a[i])
-					_xtSwapU(&a[i - 1], &a[x = i]);
+					swap_u(&a[i - 1], &a[x = i]);
 			--n;
 		} while (x);
 }
 
-static void _xtBubbleSortD(int *a, size_t n, bool ascend)
+static void bubble_sort_d(int *a, size_t n, bool ascend)
 {
 	size_t i, x;
 	if (ascend)
@@ -69,7 +68,7 @@ static void _xtBubbleSortD(int *a, size_t n, bool ascend)
 			x = 0;
 			for (i = 1; i < n; ++i)
 				if (a[i - 1] > a[i])
-					_xtSwapD(&a[i - 1], &a[x = i]);
+					swap_d(&a[i - 1], &a[x = i]);
 			--n;
 		} while (x);
 	else
@@ -77,12 +76,12 @@ static void _xtBubbleSortD(int *a, size_t n, bool ascend)
 			x = 0;
 			for (i = 1; i < n; ++i)
 				if (a[i - 1] < a[i])
-					_xtSwapD(&a[i - 1], &a[x = i]);
+					swap_d(&a[i - 1], &a[x = i]);
 			--n;
 		} while (x);
 }
 
-static int _xtBubbleSortP(void *list, size_t elemsize, size_t n, int (*cmp)(void*, void*), bool ascend)
+static int bubble_sort_p(void *list, size_t elemsize, size_t n, int (*cmp)(void*, void*), bool ascend)
 {
 	size_t i, x;
 	char *a = list;
@@ -94,7 +93,7 @@ static int _xtBubbleSortP(void *list, size_t elemsize, size_t n, int (*cmp)(void
 			x = 0;
 			for (i = 1; i < n; ++i)
 				if (cmp(&a[(i - 1) * elemsize], &a[i * elemsize]) > 0)
-					_xtSwapP(&a[(i - 1) * elemsize], &a[(x = i) * elemsize], tmp, elemsize);
+					swap_p(&a[(i - 1) * elemsize], &a[(x = i) * elemsize], tmp, elemsize);
 			--n;
 		} while (x);
 	else
@@ -102,7 +101,7 @@ static int _xtBubbleSortP(void *list, size_t elemsize, size_t n, int (*cmp)(void
 			x = 0;
 			for (i = 1; i < n; ++i)
 				if (cmp(&a[(i - 1) * elemsize], &a[i * elemsize]) < 0)
-					_xtSwapP(&a[(i - 1) * elemsize], &a[(x = i) * elemsize], tmp, elemsize);
+					swap_p(&a[(i - 1) * elemsize], &a[(x = i) * elemsize], tmp, elemsize);
 			--n;
 		} while (x);
 	free(tmp);
@@ -113,7 +112,7 @@ static int _xtBubbleSortP(void *list, size_t elemsize, size_t n, int (*cmp)(void
 Some sorting algorithms require additional routines.
 The ones ending in A are for ascending order and D for descending.
 */
-static void _xtHeapPercolateD_A(int *a, size_t low, size_t high)
+static void heap_percolate_d_a(int *a, size_t low, size_t high)
 {
 	int p;
 	size_t q;
@@ -129,7 +128,7 @@ static void _xtHeapPercolateD_A(int *a, size_t low, size_t high)
 	a[low] = p;
 }
 
-static void _xtHeapPercolateD_D(int *a, size_t low, size_t high)
+static void heap_percolate_d_d(int *a, size_t low, size_t high)
 {
 	int p;
 	size_t q;
@@ -145,26 +144,26 @@ static void _xtHeapPercolateD_D(int *a, size_t low, size_t high)
 	a[low] = p;
 }
 
-static void _xtHeapSortD(int *a, size_t n, bool ascend) {
+static void heap_sort_d(int *a, size_t n, bool ascend) {
 	ssize_t i;
 	if (ascend) {
 		for (i = n / 2; i >= 0; --i)
-			_xtHeapPercolateD_A(a, i, n);
+			heap_percolate_d_a(a, i, n);
 		for (i = n - 1; i > 0; --i) {
-			_xtSwapD(a, a + i);
-			_xtHeapPercolateD_A(a, 0, i);
+			swap_d(a, a + i);
+			heap_percolate_d_a(a, 0, i);
 		}
 	} else {
 		for (i = n / 2; i >= 0; --i)
-			_xtHeapPercolateD_D(a, i, n);
+			heap_percolate_d_d(a, i, n);
 		for (i = n - 1; i > 0; --i) {
-			_xtSwapD(a, a + i);
-			_xtHeapPercolateD_D(a, 0, i);
+			swap_d(a, a + i);
+			heap_percolate_d_d(a, 0, i);
 		}
 	}
 }
 
-static void _xtHeapPercolateU_A(unsigned *a, size_t low, size_t high)
+static void heap_percolate_u_a(unsigned *a, size_t low, size_t high)
 {
 	unsigned p;
 	size_t q;
@@ -180,7 +179,7 @@ static void _xtHeapPercolateU_A(unsigned *a, size_t low, size_t high)
 	a[low] = p;
 }
 
-static void _xtHeapPercolateU_D(unsigned *a, size_t low, size_t high)
+static void heap_percolate_u_d(unsigned *a, size_t low, size_t high)
 {
 	unsigned p;
 	size_t q;
@@ -196,27 +195,27 @@ static void _xtHeapPercolateU_D(unsigned *a, size_t low, size_t high)
 	a[low] = p;
 }
 
-static void _xtHeapSortU(unsigned *a, size_t n, bool ascend)
+static void heap_sort_u(unsigned *a, size_t n, bool ascend)
 {
 	ssize_t i;
 	if (ascend) {
 		for (i = n / 2; i >= 0; --i)
-			_xtHeapPercolateU_A(a, i, n);
+			heap_percolate_u_a(a, i, n);
 		for (i = n - 1; i > 0; --i) {
-			_xtSwapU(a, a + i);
-			_xtHeapPercolateU_A(a, 0, i);
+			swap_u(a, a + i);
+			heap_percolate_u_a(a, 0, i);
 		}
 	} else {
 		for (i = n / 2; i >= 0; --i)
-			_xtHeapPercolateU_D(a, i, n);
+			heap_percolate_u_d(a, i, n);
 		for (i = n - 1; i > 0; --i) {
-			_xtSwapU(a, a + i);
-			_xtHeapPercolateU_D(a, 0, i);
+			swap_u(a, a + i);
+			heap_percolate_u_d(a, 0, i);
 		}
 	}
 }
 
-static void _xtHeapPercolateP_A(void *list, void *tmp, size_t elemsize, int (*cmp)(void*, void*), size_t low, size_t high)
+static void heap_percolate_p_a(void *list, void *tmp, size_t elemsize, int (*cmp)(void*, void*), size_t low, size_t high)
 {
 	void *p = tmp;
 	char *a = list;
@@ -233,7 +232,7 @@ static void _xtHeapPercolateP_A(void *list, void *tmp, size_t elemsize, int (*cm
 	memcpy(&a[low * elemsize], p, elemsize);
 }
 
-static void _xtHeapPercolateP_D(void *list, void *tmp, size_t elemsize, int (*cmp)(void*, void*), size_t low, size_t high)
+static void heap_percolate_p_d(void *list, void *tmp, size_t elemsize, int (*cmp)(void*, void*), size_t low, size_t high)
 {
 	void *p = tmp;
 	char *a = list;
@@ -250,7 +249,7 @@ static void _xtHeapPercolateP_D(void *list, void *tmp, size_t elemsize, int (*cm
 	memcpy(&a[low * elemsize], p, elemsize);
 }
 
-static int _xtHeapSortP(void *list, size_t elemsize, size_t n, int (*cmp)(void*, void*), bool ascend)
+static int heap_sort_p(void *list, size_t elemsize, size_t n, int (*cmp)(void*, void*), bool ascend)
 {
 	ssize_t i;
 	char *a = list;
@@ -259,50 +258,50 @@ static int _xtHeapSortP(void *list, size_t elemsize, size_t n, int (*cmp)(void*,
 		return XT_ENOMEM;
 	if (ascend) {
 		for (i = n / 2; i >= 0; --i)
-			_xtHeapPercolateP_A(list, tmp, elemsize, cmp, i, n);
+			heap_percolate_p_a(list, tmp, elemsize, cmp, i, n);
 		for (i = n - 1; i > 0; --i) {
-			_xtSwapP(a, &a[i * elemsize], tmp, elemsize);
-			_xtHeapPercolateP_A(list, tmp, elemsize, cmp, 0, i);
+			swap_p(a, &a[i * elemsize], tmp, elemsize);
+			heap_percolate_p_a(list, tmp, elemsize, cmp, 0, i);
 		}
 	} else {
 		for (i = n / 2; i >= 0; --i)
-			_xtHeapPercolateP_D(list, tmp, elemsize, cmp, i, n);
+			heap_percolate_p_d(list, tmp, elemsize, cmp, i, n);
 		for (i = n - 1; i > 0; --i) {
-			_xtSwapP(a, &a[i * elemsize], tmp, elemsize);
-			_xtHeapPercolateP_D(list, tmp, elemsize, cmp, 0, i);
+			swap_p(a, &a[i * elemsize], tmp, elemsize);
+			heap_percolate_p_d(list, tmp, elemsize, cmp, 0, i);
 		}
 	}
 	free(tmp);
 	return 0;
 }
 
-static void _xtInsertionSortD(int *a, size_t n, bool ascend)
+static void insertion_sort_d(int *a, size_t n, bool ascend)
 {
 	size_t i, j;
 	if (ascend)
 		for (i = 1; i < n; ++i)
 			for (j = i; j > 0 && a[j - 1] > a[j]; --j)
-				_xtSwapD(&a[j], &a[j - 1]);
+				swap_d(&a[j], &a[j - 1]);
 	else
 		for (i = 1; i < n; ++i)
 			for (j = i; j > 0 && a[j - 1] < a[j]; --j)
-				_xtSwapD(&a[j], &a[j - 1]);
+				swap_d(&a[j], &a[j - 1]);
 }
 
-static void _xtInsertionSortU(unsigned *a, size_t n, bool ascend)
+static void insertion_sort_u(unsigned *a, size_t n, bool ascend)
 {
 	size_t i, j;
 	if (ascend)
 		for (i = 1; i < n; ++i)
 			for (j = i; j > 0 && a[j - 1] > a[j]; --j)
-				_xtSwapU(&a[j], &a[j - 1]);
+				swap_u(&a[j], &a[j - 1]);
 	else
 		for (i = 1; i < n; ++i)
 			for (j = i; j > 0 && a[j - 1] < a[j]; --j)
-				_xtSwapU(&a[j], &a[j - 1]);
+				swap_u(&a[j], &a[j - 1]);
 }
 
-static int _xtInsertionSortP(void *list, size_t elemsize, size_t n, int (*cmp)(void*, void*), bool ascend)
+static int insertion_sort_p(void *list, size_t elemsize, size_t n, int (*cmp)(void*, void*), bool ascend)
 {
 	size_t i, j;
 	char *a = list;
@@ -312,16 +311,16 @@ static int _xtInsertionSortP(void *list, size_t elemsize, size_t n, int (*cmp)(v
 	if (ascend)
 		for (i = 1; i < n; ++i)
 			for (j = i; j > 0 && cmp(&a[(j - 1) * elemsize], &a[j * elemsize]) > 0; --j)
-				_xtSwapP(&a[j * elemsize], &a[(j - 1) * elemsize], tmp, elemsize);
+				swap_p(&a[j * elemsize], &a[(j - 1) * elemsize], tmp, elemsize);
 	else
 		for (i = 1; i < n; ++i)
 			for (j = i; j > 0 && cmp(&a[(j - 1) * elemsize], &a[j * elemsize]) < 0; --j)
-				_xtSwapP(&a[j * elemsize], &a[(j - 1) * elemsize], tmp, elemsize);
+				swap_p(&a[j * elemsize], &a[(j - 1) * elemsize], tmp, elemsize);
 	free(tmp);
 	return 0;
 }
 
-static void _xtQuickSortD_A(int *a, ssize_t low, ssize_t high)
+static void radix_quick_sort_d_a(int *a, ssize_t low, ssize_t high)
 {
 	ssize_t i, j;
 	int pivot;
@@ -333,15 +332,15 @@ static void _xtQuickSortD_A(int *a, ssize_t low, ssize_t high)
 		while (a[j] > pivot)
 			--j;
 		if (i <= j)
-			_xtSwapD(&a[i++], &a[j--]);
+			swap_d(&a[i++], &a[j--]);
 	}
 	if (low < j)
-		_xtQuickSortD_A(a, low, j);
+		radix_quick_sort_d_a(a, low, j);
 	if (i < high)
-		_xtQuickSortD_A(a, i, high);
+		radix_quick_sort_d_a(a, i, high);
 }
 
-static void _xtQuickSortD_D(int *a, ssize_t low, ssize_t high)
+static void radix_quick_sort_d_d(int *a, ssize_t low, ssize_t high)
 {
 	ssize_t i, j;
 	int pivot;
@@ -353,15 +352,15 @@ static void _xtQuickSortD_D(int *a, ssize_t low, ssize_t high)
 		while (a[j] < pivot)
 			--j;
 		if (i <= j)
-			_xtSwapD(&a[i++], &a[j--]);
+			swap_d(&a[i++], &a[j--]);
 	}
 	if (low < j)
-		_xtQuickSortD_D(a, low, j);
+		radix_quick_sort_d_d(a, low, j);
 	if (i < high)
-		_xtQuickSortD_D(a, i, high);
+		radix_quick_sort_d_d(a, i, high);
 }
 
-static void _xtQuickSortU_A(unsigned *a, ssize_t low, ssize_t high)
+static void radix_quick_sort_u_a(unsigned *a, ssize_t low, ssize_t high)
 {
 	ssize_t i, j;
 	unsigned pivot;
@@ -373,15 +372,15 @@ static void _xtQuickSortU_A(unsigned *a, ssize_t low, ssize_t high)
 		while (a[j] > pivot)
 			--j;
 		if (i <= j)
-			_xtSwapU(&a[i++], &a[j--]);
+			swap_u(&a[i++], &a[j--]);
 	}
 	if (low < j)
-		_xtQuickSortU_A(a, low, j);
+		radix_quick_sort_u_a(a, low, j);
 	if (i < high)
-		_xtQuickSortU_A(a, i, high);
+		radix_quick_sort_u_a(a, i, high);
 }
 
-static void _xtQuickSortU_D(unsigned *a, ssize_t low, ssize_t high)
+static void radix_quick_sort_u_d(unsigned *a, ssize_t low, ssize_t high)
 {
 	ssize_t i, j;
 	unsigned pivot;
@@ -393,15 +392,15 @@ static void _xtQuickSortU_D(unsigned *a, ssize_t low, ssize_t high)
 		while (a[j] < pivot)
 			--j;
 		if (i <= j)
-			_xtSwapU(&a[i++], &a[j--]);
+			swap_u(&a[i++], &a[j--]);
 	}
 	if (low < j)
-		_xtQuickSortU_D(a, low, j);
+		radix_quick_sort_u_d(a, low, j);
 	if (i < high)
-		_xtQuickSortU_D(a, i, high);
+		radix_quick_sort_u_d(a, i, high);
 }
 
-static int _xtQuickSortP_A(void *list, size_t elemsize, ssize_t low, ssize_t high, int (*cmp)(void*, void*))
+static int radix_quick_sort_p_a(void *list, size_t elemsize, ssize_t low, ssize_t high, int (*cmp)(void*, void*))
 {
 	int ret = 1;
 	ssize_t i, j;
@@ -418,11 +417,11 @@ static int _xtQuickSortP_A(void *list, size_t elemsize, ssize_t low, ssize_t hig
 		while (cmp(&a[j * elemsize], pivot) > 0)
 			--j;
 		if (i <= j)
-			_xtSwapP(&a[i++ * elemsize], &a[j-- * elemsize], tmp, elemsize);
+			swap_p(&a[i++ * elemsize], &a[j-- * elemsize], tmp, elemsize);
 	}
-	if (low < j && (ret = _xtQuickSortP_A(list, elemsize, low, j, cmp)))
+	if (low < j && (ret = radix_quick_sort_p_a(list, elemsize, low, j, cmp)))
 		goto fail;
-	if (i < high && (ret = _xtQuickSortP_A(list, elemsize, i, high, cmp)))
+	if (i < high && (ret = radix_quick_sort_p_a(list, elemsize, i, high, cmp)))
 		goto fail;
 	ret = 0;
 fail:
@@ -431,7 +430,7 @@ fail:
 	return ret;
 }
 
-static int _xtQuickSortP_D(void *list, size_t elemsize, ssize_t low, ssize_t high, int (*cmp)(void*, void*))
+static int radix_quick_sort_p_d(void *list, size_t elemsize, ssize_t low, ssize_t high, int (*cmp)(void*, void*))
 {
 	int ret = 1;
 	ssize_t i, j;
@@ -448,11 +447,11 @@ static int _xtQuickSortP_D(void *list, size_t elemsize, ssize_t low, ssize_t hig
 		while (cmp(&a[j * elemsize], pivot) < 0)
 			--j;
 		if (i <= j)
-			_xtSwapP(&a[i++ * elemsize], &a[j-- * elemsize], tmp, elemsize);
+			swap_p(&a[i++ * elemsize], &a[j-- * elemsize], tmp, elemsize);
 	}
-	if (low < j && (ret = _xtQuickSortP_D(list, elemsize, low, j, cmp)))
+	if (low < j && (ret = radix_quick_sort_p_d(list, elemsize, low, j, cmp)))
 		goto fail;
-	if (i < high && (ret = _xtQuickSortP_D(list, elemsize, i, high, cmp)))
+	if (i < high && (ret = radix_quick_sort_p_d(list, elemsize, i, high, cmp)))
 		goto fail;
 	ret = 0;
 fail:
@@ -461,7 +460,7 @@ fail:
 	return ret;
 }
 
-static void _xtSelectionSortD(int *a, size_t n, bool ascend)
+static void selection_sort_d(int *a, size_t n, bool ascend)
 {
 	size_t i, j, min;
 	if (ascend)
@@ -471,7 +470,7 @@ static void _xtSelectionSortD(int *a, size_t n, bool ascend)
 				if (a[i] < a[min])
 					min = i;
 			if (min != j)
-				_xtSwapD(&a[min], &a[j]);
+				swap_d(&a[min], &a[j]);
 		}
 	else
 		for (j = 0; j < n - 1; ++j) {
@@ -480,11 +479,11 @@ static void _xtSelectionSortD(int *a, size_t n, bool ascend)
 				if (a[i] > a[min])
 					min = i;
 			if (min != j)
-				_xtSwapD(&a[min], &a[j]);
+				swap_d(&a[min], &a[j]);
 		}
 }
 
-static void _xtSelectionSortU(unsigned *a, size_t n, bool ascend)
+static void selection_sort_u(unsigned *a, size_t n, bool ascend)
 {
 	size_t i, j, min;
 	if (ascend)
@@ -494,7 +493,7 @@ static void _xtSelectionSortU(unsigned *a, size_t n, bool ascend)
 				if (a[i] < a[min])
 					min = i;
 			if (min != j)
-				_xtSwapU(&a[min], &a[j]);
+				swap_u(&a[min], &a[j]);
 		}
 	else
 		for (j = 0; j < n - 1; ++j) {
@@ -503,11 +502,11 @@ static void _xtSelectionSortU(unsigned *a, size_t n, bool ascend)
 				if (a[i] > a[min])
 					min = i;
 			if (min != j)
-				_xtSwapU(&a[min], &a[j]);
+				swap_u(&a[min], &a[j]);
 		}
 }
 
-static int _xtSelectionSortP(void *list, size_t elemsize, size_t n, int (*cmp)(void*, void*), bool ascend)
+static int selection_sort_p(void *list, size_t elemsize, size_t n, int (*cmp)(void*, void*), bool ascend)
 {
 	size_t i, j, min;
 	char *a = list;
@@ -521,7 +520,7 @@ static int _xtSelectionSortP(void *list, size_t elemsize, size_t n, int (*cmp)(v
 				if (cmp(&a[i * elemsize], &a[min * elemsize]) < 0)
 					min = i;
 			if (min != j)
-				_xtSwapP(&a[min * elemsize], &a[j * elemsize], tmp, elemsize);
+				swap_p(&a[min * elemsize], &a[j * elemsize], tmp, elemsize);
 		}
 	else
 		for (j = 0; j < n - 1; ++j) {
@@ -530,7 +529,7 @@ static int _xtSelectionSortP(void *list, size_t elemsize, size_t n, int (*cmp)(v
 				if (cmp(&a[i * elemsize], &a[min * elemsize]) > 0)
 					min = i;
 			if (min != j)
-				_xtSwapP(&a[min * elemsize], &a[j * elemsize], tmp, elemsize);
+				swap_p(&a[min * elemsize], &a[j * elemsize], tmp, elemsize);
 		}
 	free(tmp);
 	return 0;
@@ -538,7 +537,7 @@ static int _xtSelectionSortP(void *list, size_t elemsize, size_t n, int (*cmp)(v
 
 #define K 10
 
-static int _xtRadixSortD(int *a, size_t n, bool ascend)
+static int radix_sort_d(int *a, size_t n, bool ascend)
 {
 	int m, exp, bb[K], *b;
 	size_t i, j;
@@ -570,7 +569,7 @@ static int _xtRadixSortD(int *a, size_t n, bool ascend)
 	return 0;
 }
 
-static int _xtRadixSortU(unsigned *a, size_t n, bool ascend)
+static int radix_sort_u(unsigned *a, size_t n, bool ascend)
 {
 	unsigned m, exp, bb[K], *b;
 	size_t i, j;
@@ -606,25 +605,25 @@ int xtSortU(unsigned *list, size_t count, enum xtSortType type, bool ascend)
 {
 	switch (type) {
 	case XT_SORT_BUBBLE:
-		_xtBubbleSortU(list, count, ascend);
+		bubble_sort_u(list, count, ascend);
 		break;
 	case XT_SORT_HEAP:
-		_xtHeapSortU(list, count, ascend);
+		heap_sort_u(list, count, ascend);
 		break;
 	case XT_SORT_INSERT:
-		_xtInsertionSortU(list, count, ascend);
+		insertion_sort_u(list, count, ascend);
 		break;
 	case XT_SORT_QUICK:
 		if (ascend)
-			_xtQuickSortU_A(list, 0, count - 1);
+			radix_quick_sort_u_a(list, 0, count - 1);
 		else
-			_xtQuickSortU_D(list, 0, count - 1);
+			radix_quick_sort_u_d(list, 0, count - 1);
 		break;
 	case XT_SORT_SELECT:
-		_xtSelectionSortU(list, count, ascend);
+		selection_sort_u(list, count, ascend);
 		break;
 	case XT_SORT_RADIX:
-		return _xtRadixSortU(list, count, ascend);
+		return radix_sort_u(list, count, ascend);
 	default:
 		return XT_EINVAL;
 	}
@@ -635,25 +634,25 @@ int xtSortD(int *list, size_t count, enum xtSortType type, bool ascend)
 {
 	switch (type) {
 	case XT_SORT_BUBBLE:
-		_xtBubbleSortD   (list, count, ascend);
+		bubble_sort_d   (list, count, ascend);
 		break;
 	case XT_SORT_HEAP:
-		_xtHeapSortD     (list, count, ascend);
+		heap_sort_d     (list, count, ascend);
 		break;
 	case XT_SORT_INSERT:
-		_xtInsertionSortD(list, count, ascend);
+		insertion_sort_d(list, count, ascend);
 		break;
 	case XT_SORT_QUICK:
 		if (ascend)
-			_xtQuickSortD_A(list, 0, count - 1);
+			radix_quick_sort_d_a(list, 0, count - 1);
 		else
-			_xtQuickSortD_D(list, 0, count - 1);
+			radix_quick_sort_d_d(list, 0, count - 1);
 		break;
 	case XT_SORT_SELECT:
-		_xtSelectionSortD(list, count, ascend);
+		selection_sort_d(list, count, ascend);
 		break;
 	case XT_SORT_RADIX:
-		return _xtRadixSortD(list, count, ascend);
+		return radix_sort_d(list, count, ascend);
 	default:
 		return XT_EINVAL;
 	}
@@ -665,26 +664,26 @@ int xtSortP(void *list, size_t count, enum xtSortType type, int (*cmp)(void*,voi
 	if (!cmp)
 		return XT_EINVAL;
 	switch (type) {
-	case XT_SORT_BUBBLE: return _xtBubbleSortP   (list, elemSize, count, cmp, ascend);
-	case XT_SORT_HEAP  : return _xtHeapSortP     (list, elemSize, count, cmp, ascend);
-	case XT_SORT_INSERT: return _xtInsertionSortP(list, elemSize, count, cmp, ascend);
+	case XT_SORT_BUBBLE: return bubble_sort_p   (list, elemSize, count, cmp, ascend);
+	case XT_SORT_HEAP  : return heap_sort_p     (list, elemSize, count, cmp, ascend);
+	case XT_SORT_INSERT: return insertion_sort_p(list, elemSize, count, cmp, ascend);
 	case XT_SORT_QUICK :
 		if (ascend)
-			return _xtQuickSortP_A(list, elemSize, 0, count - 1, cmp);
+			return radix_quick_sort_p_a(list, elemSize, 0, count - 1, cmp);
 		else
-			return _xtQuickSortP_D(list, elemSize, 0, count - 1, cmp);
-	case XT_SORT_SELECT: return _xtSelectionSortP(list, elemSize, count, cmp, ascend);
+			return radix_quick_sort_p_d(list, elemSize, 0, count - 1, cmp);
+	case XT_SORT_SELECT: return selection_sort_p(list, elemSize, count, cmp, ascend);
 	default:
 		return XT_EINVAL;
 	}
 }
 
-static int _xtSortStrcmp(void *a, void *b)
+static int sort_str_cmp(void *a, void *b)
 {
 	return strcmp(*(char**)a, *(char**)b);
 }
 
 int xtSortStr(char **list, size_t count, enum xtSortType type, bool ascend)
 {
-	return xtSortP(list, count, type, _xtSortStrcmp, ascend, sizeof(char*));
+	return xtSortP(list, count, type, sort_str_cmp, ascend, sizeof(char*));
 }

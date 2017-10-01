@@ -20,7 +20,7 @@
 #include <string.h>
 
 /*
- * When porting to Windows, put these macros in the file. Overwrite any old ones
+ * When porting to Windows, put these macros in the file and overwrite any old ones
 #define XT_SOCKET_INVALID_FD (unsigned int) SOCKET_ERROR
 #define XT_SOCKET_LAST_ERROR WSAGetLastError()
 #define close closesocket
@@ -33,20 +33,20 @@
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
  */
-/**
- * Only initializes the sin_family field in the address. This is VERY IMPORTANT!!!
- * All other fields will be left untouched.
- */
-static void _xtSockaddrInit(struct xtSockaddr *sa)
-{
-	((struct sockaddr_in*)sa)->sin_family = AF_INET;
-}
 
 bool xtSockaddrEquals(const struct xtSockaddr *sa1, const struct xtSockaddr *sa2)
 {
 	// DO NOT just check the full memory! It is possible that only the address and port match, which is what we want to check for.
 	return ((struct sockaddr_in*) sa1)->sin_addr.s_addr == ((struct sockaddr_in*)sa2)->sin_addr.s_addr &&
 		((struct sockaddr_in*) sa1)->sin_port == ((struct sockaddr_in*)sa2)->sin_port;
+}
+/**
+ * Only initializes the sin_family field in the address. This is VERY IMPORTANT!!!
+ * All other fields will be left untouched.
+ */
+static void sockaddr_init(struct xtSockaddr *sa)
+{
+	((struct sockaddr_in*)sa)->sin_family = AF_INET;
 }
 
 bool xtSockaddrFromString(struct xtSockaddr *restrict sa, const char *restrict addr, uint16_t port)
@@ -65,7 +65,7 @@ bool xtSockaddrFromString(struct xtSockaddr *restrict sa, const char *restrict a
 	if (inet_pton(AF_INET, buf, &((struct sockaddr_in*)sa)->sin_addr) != 1)
 		return false;
 	xtSockaddrSetPort(sa, sep ? (unsigned short)strtoul(++sep, NULL, 10) : port);
-	_xtSockaddrInit(sa); // Init this to be safe
+	sockaddr_init(sa); // Init this to be safe
 	return true;
 }
 
@@ -73,7 +73,7 @@ bool xtSockaddrFromAddr(struct xtSockaddr *sa, uint32_t addr, uint16_t port)
 {
 	xtSockaddrSetAddress(sa, addr);
 	xtSockaddrSetPort(sa, port);
-	_xtSockaddrInit(sa); // Init this to be safe
+	sockaddr_init(sa); // Init this to be safe
 	return true;
 }
 
@@ -99,19 +99,19 @@ uint16_t xtSockaddrGetPort(const struct xtSockaddr *sa)
 
 void xtSockaddrInit(struct xtSockaddr *sa)
 {
-	_xtSockaddrInit(sa);
+	sockaddr_init(sa);
 }
 
 void xtSockaddrSetAddress(struct xtSockaddr *sa, uint32_t addr)
 {
 	((struct sockaddr_in*)sa)->sin_addr.s_addr = addr;
-	_xtSockaddrInit(sa); // Init this to be safe
+	sockaddr_init(sa); // Init this to be safe
 }
 
 void xtSockaddrSetPort(struct xtSockaddr *sa, uint16_t port)
 {
 	((struct sockaddr_in*)sa)->sin_port = htobe16(port);
-	_xtSockaddrInit(sa); // Init this to be safe
+	sockaddr_init(sa); // Init this to be safe
 }
 
 char *xtSockaddrToString(const struct xtSockaddr *restrict sa, char *restrict buf, size_t buflen)
@@ -125,37 +125,6 @@ char *xtSockaddrToString(const struct xtSockaddr *restrict sa, char *restrict bu
 
 // Some macros that spare us a lot of typing
 #define XT_SOCKET_LAST_ERROR errno
-/**
- * Converts a native socket protocol to it's xt representation.
- * XT_SOCKET_PROTO_UNKNOWN is returned if the protocol is unsupported.
- */
-static enum xtSocketProto _xtSocketNativeProtoToProto(int nativeProto)
-{
-	switch (nativeProto) {
-	case IPPROTO_TCP: return XT_SOCKET_PROTO_TCP;
-	case IPPROTO_UDP: return XT_SOCKET_PROTO_UDP;
-	default:          return XT_SOCKET_PROTO_UNKNOWN;
-	}
-}
-/**
- * Converts an xtSocketProto to the native representation.
- * @return True of the conversion was successful, false otherwise.
- */
-static bool _xtSocketProtoToNativeProto(enum xtSocketProto proto, int *restrict nativeType, int *restrict nativeProto)
-{
-	switch (proto) {
-	case XT_SOCKET_PROTO_TCP:
-		*nativeType = SOCK_STREAM;
-		*nativeProto = IPPROTO_TCP;
-		return true;
-	case XT_SOCKET_PROTO_UDP:
-		*nativeType = SOCK_DGRAM;
-		*nativeProto = IPPROTO_UDP;
-		return true;
-	default:
-		return false;
-	}
-}
 
 int xtSocketBindTo(xtSocket sock, const struct xtSockaddr *sa)
 {
@@ -190,11 +159,30 @@ int xtSocketConnect(xtSocket sock, const struct xtSockaddr *dest)
 		return 0;
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
+/**
+ * Converts an xtSocketProto to the native representation.
+ * @return True of the conversion was successful, false otherwise.
+ */
+static bool socket_proto_to_native_proto(enum xtSocketProto proto, int *restrict nativeType, int *restrict nativeProto)
+{
+	switch (proto) {
+	case XT_SOCKET_PROTO_TCP:
+		*nativeType = SOCK_STREAM;
+		*nativeProto = IPPROTO_TCP;
+		return true;
+	case XT_SOCKET_PROTO_UDP:
+		*nativeType = SOCK_DGRAM;
+		*nativeProto = IPPROTO_UDP;
+		return true;
+	default:
+		return false;
+	}
+}
 
 int xtSocketCreate(xtSocket *sock, enum xtSocketProto proto)
 {
 	int nativeType, nativeProto;
-	if (!_xtSocketProtoToNativeProto(proto, &nativeType, &nativeProto))
+	if (!socket_proto_to_native_proto(proto, &nativeType, &nativeProto))
 		return XT_EPROTONOSUPPORT;
 	*sock = socket(AF_INET, nativeType, nativeProto);
 	if (*sock == XT_SOCKET_INVALID_FD)
@@ -222,13 +210,25 @@ uint16_t xtSocketGetLocalPort(xtSocket sock)
 		return xtSockaddrGetPort(&sa);
 	return 0;
 }
+/**
+ * Converts a native socket protocol to it's xt representation.
+ * XT_SOCKET_PROTO_UNKNOWN is returned if the protocol is unsupported.
+ */
+static enum xtSocketProto socket_native_proto_to_proto(int nativeProto)
+{
+	switch (nativeProto) {
+	case IPPROTO_TCP: return XT_SOCKET_PROTO_TCP;
+	case IPPROTO_UDP: return XT_SOCKET_PROTO_UDP;
+	default:          return XT_SOCKET_PROTO_UNKNOWN;
+	}
+}
 
 enum xtSocketProto xtSocketGetProtocol(const xtSocket sock)
 {
 	int val = 0;
 	socklen_t len = sizeof val;
 	if (getsockopt(sock, SOL_SOCKET, SO_PROTOCOL, (char*)&val, &len) == 0)
-		return _xtSocketNativeProtoToProto(val);
+		return socket_native_proto_to_proto(val);
 	return XT_SOCKET_PROTO_UNKNOWN;
 }
 
@@ -483,7 +483,7 @@ struct xtSocketPoll {
 /**
  * Filters out or adds flags. This is to have consistent cross platform behavior.
  */
-static uint32_t _xtSocketPollEventFixSysFlags(uint32_t sysevents)
+static uint32_t socket_poll_event_fix_sys_flags(uint32_t sysevents)
 {
 	// Always add these on Linux!
 	sysevents |= EPOLLERR | EPOLLHUP | EPOLLRDHUP;
@@ -492,7 +492,7 @@ static uint32_t _xtSocketPollEventFixSysFlags(uint32_t sysevents)
 /**
  * Translates an xtSocketPollEvent to it's native countpart.
  */
-static uint32_t _xtSocketPollEventFlagsToSys(enum xtSocketPollEvent events)
+static uint32_t socket_poll_event_flags_to_sys(enum xtSocketPollEvent events)
 {
 	uint32_t newEvents = 0;
 	if (events & XT_POLLIN)
@@ -508,7 +508,7 @@ static uint32_t _xtSocketPollEventFlagsToSys(enum xtSocketPollEvent events)
 /**
  * Translates native epoll flags to it's xt counterpart.
  */
-static enum xtSocketPollEvent _xtSocketPollEventSysToFlags(uint32_t sysevents)
+static enum xtSocketPollEvent socket_poll_event_sys_to_flags(uint32_t sysevents)
 {
 	enum xtSocketPollEvent newEvents = 0;
 	if (sysevents & EPOLLIN)
@@ -529,7 +529,7 @@ int xtSocketPollAdd(struct xtSocketPoll *p, xtSocket sock, void *restrict data, 
 		return XT_ENOBUFS;
 	struct epoll_event event;
 	memset(&event, 0, sizeof event); // Prevent "uninitialised value(s)" warnings in Valgrind
-	event.events = _xtSocketPollEventFixSysFlags(_xtSocketPollEventFlagsToSys(events));
+	event.events = socket_poll_event_fix_sys_flags(socket_poll_event_flags_to_sys(events));
 	// Search for a free index
 	for (int i = 0; i < capacity; ++i)
 		if (p->data[i].fd == XT_SOCKET_INVALID_FD) {
@@ -626,7 +626,7 @@ void *xtSocketPollGetReadyData(const struct xtSocketPoll *p, size_t index)
 
 enum xtSocketPollEvent xtSocketPollGetReadyEvent(const struct xtSocketPoll *p, size_t index)
 {
-	return _xtSocketPollEventSysToFlags(p->events[index].events);
+	return socket_poll_event_sys_to_flags(p->events[index].events);
 }
 
 xtSocket xtSocketPollGetReadySocket(const struct xtSocketPoll *p, size_t index)
@@ -643,7 +643,7 @@ int xtSocketPollMod(struct xtSocketPoll *p, xtSocket sock, enum xtSocketPollEven
 {
 	struct epoll_event event;
 	memset(&event, 0, sizeof event);
-	event.events = _xtSocketPollEventFixSysFlags(_xtSocketPollEventFlagsToSys(events));
+	event.events = socket_poll_event_fix_sys_flags(socket_poll_event_flags_to_sys(events));
 	for (int i = 0, capacity = p->capacity; i < capacity; ++i)
 		if (p->data[i].fd == sock) {
 			event.data.ptr = &p->data[i];
@@ -683,7 +683,7 @@ int xtSocketPollSetEvent(struct xtSocketPoll *p, xtSocket sock, enum xtSocketPol
 {
 	for (int i = 0, socketsReady = p->socketsReady; i < socketsReady; ++i)
 		if (((struct _xt_poll_data*) p->events[i].data.ptr)->fd == sock) {
-			p->events[i].events = _xtSocketPollEventFlagsToSys(events);
+			p->events[i].events = socket_poll_event_flags_to_sys(events);
 			return 0;
 		}
 	return XT_EINVAL;
