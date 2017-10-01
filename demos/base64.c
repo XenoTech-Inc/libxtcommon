@@ -4,23 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define TEST_SIZE (64*1048576)
-
-static size_t xtBase64GetEncodedSize(size_t buflen)
-{
-	return 4 * ((buflen + 2) / 3);
-}
-
-static size_t xtBase64GetDecodedSize(const void *buf, size_t buflen)
-{
-	unsigned const char *xbuf = buf;
-	size_t outputlen = buflen / 4 * 3; // XXX should be * 3 / 4 ?
-	if (xbuf[buflen - 1] == '=')
-		--outputlen;
-	if (xbuf[buflen - 2] == '=')
-		--outputlen;
-	return outputlen;
-}
+#define TEST_SIZE (64 * 1048576)
 
 int main(void)
 {
@@ -43,7 +27,7 @@ int main(void)
 	if (!data)
 		goto fail;
 
-	/* fill data with random shit */
+	/* Fill data with random shit */
 	for (size_t i = 0; i < TEST_SIZE; ++i)
 		data[i] = rand();
 
