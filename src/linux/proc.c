@@ -1,7 +1,7 @@
 // XT headers
 #include <xt/proc.h>
-#include <xt/error.h>
 #include <_xt/error.h>
+#include <xt/error.h>
 #include <xt/string.h>
 
 // System headers

@@ -1,8 +1,8 @@
 // XT headers
 #include <xt/socket.h>
 #include <xt/endian.h> // htobe16
-#include <xt/error.h>
 #include <_xt/error.h>
+#include <xt/error.h>
 
 // System headers
 #include <arpa/inet.h> // sockaddr_in struct and functions to format IP addresses and ports
