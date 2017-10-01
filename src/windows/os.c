@@ -7,9 +7,7 @@
 // System headers
 #include <windows.h> // Include windows.h before TlHelp32.h, otherwise we get problems
 #include <tlhelp32.h> // For CreateToolhelp32Snapshot
-#if XT_IS_X64
-	#include <intrin.h> // For the cpuid function, only available on 64 bit...
-#endif
+#include <intrin.h> // For the cpuid function, only available on 64 bit...
 #include <io.h> // For _isatty
 
 // STD headers
@@ -252,35 +250,25 @@ char *xtGetHostname(char *buf, size_t buflen)
 	return buf;
 }
 /**
- * Special function. Since Windows 8.1 GetVersion is kind of broken and won't work correctly.
- * To avoid that, Microsoft recommends changing stuff in the resource file or including some header which nobody understands how to even do.
- * $hit$oft just breaks their API with a ridiculously bad new one, but this special function avoids doing that stupid crap. It retrieves the correct version.
- * It should also work on Windows 2000.
+ * Special function. Since Windows 8.1 GetVersion is kind of broken and won't
+ * work correctly. To avoid that, Microsoft recommends changing stuff in the
+ * resource file or including some header which nobody understands how to
+ * even do. $hit$oft just replaces their API with a ridiculously bad new one,
+ * but this special function avoids doing that stupid crap. It retrieves the
+ * correct version. It should also work on Windows 2000.
  */
-static bool _xtGetWindowsVersion(DWORD *major, DWORD *minor)
+static bool get_windows_version(RTL_OSVERSIONINFOEXW *rtlOSVersionInfo)
 {
-#if !defined(RTL_OSVERSIONINFOEXW)
-	typedef struct RTL_OSVERSIONINFOEXW {
-		DWORD dwOSVersionInfoSize, dwMajorVersion, dwMinorVersion,
-		dwBuildNumber, dwPlatformId;
-		char szCSDVersion[128];
-		WORD wServicePackMajor,wServicePackMinor, wSuiteMask, wProductType, wReserved;
-	} RTL_OSVERSIONINFOEXW;
-#endif
 	typedef LONG (WINAPI* tRtlGetVersion)(RTL_OSVERSIONINFOEXW*);
-	RTL_OSVERSIONINFOEXW pk_OsVer;
-	memset(&pk_OsVer, 0, sizeof(RTL_OSVERSIONINFOEXW));
-	pk_OsVer.dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOEXW);
-	HMODULE h_NtDll = GetModuleHandle(TEXT("ntdll.dll"));
-	tRtlGetVersion f_RtlGetVersion = (tRtlGetVersion) GetProcAddress(h_NtDll, "RtlGetVersion");
+
+	memset(rtlOSVersionInfo, 0, sizeof *rtlOSVersionInfo);
+	rtlOSVersionInfo->dwOSVersionInfoSize = sizeof *rtlOSVersionInfo;
+
+	HMODULE hmodule = GetModuleHandle(TEXT("ntdll.dll"));
+	tRtlGetVersion f_RtlGetVersion = (tRtlGetVersion)GetProcAddress(hmodule, "RtlGetVersion");
 	if (!f_RtlGetVersion)
-		return false; // This will never happen (all processes load ntdll.dll)
-	if (f_RtlGetVersion(&pk_OsVer) == 0) {
-		*major = pk_OsVer.dwMajorVersion;
-		*minor = pk_OsVer.dwMinorVersion;
-		return true;
-	} else
-		return false;
+		return false; // This should never happen (all processes load ntdll.dll)
+	return f_RtlGetVersion(rtlOSVersionInfo) == 0;
 }
 
 char *xtGetOSName(char *buf, size_t buflen)
@@ -288,15 +276,14 @@ char *xtGetOSName(char *buf, size_t buflen)
 	char *os = buf;
 	#define APPEND(str) os += snprintf(os, buflen - (os - buf), str)
 	APPEND("Windows");
-	DWORD major, minor;
-	if (!_xtGetWindowsVersion(&major, &minor))
+	RTL_OSVERSIONINFOEXW rtlOSVersionInfo;
+	if (!get_windows_version(&rtlOSVersionInfo))
 		return buf;
 	APPEND(" ");
-	OSVERSIONINFOEX osvi;
-	ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-	GetVersionEx((LPOSVERSIONINFO) &osvi);
-	bool isServer = osvi.wProductType != VER_NT_WORKSTATION;
+
+	bool isServer = rtlOSVersionInfo.wProductType != VER_NT_WORKSTATION;
+	DWORD major = rtlOSVersionInfo.dwMajorVersion;
+	DWORD minor = rtlOSVersionInfo.dwMinorVersion;
 	switch (major) {
 		case 10:
 			if (isServer) APPEND("Server 2016");
