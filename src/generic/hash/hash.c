@@ -7,7 +7,7 @@
 /**
  * The MD5 and SHAXXX functions are all taken from github.com/WaterJuice/CryptLib and changed to fit in here.
  */
- 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	MD5 START
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@
 	(a) += f((b), (c), (d)) + (x) + (t);                        \
 	(a) = (((a) << (s)) | (((a) & 0xffffffff) >> (32 - (s))));  \
 	(a) += (b);
- 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  MD5_SET, MD5_GET
 //
@@ -41,32 +41,32 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define MD5_SET(n)	(*(uint32_t*) &ptr[(n) * 4])
 #define MD5_GET(n)	MD5_SET(n)
- 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  _xtMD5TransformFunction
 //
-//  This processes one or more 64-byte data blocks, but does NOT update the bit counters. There are no alignment 
+//  This processes one or more 64-byte data blocks, but does NOT update the bit counters. There are no alignment
 //  requirements.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-static void *_xtMD5TransformFunction(struct _xtMD5Context *restrict ctx, uint8_t *restrict data, uintmax_t size)
+static void *_xtMD5TransformFunction(struct _xtMD5Context *restrict ctx, const uint8_t *restrict data, uintmax_t size)
 {
 	uint8_t *ptr;
 	uint32_t a, b, c, d;
 	uint32_t saved_a, saved_b, saved_c, saved_d;
-	
+
 	ptr = (uint8_t*)data;
-	
+
 	a = ctx->a;
 	b = ctx->b;
 	c = ctx->c;
 	d = ctx->d;
-	
+
 	do {
 		saved_a = a;
 		saved_b = b;
 		saved_c = c;
 		saved_d = d;
-		
+
 		// Round 1
 		MD5_STEP( MD5_F, a, b, c, d, MD5_SET(0),  0xd76aa478, 7 )
 		MD5_STEP( MD5_F, d, a, b, c, MD5_SET(1),  0xe8c7b756, 12 )
@@ -84,7 +84,7 @@ static void *_xtMD5TransformFunction(struct _xtMD5Context *restrict ctx, uint8_t
 		MD5_STEP( MD5_F, d, a, b, c, MD5_SET(13 ), 0xfd987193, 12 )
 		MD5_STEP( MD5_F, c, d, a, b, MD5_SET(14 ), 0xa679438e, 17 )
 		MD5_STEP( MD5_F, b, c, d, a, MD5_SET(15 ), 0x49b40821, 22 )
-		
+
 		// Round 2
 		MD5_STEP( MD5_G, a, b, c, d, MD5_GET(1),  0xf61e2562, 5 )
 		MD5_STEP( MD5_G, d, a, b, c, MD5_GET(6),  0xc040b340, 9 )
@@ -102,7 +102,7 @@ static void *_xtMD5TransformFunction(struct _xtMD5Context *restrict ctx, uint8_t
 		MD5_STEP( MD5_G, d, a, b, c, MD5_GET(2),  0xfcefa3f8, 9 )
 		MD5_STEP( MD5_G, c, d, a, b, MD5_GET(7),  0x676f02d9, 14 )
 		MD5_STEP( MD5_G, b, c, d, a, MD5_GET(12), 0x8d2a4c8a, 20 )
-		
+
 		// Round 3
 		MD5_STEP( MD5_H, a, b, c, d, MD5_GET(5),  0xfffa3942, 4 )
 		MD5_STEP( MD5_H, d, a, b, c, MD5_GET(8),  0x8771f681, 11 )
@@ -120,7 +120,7 @@ static void *_xtMD5TransformFunction(struct _xtMD5Context *restrict ctx, uint8_t
 		MD5_STEP( MD5_H, d, a, b, c, MD5_GET(12), 0xe6db99e5, 11 )
 		MD5_STEP( MD5_H, c, d, a, b, MD5_GET(15), 0x1fa27cf8, 16 )
 		MD5_STEP( MD5_H, b, c, d, a, MD5_GET(2),  0xc4ac5665, 23 )
-		
+
 		// Round 4
 		MD5_STEP( MD5_I, a, b, c, d, MD5_GET(0),  0xf4292244, 6 )
 		MD5_STEP( MD5_I, d, a, b, c, MD5_GET(7),  0x432aff97, 10 )
@@ -138,41 +138,41 @@ static void *_xtMD5TransformFunction(struct _xtMD5Context *restrict ctx, uint8_t
 		MD5_STEP( MD5_I, d, a, b, c, MD5_GET(11), 0xbd3af235, 10 )
 		MD5_STEP( MD5_I, c, d, a, b, MD5_GET(2),  0x2ad7d2bb, 15 )
 		MD5_STEP( MD5_I, b, c, d, a, MD5_GET(9),  0xeb86d391, 21 )
-		
+
 		a += saved_a;
 		b += saved_b;
 		c += saved_c;
 		d += saved_d;
-		
+
 		ptr += 64;
 	} while (size -= 64);
-	
+
 	ctx->a = a;
 	ctx->b = b;
 	ctx->c = c;
 	ctx->d = d;
-	
+
 	return ptr;
 }
 
-static void _xtMD5Digest(struct _xtMD5Context *restrict ctx, uint8_t *restrict digest) 
+static void _xtMD5Digest(struct _xtMD5Context *restrict ctx, uint8_t *restrict digest)
 {
 	uint32_t used;
 	uint32_t free;
-	
+
 	used = ctx->lo & 0x3f;
 	ctx->buffer[used++] = 0x80;
 	free = 64 - used;
-	
+
 	if (free < 8) {
 		memset (&ctx->buffer[used], 0, free);
 		_xtMD5TransformFunction(ctx, ctx->buffer, 64);
 		used = 0;
 		free = 64;
 	}
-	
+
 	memset(&ctx->buffer[used], 0, free - 8);
-	
+
 	ctx->lo <<= 3;
 	ctx->buffer[56] = (uint8_t) (ctx->lo);
 	ctx->buffer[57] = (uint8_t) (ctx->lo >> 8);
@@ -182,9 +182,9 @@ static void _xtMD5Digest(struct _xtMD5Context *restrict ctx, uint8_t *restrict d
 	ctx->buffer[61] = (uint8_t) (ctx->hi >> 8);
 	ctx->buffer[62] = (uint8_t) (ctx->hi >> 16);
 	ctx->buffer[63] = (uint8_t) (ctx->hi >> 24);
-	
+
 	_xtMD5TransformFunction(ctx, ctx->buffer, 64);
-	
+
 	digest[0]  = (uint8_t) (ctx->a);
 	digest[1]  = (uint8_t) (ctx->a >> 8);
 	digest[2]  = (uint8_t) (ctx->a >> 16);
@@ -209,12 +209,12 @@ static void _xtMD5Init(struct _xtMD5Context *ctx)
 	ctx->b = 0xefcdab89;
 	ctx->c = 0x98badcfe;
 	ctx->d = 0x10325476;
-	
+
 	ctx->lo = 0;
 	ctx->hi = 0;
 }
 
-static void _xtMD5Update(struct _xtMD5Context *restrict ctx, uint8_t *restrict buf, size_t buflen)
+static void _xtMD5Update(struct _xtMD5Context *restrict ctx, const uint8_t *restrict buf, size_t buflen)
 {
 	uint32_t saved_lo;
 	uint32_t used;
@@ -224,12 +224,12 @@ static void _xtMD5Update(struct _xtMD5Context *restrict ctx, uint8_t *restrict b
 		ctx->hi++;
 	}
 	ctx->hi += (uint32_t)( buflen >> 29 );
-	
+
 	used = saved_lo & 0x3f;
-	
+
 	if (used) {
 		free = 64 - used;
-		
+
 		if (buflen < free) {
 			memcpy(&ctx->buffer[used], buf, buflen);
 			return;
@@ -331,22 +331,22 @@ static void _xtSHA256TransformFunction(struct _xtSHA256Context *restrict ctx, ui
 	uint32_t	t1;
 	uint32_t	t;
 	int			i;
-	
+
 	// Copy state into S
 	for (i = 0; i < 8; i++) {
 		S[i] = ctx->state[i];
 	}
-	
+
 	// Copy the state into 512-bits into W[0..15]
 	for (i = 0; i < 16; i++) {
 		SHA256_LOAD32H(W[i], buf + (4*i));
 	}
-	
+
 	// Fill W[16..63]
 	for (i = 16; i < 64; i++) {
 		W[i] = SHA256_Gamma1(W[i-2]) + W[i-7] + SHA256_Gamma0(W[i-15]) + W[i-16];
 	}
-	
+
 	// Compress
 	for (i = 0; i < 64; i++) {
 		SHA256_Round(S[0], S[1], S[2], S[3], S[4], S[5], S[6], S[7], i);
@@ -360,7 +360,7 @@ static void _xtSHA256TransformFunction(struct _xtSHA256Context *restrict ctx, ui
 		S[1] = S[0];
 		S[0] = t;
 	}
-	
+
 	// Feedback
 	for (i = 0; i < 8; i++) {
 		ctx->state[i] = ctx->state[i] + S[i];
@@ -370,16 +370,16 @@ static void _xtSHA256TransformFunction(struct _xtSHA256Context *restrict ctx, ui
 static void _xtSHA256Digest(struct _xtSHA256Context *restrict ctx, uint8_t *restrict digest)
 {
 	int i;
-	
+
 	if (ctx->curlen >= sizeof ctx->buf)
 		return;
-	
+
 	// Increase the length of the message
 	ctx->length += ctx->curlen * 8;
-	
+
 	// Append the '1' bit
 	ctx->buf[ctx->curlen++] = (uint8_t) 0x80;
-	
+
 	// if the length is currently above 56 bytes we append zeros
 	// then compress.  Then we can fall back to padding zeros and length
 	// encoding like normal.
@@ -389,15 +389,15 @@ static void _xtSHA256Digest(struct _xtSHA256Context *restrict ctx, uint8_t *rest
 		_xtSHA256TransformFunction(ctx, ctx->buf);
 		ctx->curlen = 0;
 	}
-	
+
 	// Pad up to 56 bytes of zeroes
 	while (ctx->curlen < 56)
 		ctx->buf[ctx->curlen++] = (uint8_t) 0;
-	
+
 	// Store length
 	SHA256_STORE64H(ctx->length, ctx->buf + 56);
 	_xtSHA256TransformFunction(ctx, ctx->buf);
-	
+
 	// Copy output
 	for (i = 0; i < 8; i++) {
 		SHA256_STORE32H(ctx->state[i], digest + (4 * i));
@@ -418,12 +418,12 @@ static void _xtSHA256Init(struct _xtSHA256Context *ctx)
 	ctx->state[7] = 0x5BE0CD19UL;
 }
 
-static void _xtSHA256Update(struct _xtSHA256Context *restrict ctx, uint8_t *restrict buf, size_t buflen)
+static void _xtSHA256Update(struct _xtSHA256Context *restrict ctx, const uint8_t *restrict buf, size_t buflen)
 {
 	uint32_t n;
 	if (ctx->curlen > sizeof ctx->buf)
 		return;
-	
+
 	while (buflen > 0) {
 		if (ctx->curlen == 0 && buflen >= SHA256_BLOCK_SIZE) {
 			_xtSHA256TransformFunction(ctx, (uint8_t*) buf);
@@ -532,22 +532,22 @@ static void _xtSHA512TransformFunction(struct _xtSHA512Context *restrict ctx, ui
 	uint64_t	t0;
 	uint64_t	t1;
 	int			i;
-	
+
 	// Copy state into S
 	for (i = 0; i < 8; i++) {
 		S[i] = ctx->state[i];
 	}
-	
+
 	// Copy the state into 1024-bits into W[0..15]
 	for (i = 0; i < 16; i++) {
 		SHA512_LOAD64H(W[i], buf + (8 * i));
 	}
-	
+
 	// Fill W[16..79]
 	for (i = 16; i < 80; i++) {
 		W[i] = SHA512_Gamma1(W[i - 2]) + W[i - 7] + SHA512_Gamma0(W[i - 15]) + W[i - 16];
 	}
-	
+
 	// Compress
 	for (i = 0; i < 80; i += 8) {
 		SHA512_Round(S[0],S[1],S[2],S[3],S[4],S[5],S[6],S[7],i+0);
@@ -559,7 +559,7 @@ static void _xtSHA512TransformFunction(struct _xtSHA512Context *restrict ctx, ui
 		SHA512_Round(S[2],S[3],S[4],S[5],S[6],S[7],S[0],S[1],i+6);
 		SHA512_Round(S[1],S[2],S[3],S[4],S[5],S[6],S[7],S[0],i+7);
 	}
-	
+
 	// Feedback
 	for (i = 0; i < 8; i++) {
 		ctx->state[i] = ctx->state[i] + S[i];
@@ -569,16 +569,16 @@ static void _xtSHA512TransformFunction(struct _xtSHA512Context *restrict ctx, ui
 static void _xtSHA512Digest(struct _xtSHA512Context *restrict ctx, uint8_t *restrict digest)
 {
 	int i;
-	
+
 	if (ctx->curlen >= sizeof ctx->buf)
 		return;
-	
+
 	// Increase the length of the message
 	ctx->length += ctx->curlen * 8LLU;
-	
+
 	// Append the '1' bit
 	ctx->buf[ctx->curlen++] = (uint8_t)0x80;
-	
+
 	// If the length is currently above 112 bytes we append zeros
 	// then compress.  Then we can fall back to padding zeros and length
 	// encoding like normal.
@@ -588,17 +588,17 @@ static void _xtSHA512Digest(struct _xtSHA512Context *restrict ctx, uint8_t *rest
 		_xtSHA512TransformFunction(ctx, ctx->buf);
 		ctx->curlen = 0;
 	}
-	
+
 	// Pad up to 120 bytes of zeroes
 	// note: that from 112 to 120 is the 64 MSB of the length.  We assume that you won't hash
 	// > 2^64 bits of data... :-)
 	while (ctx->curlen < 120)
 		ctx->buf[ctx->curlen++] = (uint8_t)0;
-	
+
 	// Store length
 	SHA512_STORE64H(ctx->length, ctx->buf + 120);
 	_xtSHA512TransformFunction(ctx, ctx->buf);
-	
+
 	// Copy output
 	for (i = 0; i < 8; i++)
 		SHA512_STORE64H(ctx->state[i], ((uint8_t*)(digest)) + (8 * i));
@@ -618,13 +618,13 @@ static void _xtSHA512Init(struct _xtSHA512Context *ctx)
 	ctx->state[7] = 0x5be0cd19137e2179LLU;
 }
 
-static void _xtSHA512Update(struct _xtSHA512Context *restrict ctx, uint8_t *restrict buf, size_t buflen)
+static void _xtSHA512Update(struct _xtSHA512Context *restrict ctx, const uint8_t *restrict buf, size_t buflen)
 {
 	uint32_t n;
-	
+
 	if (ctx->curlen > sizeof ctx->buf)
 		return;
-	
+
 	while (buflen > 0) {
 		if (ctx->curlen == 0 && buflen >= SHA512_BLOCK_SIZE) {
 			_xtSHA512TransformFunction(ctx, (uint8_t*)buf);
@@ -696,7 +696,7 @@ void xtHashReset(struct xtHash *ctx)
 	}
 }
 
-void xtHashUpdate(struct xtHash *restrict ctx, void *restrict buf, size_t buflen)
+void xtHashUpdate(struct xtHash *restrict ctx, const void *restrict buf, size_t buflen)
 {
 	switch (ctx->algorithm) {
 	case XT_HASH_MD5 :

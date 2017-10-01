@@ -114,7 +114,7 @@ void xtHashReset(struct xtHash *ctx);
 /**
  * Updates the state of the digest.
  */
-void xtHashUpdate(struct xtHash *restrict ctx, void *restrict buf, size_t len);
+void xtHashUpdate(struct xtHash *restrict ctx, const void *restrict buf, size_t len);
 
 #ifdef __cplusplus
 }
