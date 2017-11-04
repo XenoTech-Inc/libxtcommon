@@ -19,7 +19,7 @@
 #define dbgs(s) ((void)0)
 #endif
 
-int _xt_vsnprintf(char *str, size_t size, char *format, char *end, va_list args)
+int _xtvsnprintf(char *str, size_t size, char *format, char *end, va_list args)
 {
 	const char *rep;
 	char *fptr, *buf, *ptr;

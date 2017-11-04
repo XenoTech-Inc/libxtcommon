@@ -72,36 +72,6 @@ static const xtErrorMap errorMap[] = {
 	{ "Unknown error", XT_EUNKNOWN }
 };
 
-const char *xtGetErrorStr(int errnum)
-{
-	errnum = errnum >= XT_EMAXRANGE || errnum < 0 ? XT_EUNKNOWN : errnum;
-	return errorMap[errnum].name;
-}
-
-void xtPerror(const char *msg, int errnum)
-{
-	if (msg && msg[0] != '\0') { // If the string is longer than zero characters also!
-		if (errnum >= XT_EMAXRANGE || errnum < 0)
-			fprintf(stderr, "%s: %s %d\n", msg, xtGetErrorStr(errnum), errnum);
-		else
-			fprintf(stderr, "%s: %s\n", msg, xtGetErrorStr(errnum));
-	} else {
-		if (errnum >= XT_EMAXRANGE || errnum < 0)
-			fprintf(stderr, "%s %d\n", xtGetErrorStr(errnum), errnum);
-		else
-			fprintf(stderr, "%s\n", xtGetErrorStr(errnum));
-	}
-}
-
-char *xtStrError(char *buf, size_t buflen, int errnum)
-{
-	if (errnum >= XT_EMAXRANGE || errnum < 0)
-		snprintf(buf, buflen, "%s %d", xtGetErrorStr(errnum), errnum);
-	else
-		snprintf(buf, buflen, "%s", xtGetErrorStr(errnum));
-	return buf;
-}
-
 int _xtTranslateSysError(int syserrnum)
 {
 	switch (syserrnum) {
@@ -203,4 +173,34 @@ int _xtTranslateSysError(int syserrnum)
 	case WSAESHUTDOWN:                      return XT_ESHUTDOWN;
 	default:                                return XT_EUNKNOWN;
 	}
+}
+
+const char *xtGetErrorStr(int errnum)
+{
+	errnum = errnum >= XT_EMAXRANGE || errnum < 0 ? XT_EUNKNOWN : errnum;
+	return errorMap[errnum].name;
+}
+
+void xtPerror(const char *msg, int errnum)
+{
+	if (msg && msg[0] != '\0') { // If the string is longer than zero characters also!
+		if (errnum >= XT_EMAXRANGE || errnum < 0)
+			fprintf(stderr, "%s: %s %d\n", msg, xtGetErrorStr(errnum), errnum);
+		else
+			fprintf(stderr, "%s: %s\n", msg, xtGetErrorStr(errnum));
+	} else {
+		if (errnum >= XT_EMAXRANGE || errnum < 0)
+			fprintf(stderr, "%s %d\n", xtGetErrorStr(errnum), errnum);
+		else
+			fprintf(stderr, "%s\n", xtGetErrorStr(errnum));
+	}
+}
+
+char *xtStrError(char *buf, size_t buflen, int errnum)
+{
+	if (errnum >= XT_EMAXRANGE || errnum < 0)
+		snprintf(buf, buflen, "%s %d", xtGetErrorStr(errnum), errnum);
+	else
+		snprintf(buf, buflen, "%s", xtGetErrorStr(errnum));
+	return buf;
 }

@@ -133,3 +133,19 @@ fail:
 
 	return XT_EMSGSIZE;
 }
+
+size_t xtBase64GetDecodedSize(const void *buf, size_t buflen)
+{
+	unsigned const char *xbuf = buf;
+	size_t outputlen = buflen / 4 * 3; // XXX should be * 3 / 4 ?
+	if (xbuf[buflen - 1] == '=')
+		--outputlen;
+	if (xbuf[buflen - 2] == '=')
+		--outputlen;
+	return outputlen;
+}
+
+size_t xtBase64GetEncodedSize(size_t buflen)
+{
+	return 4 * ((buflen + 2) / 3);
+}

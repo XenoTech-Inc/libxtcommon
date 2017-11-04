@@ -1,7 +1,7 @@
 // XT headers
 #include <xt/thread.h>
-#include <xt/error.h>
 #include <_xt/error.h>
+#include <xt/error.h>
 #include <xt/string.h>
 
 // System headers
@@ -56,13 +56,6 @@ int xtMutexUnlock(xtMutex *m)
 	return ret == 0 ? 0 : _xtTranslateSysError(ret);
 }
 
-static void *_xtThreadStart(void *arg)
-{
-	struct xtThread *t = arg;
-	// Execute the function
-	return t->func(t, t->arg);
-}
-
 int xtThreadContinue(struct xtThread *t)
 {
 	if (xtThreadGetID(t) == xtThreadGetID(NULL))
@@ -73,6 +66,13 @@ int xtThreadContinue(struct xtThread *t)
 	if (suspendCount <= 0)
 		pthread_cond_signal(&t->suspendCond);
 	return 0;
+}
+
+static void *thread_start(void *arg)
+{
+	struct xtThread *t = arg;
+	// Execute the function
+	return t->func(t, t->arg);
 }
 
 int xtThreadCreate(struct xtThread *t, void *(*func)(struct xtThread *t, void *arg), void *arg, unsigned stackSizeKB, int guardSizeKB)
@@ -106,7 +106,7 @@ int xtThreadCreate(struct xtThread *t, void *(*func)(struct xtThread *t, void *a
 	t->func = func;
 	t->arg = arg;
 	t->suspendCount = 0;
-	if ((ret = pthread_create(&t->nativeThread, &t->attr, _xtThreadStart, t)) != 0)
+	if ((ret = pthread_create(&t->nativeThread, &t->attr, thread_start, t)) != 0)
 		goto error;
 	return 0;
 error:

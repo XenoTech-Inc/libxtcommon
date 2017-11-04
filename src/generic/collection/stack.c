@@ -27,7 +27,13 @@ func_get_grow(xtStackU)
 func_get_grow(xtStackLU)
 func_get_grow(xtStackZU)
 
-static inline int xt_stack_create(void **data, size_t elemsize, size_t n)
+#define stack_init(this, data, cap) \
+	this->data = data;\
+	this->count = 0;\
+	this->capacity = cap;\
+	this->grow = -2;
+
+static inline int stack_create(void **data, size_t elemsize, size_t n)
 {
 	if (!n)
 		n = XT_STACK_CAPACITY_DEFAULT;
@@ -36,16 +42,10 @@ static inline int xt_stack_create(void **data, size_t elemsize, size_t n)
 	return 0;
 }
 
-#define stack_init(this, data, cap) \
-	this->data = data;\
-	this->count = 0;\
-	this->capacity = cap;\
-	this->grow = -2;
-
 int xtStackHDCreate(struct xtStackHD *this, size_t capacity)
 {
 	void *data;
-	int ret = xt_stack_create(&data, sizeof(short), capacity);
+	int ret = stack_create(&data, sizeof(short), capacity);
 	if (ret)
 		return ret;
 	stack_init(this, data, capacity);
@@ -55,7 +55,7 @@ int xtStackHDCreate(struct xtStackHD *this, size_t capacity)
 int xtStackDCreate(struct xtStackD *this, size_t capacity)
 {
 	void *data;
-	int ret = xt_stack_create(&data, sizeof(int), capacity);
+	int ret = stack_create(&data, sizeof(int), capacity);
 	if (ret)
 		return ret;
 	stack_init(this, data, capacity)
@@ -65,7 +65,7 @@ int xtStackDCreate(struct xtStackD *this, size_t capacity)
 int xtStackUCreate(struct xtStackU *this, size_t capacity)
 {
 	void *data;
-	int ret = xt_stack_create(&data, sizeof(unsigned), capacity);
+	int ret = stack_create(&data, sizeof(unsigned), capacity);
 	if (ret)
 		return ret;
 	stack_init(this, data, capacity)
@@ -75,7 +75,7 @@ int xtStackUCreate(struct xtStackU *this, size_t capacity)
 int xtStackLUCreate(struct xtStackLU *this, size_t capacity)
 {
 	void *data;
-	int ret = xt_stack_create(&data, sizeof(unsigned long), capacity);
+	int ret = stack_create(&data, sizeof(unsigned long), capacity);
 	if (ret)
 		return ret;
 	stack_init(this, data, capacity)
@@ -85,7 +85,7 @@ int xtStackLUCreate(struct xtStackLU *this, size_t capacity)
 int xtStackZUCreate(struct xtStackZU *this, size_t capacity)
 {
 	void *data;
-	int ret = xt_stack_create(&data, sizeof(size_t), capacity);
+	int ret = stack_create(&data, sizeof(size_t), capacity);
 	if (ret)
 		return ret;
 	stack_init(this, data, capacity)
