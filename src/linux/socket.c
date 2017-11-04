@@ -37,8 +37,8 @@
 bool xtSockaddrEquals(const struct xtSockaddr *sa1, const struct xtSockaddr *sa2)
 {
 	// DO NOT just check the full memory! It is possible that only the address and port match, which is what we want to check for.
-	return ((struct sockaddr_in*) sa1)->sin_addr.s_addr == ((struct sockaddr_in*)sa2)->sin_addr.s_addr &&
-		((struct sockaddr_in*) sa1)->sin_port == ((struct sockaddr_in*)sa2)->sin_port;
+	return ((struct sockaddr_in*)sa1)->sin_addr.s_addr == ((struct sockaddr_in*)sa2)->sin_addr.s_addr &&
+		((struct sockaddr_in*)sa1)->sin_port == ((struct sockaddr_in*)sa2)->sin_port;
 }
 /**
  * Only initializes the sin_family field in the address. This is VERY IMPORTANT!!!
@@ -564,7 +564,7 @@ int xtSocketPollCreate(struct xtSocketPoll **p, size_t capacity)
 	if ((epollfd = epoll_create(capacity)) == -1)
 		goto error;
 	// Prepare the array for usage
-	for (int i = 0; i < (int) capacity; ++i) {
+	for (int i = 0; i < (int)capacity; ++i) {
 		sp->data[i].fd = XT_SOCKET_INVALID_FD;
 		sp->data[i].data = NULL;
 	}

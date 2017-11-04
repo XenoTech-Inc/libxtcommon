@@ -17,8 +17,8 @@
 bool xtSockaddrEquals(const struct xtSockaddr *sa1, const struct xtSockaddr * sa2)
 {
 	// DO NOT just check the full memory! It is possible that only the address and port match, which is what we want to check for.
-	return ((struct sockaddr_in*) sa1)->sin_addr.s_addr == ((struct sockaddr_in*) sa2)->sin_addr.s_addr &&
-		((struct sockaddr_in*) sa1)->sin_port == ((struct sockaddr_in*) sa2)->sin_port;
+	return ((struct sockaddr_in*)sa1)->sin_addr.s_addr == ((struct sockaddr_in*)sa2)->sin_addr.s_addr &&
+		((struct sockaddr_in*)sa1)->sin_port == ((struct sockaddr_in*)sa2)->sin_port;
 }
 /**
  * Only initializes the sin_family field in the address. This is VERY IMPORTANT!!!
@@ -26,7 +26,7 @@ bool xtSockaddrEquals(const struct xtSockaddr *sa1, const struct xtSockaddr * sa
  */
 static void sockaddr_init(struct xtSockaddr *sa)
 {
-	((struct sockaddr_in*) sa)->sin_family = AF_INET;
+	((struct sockaddr_in*)sa)->sin_family = AF_INET;
 }
 
 bool xtSockaddrFromString(struct xtSockaddr *restrict sa, const char *restrict addr, uint16_t port)
@@ -44,7 +44,7 @@ bool xtSockaddrFromString(struct xtSockaddr *restrict sa, const char *restrict a
 	}
 	if (inet_pton(AF_INET, buf, &((struct sockaddr_in*) sa)->sin_addr) != 1)
 		return false;
-	xtSockaddrSetPort(sa, sep ? (unsigned short) strtoul(++sep, NULL, 10) : port);
+	xtSockaddrSetPort(sa, sep ? (unsigned short)strtoul(++sep, NULL, 10) : port);
 	sockaddr_init(sa); // Init this to be safe
 	return true;
 }
@@ -84,20 +84,20 @@ void xtSockaddrInit(struct xtSockaddr *sa)
 
 void xtSockaddrSetAddress(struct xtSockaddr *sa, uint32_t addr)
 {
-	((struct sockaddr_in*) sa)->sin_addr.s_addr = addr;
+	((struct sockaddr_in*)sa)->sin_addr.s_addr = addr;
 	sockaddr_init(sa); // Init this to be safe
 }
 
 void xtSockaddrSetPort(struct xtSockaddr *sa, uint16_t port)
 {
-	((struct sockaddr_in*) sa)->sin_port = xthtobe16(port);
+	((struct sockaddr_in*)sa)->sin_port = xthtobe16(port);
 	sockaddr_init(sa); // Init this to be safe
 }
 
 char *xtSockaddrToString(const struct xtSockaddr *restrict sa, char *restrict buf, size_t buflen)
 {
 	char sbuf[32];
-	if (!inet_ntop(AF_INET, &((struct sockaddr_in*) sa)->sin_addr, sbuf, INET_ADDRSTRLEN))
+	if (!inet_ntop(AF_INET, &((struct sockaddr_in*)sa)->sin_addr, sbuf, INET_ADDRSTRLEN))
 		return NULL;
 	snprintf(buf, buflen, "%s:%hu", sbuf, xtSockaddrGetPort(sa));
 	return buf;
@@ -412,7 +412,7 @@ int xtSocketTCPAccept(xtSocket sock, xtSocket *restrict peerSock, struct xtSocka
 {
 	socklen_t dummyLen = sizeof(struct sockaddr_in);
 	// Something is happening!
-	*peerSock = accept(sock, (struct sockaddr*) peerAddr, &dummyLen);
+	*peerSock = accept(sock, (struct sockaddr*)peerAddr, &dummyLen);
 	// Check if this socket suddenly closed, but is now woken up
 	// Also check if the peersocket has been accepted
 	if (xtSocketIsClosed(sock) || *peerSock == XT_SOCKET_INVALID_FD)
@@ -438,7 +438,7 @@ int xtSocketTCPRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t
 int xtSocketTCPWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent)
 {
 	ssize_t ret;
-	ret = send(sock, (const char*) buf, buflen, 0);
+	ret = send(sock, (const char*)buf, buflen, 0);
 	if (ret == -1) {
 		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 	} else {
@@ -451,7 +451,7 @@ int xtSocketUDPRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t
 {
 	socklen_t dummyLen = sizeof(struct sockaddr_in);
 	ssize_t ret;
-	ret = recvfrom(sock, buf, buflen, 0, (struct sockaddr*) sender, &dummyLen);
+	ret = recvfrom(sock, buf, buflen, 0, (struct sockaddr*)sender, &dummyLen);
 	// When sending UDP packets on Windows, and they destination reports that it's not
 	// listening on that port, Windows will report WSAECONNRESET. You should really just ignore it
 	// because it's bullshit. And ignoring it here is exactly what we're doing. This Windows behavior
@@ -466,7 +466,7 @@ int xtSocketUDPRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t
 int xtSocketUDPWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent, const struct xtSockaddr *restrict dest)
 {
 	ssize_t ret;
-	ret = sendto(sock, buf, buflen, 0, (const struct sockaddr*) dest, sizeof(struct sockaddr_in));
+	ret = sendto(sock, buf, buflen, 0, (const struct sockaddr*)dest, sizeof(struct sockaddr_in));
 	if (ret == -1) {
 		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 	} else {
@@ -532,7 +532,7 @@ static enum xtSocketPollEvent socket_poll_event_sys_to_flags(short sysevents)
 int xtSocketPollAdd(struct xtSocketPoll *p, xtSocket sock, void *restrict data, enum xtSocketPollEvent events)
 {
 	int index = p->count;
-	if (index == (int) p->capacity)
+	if (index == (int)p->capacity)
 		return XT_ENOBUFS;
 	p->fds[index].fd = sock;
 	p->fds[index].events = socket_poll_event_fix_sys_flags(socket_poll_event_flags_to_sys(events));

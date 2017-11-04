@@ -78,7 +78,7 @@ int xtThreadCreate(struct xtThread *t, void *(*func)(struct xtThread *t, void *a
 		goto error;
 	t->suspendCount = 0;
 	// Specifying zero as stack size to _beginthreadex makes it use the main threads stack size
-	t->nativeThread = (HANDLE) _beginthreadex(NULL, stackSizeKB * 1024, thread_start, t, 0, &t->tid);
+	t->nativeThread = (HANDLE)_beginthreadex(NULL, stackSizeKB * 1024, thread_start, t, 0, &t->tid);
 	if (t->nativeThread == 0)
 		goto error;
 	return 0;
