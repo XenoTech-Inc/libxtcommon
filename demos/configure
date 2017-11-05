@@ -41,10 +41,12 @@ for i in "$@"; do
 		fi
 		win=yes
 		LDLIBS=" -lntdll -lpsapi -lws2_32"
-		;;
+		continue;;
 	--)
+		shift 1
 		break;;
 	esac
+	shift 1
 done
 
 if [ "$win" == no ]; then

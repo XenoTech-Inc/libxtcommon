@@ -86,9 +86,9 @@ if [ $clean = yes ]; then
 	cd demos && make clean && cd ..
 fi
 
-buildopts="-g -DDEBUG $@"
+buildopts="-- -g -DDEBUG $@"
 if [ $debug = no ]; then
-	buildopts="-O3 -ffast-math $@"
+	buildopts="-- -O3 -ffast-math $@"
 fi
 
 echo "Build options: $buildopts"
