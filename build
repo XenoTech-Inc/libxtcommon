@@ -5,6 +5,28 @@ clean=no
 debug=yes
 cores="$(nproc)"
 
+usage() {
+cat <<EOF
+XenoTech Common Library build script
+
+Options:
+
+-help    This help
+-arch    Set target to specified argument
+-c       Clean project
+-d       Create debug build
+-r       Create release build
+-l       Set target to Linux
+-w       Set target to Windows
+64       Use x86_64
+x64      Use x64_64
+32       Use x86
+x86      Use x86
+
+Default options are: -d -arch linux x64
+EOF
+}
+
 # Parse args
 for i in "$@"; do
 	case $i in
@@ -44,12 +66,18 @@ for i in "$@"; do
 	x86) arch=x86;;
 	--)
 		break;;
+	-help)
+		usage
+		exit 0
+		;;
+	*)
+		echo "Bad argument: $i" 1>&2
+		echo "Type $0 -help for help" 1>&2
+		exit 1
+		;;
 	esac
 	shift 1
 done
-
-# Print settings
-echo "Building for target: $target $arch"
 
 # Prepare for build
 if [ $clean = yes ]; then
@@ -65,6 +93,10 @@ fi
 
 echo "Build options: $buildopts"
 
+# Print settings
+echo "Building for target: $target $arch"
+
+# Make sure windows target is properly setup
 if [ $target = windows ]; then
 	if [ $arch = x64 ]; then
 		buildopts="windows-x64 $buildopts"
@@ -73,6 +105,7 @@ if [ $target = windows ]; then
 	fi
 fi
 
+# Build project
 ./configure $buildopts
 cd demos && ./configure $buildopts && cd ..
 make -j$cores
