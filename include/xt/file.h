@@ -35,8 +35,7 @@ extern "C" {
 struct xtFileFind {
 #if XT_IS_LINUX
 	DIR *dir;
-	struct dirent entry;
-	struct dirent *result;
+	struct dirent *entry;
 #else
 	void *handle;
 #endif

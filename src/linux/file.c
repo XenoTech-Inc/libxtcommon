@@ -35,10 +35,10 @@ cleanup:
 
 int xtFileFindNextFile(struct xtFileFind *restrict handle, char *restrict buf, size_t buflen)
 {
-	int ret;
-	if ((ret = readdir_r(handle->dir, &handle->entry, &handle->result)) != 0 || !handle->result)
-		return ret == 0 && !handle->result ? XT_ENOENT : _xtTranslateSysError(ret);
-	xtstrncpy(buf, handle->entry.d_name, buflen);
+	errno = 0; // We must clear the error flag on every iteration
+	if (!(handle->entry = readdir(handle->dir)))
+		return errno == 0 ? XT_ENOENT : _xtTranslateSysError(errno);
+	xtstrncpy(buf, handle->entry->d_name, buflen);
 	return 0;
 }
 
