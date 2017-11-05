@@ -1,0 +1,79 @@
+#!/bin/bash
+target=linux
+arch=x64
+clean=no
+debug=yes
+cores="$(nproc)"
+
+# Parse args
+for i in "$@"; do
+	case $i in
+	-w) target=windows;;
+	-l) target=linux;;
+	-arch)
+		shift 1
+		if [ -z $1 ]; then
+			echo "Missing argument" 1>&2
+			exit 1
+		fi
+		case "$1" in
+		windows) ;;
+		linux) ;;
+		*)
+			echo "Unknown arch: $1" 1>&2
+			echo "Archs are case sensitive. Supported archs: windows linux" 1>&2
+			exit 1
+			;;
+		esac
+		target="$1"
+		continue;;
+	-c) clean=yes;;
+	-d) debug=yes;;
+	-r) debug=no;;
+	-j)
+		shift 1
+		if [ -z $1 ]; then
+			echo "Missing argument" 1>&2
+			exit 1
+		fi
+		cores="$1"
+		continue;;
+	64) arch=x64;;
+	x64) arch=x64;;
+	32) arch=x86;;
+	x86) arch=x86;;
+	--)
+		break;;
+	esac
+	shift 1
+done
+
+# Print settings
+echo "Building for target: $target $arch"
+
+# Prepare for build
+if [ $clean = yes ]; then
+	echo 'Cleaning project...'
+	make clean
+	cd demos && make clean && cd ..
+fi
+
+buildopts="-g -DDEBUG $@"
+if [ $debug = no ]; then
+	buildopts="-O3 -ffast-math $@"
+fi
+
+echo "Build options: $buildopts"
+
+if [ $target = windows ]; then
+	if [ $arch = x64 ]; then
+		buildopts="windows-x64 $buildopts"
+	else
+		buildopts="windows-x86 $buildopts"
+	fi
+fi
+
+./configure $buildopts
+cd demos && ./configure $buildopts && cd ..
+make -j$cores
+cd demos && make -j$cores && cd ..
