@@ -50,11 +50,10 @@ static SYSTEMTIME get_system_time_diff(const SYSTEMTIME *st1, const SYSTEMTIME *
 int xtCalendarGetGMTOffset(int *offset)
 {
 	SYSTEMTIME gmtSystemTime, utcSystemTime;
-	// It seems that these functions cannot fail
-	// Get the GMT time
-	GetLocalTime(&gmtSystemTime);
-	// Get the UTC time
-	GetSystemTime(&utcSystemTime);
+
+	GetLocalTime(&gmtSystemTime); // Get the GMT time
+	GetSystemTime(&utcSystemTime); // Get the UTC time
+
 	SYSTEMTIME diff;
 	if (gmtSystemTime.wHour > utcSystemTime.wHour || gmtSystemTime.wDay > utcSystemTime.wDay) {
 		diff = get_system_time_diff(&gmtSystemTime, &utcSystemTime);
