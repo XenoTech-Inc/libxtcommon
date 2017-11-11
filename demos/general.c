@@ -81,6 +81,11 @@ static void fileTest(void)
 		else
 			FAIL("xtFileCopy()");
 
+		if (xtFileSetSize(newPath, 1024) == 0)
+			PASS("xtFileSetSize()");
+		else
+			FAIL("xtFileSetSize()");
+
 		if (xtFileRemove(tmpFilePath) == 0 && xtFileRemove(newPath) == 0)
 			PASS("xtFileRemove()");
 		else

@@ -230,6 +230,11 @@ int xtFileSetCWD(const char *path)
 	return chdir(path) == 0 ? 0 : _xtTranslateSysError(errno);
 }
 
+int xtFileSetSize(const char *path, unsigned long long size)
+{
+	return truncate(path, size) == 0 ? 0 : _xtTranslateSysError(errno);
+}
+
 int xtFileTempFile(char *restrict buf, size_t buflen, FILE **restrict f)
 {
 	char path[32];

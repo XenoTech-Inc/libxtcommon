@@ -228,6 +228,23 @@ int xtFileSetCWD(const char *path)
 	return SetCurrentDirectory((LPCSTR) path) != 0 ? 0 : _xtTranslateSysError(GetLastError());
 }
 
+int xtFileSetSize(const char *path, unsigned long long size)
+{
+	HANDLE handle = CreateFile(path, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+	if (handle == INVALID_HANDLE_VALUE)
+		return _xtTranslateSysError(GetLastError());
+	BOOL ret;
+	LARGE_INTEGER sizeLi;
+	sizeLi.QuadPart = size;
+	if ((ret = SetFilePointerEx(handle, sizeLi, NULL, FILE_BEGIN)) == FALSE)
+		goto cleanup;
+	ret = SetEndOfFile(handle);
+cleanup:
+	CloseHandle(handle);
+	return ret == TRUE ? 0 : _xtTranslateSysError(GetLastError());
+
+}
+
 int xtFileTempFile(char *restrict buf, size_t buflen, FILE **restrict f)
 {
 	int ret;

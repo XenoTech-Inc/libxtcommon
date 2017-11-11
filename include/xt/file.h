@@ -216,6 +216,14 @@ int xtFileRemoveDir(const char *path);
  */
 int xtFileSetCWD(const char *path);
 /**
+ * Truncates the size of file that resides at \a path to \a size.
+ * Depending on the filesystem in use, this operation may complete
+ * instantaneously. If you're unlucky, the file has to be rewritten physically.
+ * @return Zero if the file has been truncated to the new size, otherwise an
+ * error code.
+ */
+int xtFileSetSize(const char *path, unsigned long long size);
+/**
  * Creates a temporary binary file that is automatically removed when it is
  * closed or at program termination. The file is opened as in fopen() for update
  * in binary mode (that is, "wb+").
