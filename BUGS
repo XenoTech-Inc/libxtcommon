@@ -44,9 +44,16 @@ xtProcGetMemoryInfo(): In the returned memory info structure, the 'swap' and
   invalid fields with bogus values. We cannot reliably retrieve them.
 xtProcKill(): Many signals on Windows are not supported and send a standard kill
   signal instead.
+
 ## Thread API
 
 xtThreadCreate(): Specifying a guard size has no effect since the Windows
   API has no support for such a thing.
 xtThreadSetName(), xtThreadGetName(): These both have no effect on Windows.
   The Windows API has no support for thread names until Windows 10 and up.
+
+## Time API
+xtClockGetRes(): This function is rather meaningless on Windows. It shall
+  always report the maximum precision that each clock offers on Windows
+  even if your hardware would not support it. This is because Windows
+  just does not offer a way to retrieve the clock accuracy unfortunately.

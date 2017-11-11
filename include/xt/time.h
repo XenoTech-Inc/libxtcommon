@@ -94,10 +94,6 @@ int xtCalendarIsDST(bool *isDST);
 /**
  * Finds the resolution (precision) of the specified clock \a clock.
  * The resolution of the available clocks depends on the implementation.
- * @remarks This function is rather meaningless on Windows. It shall
- * always report the maximum precision that each clock offers on Windows
- * even if your hardware would not support it. This is because Windows
- * just does not offer a way to retrieve the clock accuracy.
  */
 int xtClockGetRes(struct xtTimestamp *timestamp, enum xtClock clock);
 /**
