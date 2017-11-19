@@ -1,6 +1,6 @@
 #!/bin/bash
 target=linux
-arch=x64
+arch=def
 clean=no
 debug=yes
 cores="$(nproc)"
@@ -28,13 +28,19 @@ EOF
 }
 
 # Parse args
-for i in "$@"; do
-	case $i in
-	-w) target=windows;;
+while true; do
+	if [ -z "$1" ]; then
+		break
+	fi
+	case "$1" in
+	-w)
+		target=windows
+		arch=x64
+		;;
 	-l) target=linux;;
 	-arch)
 		shift 1
-		if [ -z $1 ]; then
+		if [ -z "$1" ]; then
 			echo "Missing argument" 1>&2
 			exit 1
 		fi
@@ -54,7 +60,7 @@ for i in "$@"; do
 	-r) debug=no;;
 	-j)
 		shift 1
-		if [ -z $1 ]; then
+		if [ -z "$1" ]; then
 			echo "Missing argument" 1>&2
 			exit 1
 		fi
@@ -97,11 +103,15 @@ echo "Build options: $buildopts"
 echo "Building for target: $target $arch"
 
 # Make sure windows target is properly setup
-if [ $target = windows ]; then
+if [ $target != linux ]; then
 	if [ $arch = x64 ]; then
 		buildopts="windows-x64 $buildopts"
 	else
 		buildopts="windows-x86 $buildopts"
+	fi
+else
+	if [ $arch != def ]; then
+		echo "Warning: Linux only supports your current architecture" 1>&2
 	fi
 fi
 
