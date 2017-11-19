@@ -11,8 +11,8 @@ XenoTech Common Library build script
 
 Options:
 
--help    This help
--arch    Set target to specified argument
+--help   This help
+--arch   Set target to specified argument
 -c       Clean project
 -d       Create debug build
 -r       Create release build
@@ -38,7 +38,7 @@ while true; do
 		arch=x64
 		;;
 	-l) target=linux;;
-	-arch)
+	--arch)
 		shift 1
 		if [ -z "$1" ]; then
 			echo "Missing argument" 1>&2
@@ -58,27 +58,19 @@ while true; do
 	-c) clean=yes;;
 	-d) debug=yes;;
 	-r) debug=no;;
-	-j)
-		shift 1
-		if [ -z "$1" ]; then
-			echo "Missing argument" 1>&2
-			exit 1
-		fi
-		cores="$1"
-		continue;;
 	64) arch=x64;;
 	x64) arch=x64;;
 	32) arch=x86;;
 	x86) arch=x86;;
 	--)
 		break;;
-	-help)
+	-h|--help)
 		usage
 		exit 0
 		;;
 	*)
-		echo "Bad argument: $i" 1>&2
-		echo "Type $0 -help for help" 1>&2
+		echo "Bad argument: $1" 1>&2
+		echo "Type $0 --help for help" 1>&2
 		exit 1
 		;;
 	esac
