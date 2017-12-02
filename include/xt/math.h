@@ -15,6 +15,9 @@
 extern "C" {
 #endif
 
+// XT headers
+#include <xt/_base.h>
+
 // STD headers
 #include <stdbool.h>
 #include <stdint.h>
