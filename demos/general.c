@@ -224,7 +224,7 @@ static void threadTest(void)
 static void timeTest(void)
 {
 	char sbuf[256];
-	struct xtTimestamp ts, timeNow;
+	struct xtTimestamp ts;
 	if (xtClockGetRes(&ts, XT_CLOCK_MONOTONIC) == 0)
 		PASS("xtClockGetRes(XT_CLOCK_MONOTONIC)");
 	else
@@ -275,7 +275,7 @@ static void timeTest(void)
 	else
 		FAIL("xtClockGetTime(XT_CLOCK_REALTIME_NOW)");
 
-	if (xtFormatTimePrecise(sbuf, sizeof sbuf, &timeNow))
+	if (xtFormatTimePrecise(sbuf, sizeof sbuf, &ts))
 		PASS("xtFormatTimePrecise()");
 	else
 		FAIL("xtFormatTimePrecise()");
