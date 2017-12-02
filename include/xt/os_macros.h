@@ -14,6 +14,9 @@
 extern "C" {
 #endif
 
+// XT headers
+#include <xt/_base.h>
+
 #if defined(__gnu_linux__)
 	#define XT_IS_LINUX 1
 	#include <limits.h>

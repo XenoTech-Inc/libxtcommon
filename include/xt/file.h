@@ -16,6 +16,7 @@ extern "C" {
 #endif
 
 // XT headers
+#include <xt/_base.h>
 #include <xt/list.h>
 #include <xt/os_macros.h>
 
