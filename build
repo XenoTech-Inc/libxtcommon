@@ -1,0 +1,114 @@
+#!/bin/bash
+target=linux
+arch=def
+clean=no
+debug=yes
+cores="$(nproc)"
+
+usage() {
+cat <<EOF
+XenoTech Common Library build script
+
+Options:
+
+--help   This help
+--arch   Set target to specified argument
+-c       Clean project
+-d       Create debug build
+-r       Create release build
+-l       Set target to Linux
+-w       Set target to Windows
+64       Use x86_64
+x64      Use x64_64
+32       Use x86
+x86      Use x86
+
+Default options are: -d -arch linux x64
+EOF
+}
+
+# Parse args
+while true; do
+	if [ -z "$1" ]; then
+		break
+	fi
+	case "$1" in
+	-w)
+		target=windows
+		arch=x64
+		;;
+	-l) target=linux;;
+	--arch)
+		shift 1
+		if [ -z "$1" ]; then
+			echo "Missing argument" 1>&2
+			exit 1
+		fi
+		case "$1" in
+		windows) ;;
+		linux) ;;
+		*)
+			echo "Unknown arch: $1" 1>&2
+			echo "Archs are case sensitive. Supported archs: windows linux" 1>&2
+			exit 1
+			;;
+		esac
+		target="$1"
+		continue;;
+	-c) clean=yes;;
+	-d) debug=yes;;
+	-r) debug=no;;
+	64) arch=x64;;
+	x64) arch=x64;;
+	32) arch=x86;;
+	x86) arch=x86;;
+	--)
+		break;;
+	-h|--help)
+		usage
+		exit 0
+		;;
+	*)
+		echo "Bad argument: $1" 1>&2
+		echo "Type $0 --help for help" 1>&2
+		exit 1
+		;;
+	esac
+	shift 1
+done
+
+# Prepare for build
+if [ $clean = yes ]; then
+	echo 'Cleaning project...'
+	make clean
+	cd demos && make clean && cd ..
+fi
+
+buildopts="-- -g -DDEBUG $@"
+if [ $debug = no ]; then
+	buildopts="-- -O3 -ffast-math $@"
+fi
+
+echo "Build options: $buildopts"
+
+# Print settings
+echo "Building for target: $target $arch"
+
+# Make sure windows target is properly setup
+if [ $target != linux ]; then
+	if [ $arch = x64 ]; then
+		buildopts="windows-x64 $buildopts"
+	else
+		buildopts="windows-x86 $buildopts"
+	fi
+else
+	if [ $arch != def ]; then
+		echo "Warning: Linux only supports your current architecture" 1>&2
+	fi
+fi
+
+# Build project
+./configure $buildopts
+cd demos && ./configure $buildopts && cd ..
+make -j$cores
+cd demos && make -j$cores && cd ..

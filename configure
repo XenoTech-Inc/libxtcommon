@@ -20,11 +20,13 @@ win=no
 is32bit=no
 pkgarg=
 
-for i in "$@"; do
-	case "$i" in
+while true; do
+	if [ -z "$1" ]; then
+		break
+	fi
+	case "$1" in
 	windows*)
-		shift 1
-		case "$i" in
+		case "$1" in
 		windows-x86)
 			WIN=i686-$WINARCH
 			pkgarg=windows-x86
@@ -34,7 +36,7 @@ for i in "$@"; do
 			pkgarg=windows-x64
 			;;
 		*)
-			echo Invalid target: $i 1>&2
+			echo Invalid target: $1 1>&2
 			exit 1;;
 		esac
 		CC="$WIN"-gcc
@@ -45,8 +47,10 @@ for i in "$@"; do
 		win=yes
 		CFLAGS="-std=c99 -Wall -Wextra -pedantic -DWINVER=1536 -D_WIN32_WINNT=1536"
 		OS_DIR="src/windows"
-		;;
+		shift 1
+		continue;;
 	--)
+		shift 1
 		break;;
 	esac
 done
