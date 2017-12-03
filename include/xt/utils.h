@@ -13,9 +13,6 @@
 extern "C" {
 #endif
 
-// XT headers
-#include <xt/_base.h>
-
 #define XT_VERSION_MAJOR 0
 #define XT_VERSION_MINOR 9
 #define XT_VERSION_PATCH 0
