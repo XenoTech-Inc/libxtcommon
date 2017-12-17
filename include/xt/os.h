@@ -111,9 +111,11 @@ void xtConsoleClear(void);
  */
 int xtConsoleFillLine(const char *pattern);
 
-#define XT_CONSOLE_ALIGN_LEFT 0
-#define XT_CONSOLE_ALIGN_CENTER 1
-#define XT_CONSOLE_ALIGN_RIGHT 2
+enum xtConsoleAlignment {
+	XT_CONSOLE_ALIGN_LEFT,
+	XT_CONSOLE_ALIGN_CENTER,
+	XT_CONSOLE_ALIGN_RIGHT
+};
 /**
  * Print text that wraps around after \a textWidth characters aligned to left, center, or right.
  * If \a textWidth is zero, it does not wrap the text and fails if it does not fit.
@@ -122,7 +124,7 @@ int xtConsoleFillLine(const char *pattern);
  * @param hardSplit - If it may split words. For text, you probably would specify false.
  * @return Zero if it has been printed, otherwise an error code.
  */
-int xtConsolePutString(const char *str, unsigned textWidth, bool hardSplit, unsigned alignment);
+int xtConsolePutString(const char *str, unsigned textWidth, bool hardSplit, enum xtConsoleAlignment alignment);
 /**
  * Tells you the available amount of columns and rows in the console.
  * Both pointers are optional. They remain untouched on error.

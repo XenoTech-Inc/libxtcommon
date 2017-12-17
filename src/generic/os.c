@@ -5,7 +5,7 @@
 #include <ctype.h>
 #include <string.h>
 
-int xtConsolePutString(const char *str, unsigned textWidth, bool hardSplit, unsigned alignment)
+int xtConsolePutString(const char *str, unsigned textWidth, bool hardSplit, enum xtConsoleAlignment alignment)
 {
 	int retval;
 	unsigned cols;
