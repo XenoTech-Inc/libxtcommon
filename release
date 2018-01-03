@@ -1,0 +1,19 @@
+#!/bin/bash -e
+if [ -f demos/Makefile ]; then
+	pushd demos >/dev/null
+	make clean && rm -f Makefile
+	popd >/dev/null
+fi
+if [ -f Makefile ]; then
+	make mrproper && rm -f Makefile
+fi
+dir="${PWD##*/}"
+cd ..
+tar jcf "$dir".tar.xz --exclude="$dir"/.git --exclude="$dir/docs/html" --exclude="$dir/docs/DoxyFile" --exclude="$dir/docs/DoxyIcon.jpg" --exclude=tags --exclude='*.swp' --exclude='*.vim' --exclude='.gitignore' --exclude='release' --exclude='.dropped' "$dir"
+# make sure environment is sane
+cd "$dir"
+git checkout configure
+# continue deploying
+cd ..
+md5sum "$dir".tar.xz >"$dir".tar.xz.md5sum
+shasum "$dir".tar.xz >"$dir".tar.xz.shasum

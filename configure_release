@@ -1,2 +1,0 @@
-#!/bin/bash -e
-./configure -O3 -ffast-math "$@"
