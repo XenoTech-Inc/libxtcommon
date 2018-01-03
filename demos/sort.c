@@ -4,6 +4,7 @@
 #include <xt/string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include "utils.h"
 
@@ -107,11 +108,84 @@ static void large(void)
 	free(a);
 }
 
+#if 1
+static void string_sort(void)
+{
+	const char *list[] = {
+		"mafketel",
+		"funny dinnur FOUR",
+		"mah boi",
+		"MAH BOI",
+		"Ja, de beste pornofilm",
+		"je kan lekker niet verslaan!",
+		"p.p.p.p.pokemon!",
+		"stomme kutkinderen",
+		"krijg toch de pest",
+		NULL
+	};
+	const char *list2[] = {
+		"p.p.p.p.pokemon!",
+		"mafketel",
+		"krijg toch de pest",
+		"Ja, de beste pornofilm",
+		"je kan lekker niet verslaan!",
+		"MAH BOI",
+		"stomme kutkinderen",
+		"mah boi",
+		"funny dinnur FOUR",
+		NULL
+	};
+
+	const char *sorted[] = {
+		"Ja, de beste pornofilm",
+		"MAH BOI",
+		"funny dinnur FOUR",
+		"je kan lekker niet verslaan!",
+		"krijg toch de pest",
+		"mafketel",
+		"mah boi",
+		"p.p.p.p.pokemon!",
+		"stomme kutkinderen",
+		NULL
+	};
+	const char *rsorted[] = {
+		"stomme kutkinderen",
+		"p.p.p.p.pokemon!",
+		"mah boi",
+		"mafketel",
+		"krijg toch de pest",
+		"je kan lekker niet verslaan!",
+		"funny dinnur FOUR",
+		"MAH BOI",
+		"Ja, de beste pornofilm",
+		NULL
+	};
+
+	unsigned count = 0;
+	for (const char **ptr = list; *ptr; ++ptr)
+		++count;
+	printf("count: %u\n", count);
+
+	xtSortStr(list, count, XT_SORT_QUICK, true);
+
+	for (const char **a = list, **b = sorted; *a; ++a, ++b)
+		if (strcmp(*a, *b))
+			fprintf(stderr, "fail: expected: %s, got: %s\n", *b, *a);
+
+	xtSortStr(list2, count, XT_SORT_QUICK, false);
+
+	for (const char **a = list2, **b = rsorted; *a; ++a, ++b)
+		if (strcmp(*a, *b))
+			fprintf(stderr, "fail: expected: %s, got: %s\n", *b, *a);
+}
+#endif
+
 int main(void)
 {
 	stats_init(&stats, "sort");
 	srand(time(NULL));
 	puts("-- SORT TEST");
+#if 0
 	fputs("Algorithms:", stdout);
 	for (unsigned i = 0; i < NTYPE; ++i)
 		xtprintf(" %s", names[i]);
@@ -119,7 +193,9 @@ int main(void)
 	sortu();
 	sortd();
 	large();
-	puts("done");
+#else
+	string_sort();
+#endif
 	stats_info(&stats);
 	return stats_status(&stats);
 }

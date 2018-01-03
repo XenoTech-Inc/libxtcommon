@@ -27,7 +27,7 @@ enum xtSortType {
 int xtSortU(unsigned *list, size_t count, enum xtSortType type, bool ascend);
 int xtSortD(int *list, size_t count, enum xtSortType type, bool ascend);
 int xtSortP(void *list, size_t count, enum xtSortType type, int (*cmp)(void*, void*), bool ascend, size_t elemSize);
-int xtSortStr(char **list, size_t count, enum xtSortType type, bool ascend);
+int xtSortStr(const char **list, size_t count, enum xtSortType type, bool ascend);
 
 #ifdef __cplusplus
 }

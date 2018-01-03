@@ -35,9 +35,9 @@ static inline void _xtSwapU(unsigned *a, unsigned *b)
 
 static inline void _xtSwapP(void *a, void *b, void *tmp, size_t size)
 {
-	memcpy(tmp, a  , size);
-	memcpy(a  , b  , size);
-	memcpy(b  , tmp, size);
+	memmove(tmp, a  , size);
+	memmove(a  , b  , size);
+	memmove(b  , tmp, size);
 }
 
 static void _xtBubbleSortU(unsigned *a, size_t n, bool ascend)
@@ -406,19 +406,23 @@ static int _xtQuickSortP_A(void *list, size_t elemsize, ssize_t low, ssize_t hig
 	int ret = 1;
 	ssize_t i, j;
 	char *a = list;
-	void *pivot = malloc(elemsize);
-	void *tmp = malloc(elemsize);
+	void *pivot, *tmp;
+
+	pivot = malloc(elemsize);
+	tmp = malloc(elemsize);
+
 	if (!pivot || !tmp)
 		return XT_ENOMEM;
 	i = low; j = high;
-	memcpy(pivot, &a[low + (high - low) / 2], elemsize);
+	memmove(pivot, a + (low + (high - low) / 2) * elemsize, elemsize);
+
 	while (i <= j) {
-		while (cmp(&a[i * elemsize], pivot) < 0)
+		while (cmp(a + i * elemsize, pivot) < 0)
 			++i;
-		while (cmp(&a[j * elemsize], pivot) > 0)
+		while (cmp(a + j * elemsize, pivot) > 0)
 			--j;
 		if (i <= j)
-			_xtSwapP(&a[i++ * elemsize], &a[j-- * elemsize], tmp, elemsize);
+			_xtSwapP(a + i++ * elemsize, a + j-- * elemsize, tmp, elemsize);
 	}
 	if (low < j && (ret = _xtQuickSortP_A(list, elemsize, low, j, cmp)))
 		goto fail;
@@ -436,19 +440,23 @@ static int _xtQuickSortP_D(void *list, size_t elemsize, ssize_t low, ssize_t hig
 	int ret = 1;
 	ssize_t i, j;
 	char *a = list;
-	void *pivot = malloc(elemsize);
-	void *tmp = malloc(elemsize);
+	void *pivot, *tmp;
+
+	pivot = malloc(elemsize);
+	tmp = malloc(elemsize);
+
 	if (!pivot || !tmp)
 		return XT_ENOMEM;
 	i = low; j = high;
-	memcpy(pivot, &a[low + (high - low) / 2], elemsize);
+	memmove(pivot, a + (low + (high - low) / 2) * elemsize, elemsize);
+
 	while (i <= j) {
-		while (cmp(&a[i * elemsize], pivot) > 0)
+		while (cmp(a + i * elemsize, pivot) > 0)
 			++i;
-		while (cmp(&a[j * elemsize], pivot) < 0)
+		while (cmp(a + j * elemsize, pivot) < 0)
 			--j;
 		if (i <= j)
-			_xtSwapP(&a[i++ * elemsize], &a[j-- * elemsize], tmp, elemsize);
+			_xtSwapP(a + i++ * elemsize, a + j-- * elemsize, tmp, elemsize);
 	}
 	if (low < j && (ret = _xtQuickSortP_D(list, elemsize, low, j, cmp)))
 		goto fail;
@@ -662,7 +670,7 @@ int xtSortD(int *list, size_t count, enum xtSortType type, bool ascend)
 
 int xtSortP(void *list, size_t count, enum xtSortType type, int (*cmp)(void*,void*), bool ascend, size_t elemSize)
 {
-	if (!cmp)
+	if (!cmp || !elemSize)
 		return XT_EINVAL;
 	switch (type) {
 	case XT_SORT_BUBBLE: return _xtBubbleSortP   (list, elemSize, count, cmp, ascend);
@@ -684,7 +692,7 @@ static int _xtSortStrcmp(void *a, void *b)
 	return strcmp(*(char**)a, *(char**)b);
 }
 
-int xtSortStr(char **list, size_t count, enum xtSortType type, bool ascend)
+int xtSortStr(const char **list, size_t count, enum xtSortType type, bool ascend)
 {
-	return xtSortP(list, count, type, _xtSortStrcmp, ascend, sizeof(char*));
+	return xtSortP((char**)list, count, type, _xtSortStrcmp, ascend, sizeof *list);
 }
