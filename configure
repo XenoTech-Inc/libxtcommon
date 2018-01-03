@@ -153,6 +153,7 @@ xtcommon.pc: create_pkgconfig
 install: $FINALLIBPATH xtcommon.pc
 	cp -R include/* $INCLUDEDIR
 	cp lib/$LIBNAME $LIBDIR
+	mkdir -p $PKG_CONFIG_PATH
 	cp xtcommon.pc $PKG_CONFIG_PATH
 
 $FINALLIBPATH: \$(OBJECTS)
