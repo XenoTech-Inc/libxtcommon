@@ -21,6 +21,7 @@ static struct stats stats;
 #include "chklist.h"
 
 #define ASZ 4096
+#define LARGE_ASZ (1 << 14LLU)
 
 enum xtSortType types[] = {
 	XT_SORT_BUBBLE,
@@ -88,7 +89,7 @@ static void sortd(void)
 
 static void large(void)
 {
-	size_t n = 1 << 14LLU;
+	size_t n = LARGE_ASZ;
 	unsigned *a = malloc(n * sizeof(unsigned));
 	if (!a) abort();
 	struct xtTimestamp then, now;
@@ -108,7 +109,6 @@ static void large(void)
 	free(a);
 }
 
-#if 1
 static void string_sort(void)
 {
 	const char *list[] = {
@@ -166,26 +166,40 @@ static void string_sort(void)
 		++count;
 	printf("count: %u\n", count);
 
-	xtSortStr(list, count, XT_SORT_QUICK, true);
+	int type = XT_SORT_QUICK;
+
+	if (xtSortStr(list, count, type, true)) {
+		FAIL("xtSortStr: ascending");
+		return;
+	}
 
 	for (const char **a = list, **b = sorted; *a; ++a, ++b)
-		if (strcmp(*a, *b))
-			fprintf(stderr, "fail: expected: %s, got: %s\n", *b, *a);
+		if (strcmp(*a, *b)) {
+			FAIL("xtSortStr: ascending");
+			fprintf(stderr, "expected: %s, got: %s\n", *b, *a);
+			return;
+		}
 
-	xtSortStr(list2, count, XT_SORT_QUICK, false);
+	if (xtSortStr(list2, count, type, false)) {
+		FAIL("xtSortStr: descending");
+		return;
+	}
 
 	for (const char **a = list2, **b = rsorted; *a; ++a, ++b)
-		if (strcmp(*a, *b))
-			fprintf(stderr, "fail: expected: %s, got: %s\n", *b, *a);
+		if (strcmp(*a, *b)) {
+			FAIL("xtSortStr: descending");
+			fprintf(stderr, "expected: %s, got: %s\n", *b, *a);
+			return;
+		}
+
+	PASS("xtSortStr");
 }
-#endif
 
 int main(void)
 {
 	stats_init(&stats, "sort");
 	srand(time(NULL));
 	puts("-- SORT TEST");
-#if 0
 	fputs("Algorithms:", stdout);
 	for (unsigned i = 0; i < NTYPE; ++i)
 		xtprintf(" %s", names[i]);
@@ -193,9 +207,7 @@ int main(void)
 	sortu();
 	sortd();
 	large();
-#else
 	string_sort();
-#endif
 	stats_info(&stats);
 	return stats_status(&stats);
 }
