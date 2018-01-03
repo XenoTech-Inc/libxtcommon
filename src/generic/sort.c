@@ -34,9 +34,9 @@ static inline void swap_u(unsigned *a, unsigned *b)
 
 static inline void swap_p(void *a, void *b, void *tmp, size_t size)
 {
-	memcpy(tmp, a  , size);
-	memcpy(a  , b  , size);
-	memcpy(b  , tmp, size);
+	memmove(tmp, a  , size);
+	memmove(a  , b  , size);
+	memmove(b  , tmp, size);
 }
 
 static void bubble_sort_u(unsigned *a, size_t n, bool ascend)
@@ -81,7 +81,7 @@ static void bubble_sort_d(int *a, size_t n, bool ascend)
 		} while (x);
 }
 
-static int bubble_sort_p(void *list, size_t elemsize, size_t n, int (*cmp)(void*, void*), bool ascend)
+static int bubble_sort_p(void *list, size_t elemsize, size_t n, int (*cmp)(const void*, const void*), bool ascend)
 {
 	size_t i, x;
 	char *a = list;
@@ -92,16 +92,16 @@ static int bubble_sort_p(void *list, size_t elemsize, size_t n, int (*cmp)(void*
 		do {
 			x = 0;
 			for (i = 1; i < n; ++i)
-				if (cmp(&a[(i - 1) * elemsize], &a[i * elemsize]) > 0)
-					swap_p(&a[(i - 1) * elemsize], &a[(x = i) * elemsize], tmp, elemsize);
+				if (cmp(a + (i - 1) * elemsize, a + i * elemsize) > 0)
+					swap_p(a + (i - 1) * elemsize, a + (x = i) * elemsize, tmp, elemsize);
 			--n;
 		} while (x);
 	else
 		do {
 			x = 0;
 			for (i = 1; i < n; ++i)
-				if (cmp(&a[(i - 1) * elemsize], &a[i * elemsize]) < 0)
-					swap_p(&a[(i - 1) * elemsize], &a[(x = i) * elemsize], tmp, elemsize);
+				if (cmp(a + (i - 1) * elemsize, a + i * elemsize) < 0)
+					swap_p(a + (i - 1) * elemsize, a + (x = i) * elemsize, tmp, elemsize);
 			--n;
 		} while (x);
 	free(tmp);
@@ -215,41 +215,41 @@ static void heap_sort_u(unsigned *a, size_t n, bool ascend)
 	}
 }
 
-static void heap_percolate_p_a(void *list, void *tmp, size_t elemsize, int (*cmp)(void*, void*), size_t low, size_t high)
+static void heap_percolate_p_a(void *list, void *tmp, size_t elemsize, int (*cmp)(const void*, const void*), size_t low, size_t high)
 {
 	void *p = tmp;
 	char *a = list;
 	size_t q;
-	for (memcpy(tmp, &a[low * elemsize], elemsize); 2 * low + 1 < high; low = q) {
+	for (memcpy(tmp, a + low * elemsize, elemsize); 2 * low + 1 < high; low = q) {
 		q = 2 * low + 1;
-		if (q != high - 1 && cmp(&a[q * elemsize], &a[(q + 1) * elemsize]) < 0)
+		if (q != high - 1 && cmp(a + q * elemsize, a + (q + 1) * elemsize) < 0)
 			++q;
-		if (cmp(p, &a[q * elemsize]) < 0)
-			memcpy(&a[low * elemsize], &a[q * elemsize], elemsize);
+		if (cmp(p, a + q * elemsize) < 0)
+			memcpy(a + low * elemsize, a + q * elemsize, elemsize);
 		else
 			break;
 	}
-	memcpy(&a[low * elemsize], p, elemsize);
+	memcpy(a + low * elemsize, p, elemsize);
 }
 
-static void heap_percolate_p_d(void *list, void *tmp, size_t elemsize, int (*cmp)(void*, void*), size_t low, size_t high)
+static void heap_percolate_p_d(void *list, void *tmp, size_t elemsize, int (*cmp)(const void*, const void*), size_t low, size_t high)
 {
 	void *p = tmp;
 	char *a = list;
 	size_t q;
-	for (memcpy(tmp, &a[low * elemsize], elemsize); 2 * low + 1 < high; low = q) {
+	for (memcpy(tmp, a + low * elemsize, elemsize); 2 * low + 1 < high; low = q) {
 		q = 2 * low + 1;
-		if (q != high - 1 && cmp(&a[q * elemsize], &a[(q + 1) * elemsize]) > 0)
+		if (q != high - 1 && cmp(a + q * elemsize, a + (q + 1) * elemsize) > 0)
 			++q;
-		if (cmp(p, &a[q * elemsize]) > 0)
-			memcpy(&a[low * elemsize], &a[q * elemsize], elemsize);
+		if (cmp(p, a + q * elemsize) > 0)
+			memcpy(a + low * elemsize, a + q * elemsize, elemsize);
 		else
 			break;
 	}
-	memcpy(&a[low * elemsize], p, elemsize);
+	memcpy(a + low * elemsize, p, elemsize);
 }
 
-static int heap_sort_p(void *list, size_t elemsize, size_t n, int (*cmp)(void*, void*), bool ascend)
+static int heap_sort_p(void *list, size_t elemsize, size_t n, int (*cmp)(const void*, const void*), bool ascend)
 {
 	ssize_t i;
 	char *a = list;
@@ -260,14 +260,14 @@ static int heap_sort_p(void *list, size_t elemsize, size_t n, int (*cmp)(void*, 
 		for (i = n / 2; i >= 0; --i)
 			heap_percolate_p_a(list, tmp, elemsize, cmp, i, n);
 		for (i = n - 1; i > 0; --i) {
-			swap_p(a, &a[i * elemsize], tmp, elemsize);
+			swap_p(a, a + i * elemsize, tmp, elemsize);
 			heap_percolate_p_a(list, tmp, elemsize, cmp, 0, i);
 		}
 	} else {
 		for (i = n / 2; i >= 0; --i)
 			heap_percolate_p_d(list, tmp, elemsize, cmp, i, n);
 		for (i = n - 1; i > 0; --i) {
-			swap_p(a, &a[i * elemsize], tmp, elemsize);
+			swap_p(a, a + i * elemsize, tmp, elemsize);
 			heap_percolate_p_d(list, tmp, elemsize, cmp, 0, i);
 		}
 	}
@@ -301,7 +301,7 @@ static void insertion_sort_u(unsigned *a, size_t n, bool ascend)
 				swap_u(&a[j], &a[j - 1]);
 }
 
-static int insertion_sort_p(void *list, size_t elemsize, size_t n, int (*cmp)(void*, void*), bool ascend)
+static int insertion_sort_p(void *list, size_t elemsize, size_t n, int (*cmp)(const void*, const void*), bool ascend)
 {
 	size_t i, j;
 	char *a = list;
@@ -310,12 +310,12 @@ static int insertion_sort_p(void *list, size_t elemsize, size_t n, int (*cmp)(vo
 		return XT_ENOMEM;
 	if (ascend)
 		for (i = 1; i < n; ++i)
-			for (j = i; j > 0 && cmp(&a[(j - 1) * elemsize], &a[j * elemsize]) > 0; --j)
-				swap_p(&a[j * elemsize], &a[(j - 1) * elemsize], tmp, elemsize);
+			for (j = i; j > 0 && cmp(a + (j - 1) * elemsize, a + j * elemsize) > 0; --j)
+				swap_p(a + j * elemsize, a + (j - 1) * elemsize, tmp, elemsize);
 	else
 		for (i = 1; i < n; ++i)
-			for (j = i; j > 0 && cmp(&a[(j - 1) * elemsize], &a[j * elemsize]) < 0; --j)
-				swap_p(&a[j * elemsize], &a[(j - 1) * elemsize], tmp, elemsize);
+			for (j = i; j > 0 && cmp(a + (j - 1) * elemsize, a + j * elemsize) < 0; --j)
+				swap_p(a + j * elemsize, a + (j - 1) * elemsize, tmp, elemsize);
 	free(tmp);
 	return 0;
 }
@@ -400,24 +400,28 @@ static void radix_quick_sort_u_d(unsigned *a, ssize_t low, ssize_t high)
 		radix_quick_sort_u_d(a, i, high);
 }
 
-static int radix_quick_sort_p_a(void *list, size_t elemsize, ssize_t low, ssize_t high, int (*cmp)(void*, void*))
+static int radix_quick_sort_p_a(void *list, size_t elemsize, ssize_t low, ssize_t high, int (*cmp)(const void*, const void*))
 {
 	int ret = 1;
 	ssize_t i, j;
 	char *a = list;
-	void *pivot = malloc(elemsize);
-	void *tmp = malloc(elemsize);
+	void *pivot, *tmp;
+
+	pivot = malloc(elemsize);
+	tmp = malloc(elemsize);
+
 	if (!pivot || !tmp)
 		return XT_ENOMEM;
 	i = low; j = high;
-	memcpy(pivot, &a[low + (high - low) / 2], elemsize);
+	memmove(pivot, a + (low + (high - low) / 2) * elemsize, elemsize);
+
 	while (i <= j) {
-		while (cmp(&a[i * elemsize], pivot) < 0)
+		while (cmp(a + i * elemsize, pivot) < 0)
 			++i;
-		while (cmp(&a[j * elemsize], pivot) > 0)
+		while (cmp(a + j * elemsize, pivot) > 0)
 			--j;
 		if (i <= j)
-			swap_p(&a[i++ * elemsize], &a[j-- * elemsize], tmp, elemsize);
+			swap_p(a + i++ * elemsize, a + j-- * elemsize, tmp, elemsize);
 	}
 	if (low < j && (ret = radix_quick_sort_p_a(list, elemsize, low, j, cmp)))
 		goto fail;
@@ -430,24 +434,28 @@ fail:
 	return ret;
 }
 
-static int radix_quick_sort_p_d(void *list, size_t elemsize, ssize_t low, ssize_t high, int (*cmp)(void*, void*))
+static int radix_quick_sort_p_d(void *list, size_t elemsize, ssize_t low, ssize_t high, int (*cmp)(const void*, const void*))
 {
 	int ret = 1;
 	ssize_t i, j;
 	char *a = list;
-	void *pivot = malloc(elemsize);
-	void *tmp = malloc(elemsize);
+	void *pivot, *tmp;
+
+	pivot = malloc(elemsize);
+	tmp = malloc(elemsize);
+
 	if (!pivot || !tmp)
 		return XT_ENOMEM;
 	i = low; j = high;
-	memcpy(pivot, &a[low + (high - low) / 2], elemsize);
+	memmove(pivot, a + (low + (high - low) / 2) * elemsize, elemsize);
+
 	while (i <= j) {
-		while (cmp(&a[i * elemsize], pivot) > 0)
+		while (cmp(a + i * elemsize, pivot) > 0)
 			++i;
-		while (cmp(&a[j * elemsize], pivot) < 0)
+		while (cmp(a + j * elemsize, pivot) < 0)
 			--j;
 		if (i <= j)
-			swap_p(&a[i++ * elemsize], &a[j-- * elemsize], tmp, elemsize);
+			swap_p(a + i++ * elemsize, a + j-- * elemsize, tmp, elemsize);
 	}
 	if (low < j && (ret = radix_quick_sort_p_d(list, elemsize, low, j, cmp)))
 		goto fail;
@@ -506,7 +514,7 @@ static void selection_sort_u(unsigned *a, size_t n, bool ascend)
 		}
 }
 
-static int selection_sort_p(void *list, size_t elemsize, size_t n, int (*cmp)(void*, void*), bool ascend)
+static int selection_sort_p(void *list, size_t elemsize, size_t n, int (*cmp)(const void*, const void*), bool ascend)
 {
 	size_t i, j, min;
 	char *a = list;
@@ -517,19 +525,19 @@ static int selection_sort_p(void *list, size_t elemsize, size_t n, int (*cmp)(vo
 		for (j = 0; j < n - 1; ++j) {
 			min = j;
 			for (i = j + 1; i < n; ++i)
-				if (cmp(&a[i * elemsize], &a[min * elemsize]) < 0)
+				if (cmp(a + i * elemsize, a + min * elemsize) < 0)
 					min = i;
 			if (min != j)
-				swap_p(&a[min * elemsize], &a[j * elemsize], tmp, elemsize);
+				swap_p(a + min * elemsize, a + j * elemsize, tmp, elemsize);
 		}
 	else
 		for (j = 0; j < n - 1; ++j) {
 			min = j;
 			for (i = j + 1; i < n; ++i)
-				if (cmp(&a[i * elemsize], &a[min * elemsize]) > 0)
+				if (cmp(a + i * elemsize, a + min * elemsize) > 0)
 					min = i;
 			if (min != j)
-				swap_p(&a[min * elemsize], &a[j * elemsize], tmp, elemsize);
+				swap_p(a + min * elemsize, a + j * elemsize, tmp, elemsize);
 		}
 	free(tmp);
 	return 0;
@@ -659,9 +667,9 @@ int xtSortD(int *list, size_t count, enum xtSortType type, bool ascend)
 	return 0;
 }
 
-int xtSortP(void *list, size_t count, enum xtSortType type, int (*cmp)(void*,void*), bool ascend, size_t elemSize)
+int xtSortP(void *list, size_t count, enum xtSortType type, int (*cmp)(const void*, const void*), bool ascend, size_t elemSize)
 {
-	if (!cmp)
+	if (!cmp || !elemSize)
 		return XT_EINVAL;
 	switch (type) {
 	case XT_SORT_BUBBLE: return bubble_sort_p   (list, elemSize, count, cmp, ascend);
@@ -673,17 +681,19 @@ int xtSortP(void *list, size_t count, enum xtSortType type, int (*cmp)(void*,voi
 		else
 			return radix_quick_sort_p_d(list, elemSize, 0, count - 1, cmp);
 	case XT_SORT_SELECT: return selection_sort_p(list, elemSize, count, cmp, ascend);
+	case XT_SORT_RADIX:
+		return XT_EOPNOTSUPP;
 	default:
 		return XT_EINVAL;
 	}
 }
 
-static int sort_str_cmp(void *a, void *b)
+static int sort_str_cmp(const void *a, const void *b)
 {
-	return strcmp(*(char**)a, *(char**)b);
+	return strcmp(*(const char**)a, *(const char**)b);
 }
 
-int xtSortStr(char **list, size_t count, enum xtSortType type, bool ascend)
+int xtSortStr(const char **list, size_t count, enum xtSortType type, bool ascend)
 {
-	return xtSortP(list, count, type, sort_str_cmp, ascend, sizeof(char*));
+	return xtSortP(list, count, type, sort_str_cmp, ascend, sizeof *list);
 }
