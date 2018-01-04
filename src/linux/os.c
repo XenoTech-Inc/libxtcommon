@@ -1,5 +1,5 @@
 // XT headers
-#include <xt/os.h>
+#include <_xt/os.h>
 #include <_xt/error.h>
 #include <xt/error.h>
 #include <xt/os_macros.h>
@@ -38,11 +38,6 @@ bool xtBatteryIsCharging(void)
 	return false;
 }
 
-bool xtBatteryIsPresent(void)
-{
-	return xtBatteryGetPowerLevel() != -1;
-}
-
 int xtBatteryGetPowerLevel(void)
 {
 	char sbuf[64];
@@ -56,25 +51,6 @@ int xtBatteryGetPowerLevel(void)
 		return retval > 0 ? strtol(sbuf, NULL, 10) : -1;
 	}
 	return -1;
-}
-
-void xtCPUDump(const struct xtCPUInfo *restrict cpuInfo, FILE *restrict f)
-{
-	fprintf(f, "CPU name: %s\n", cpuInfo->name);
-	char cpuArch[16];
-	switch (cpuInfo->architecture) {
-	case XT_CPU_ARCH_X64: strncpy(cpuArch, "x64", sizeof cpuArch); break;
-	case XT_CPU_ARCH_X86: strncpy(cpuArch, "x86", sizeof cpuArch); break;
-	case XT_CPU_ARCH_ARM: strncpy(cpuArch, "ARM", sizeof cpuArch); break;
-	case XT_CPU_ARCH_IA64: strncpy(cpuArch, "IA64", sizeof cpuArch); break;
-	default: strncpy(cpuArch, "Unknown", sizeof cpuArch); break;
-	}
-	fprintf(f, "CPU architecture: %s\n", cpuArch);
-	fprintf(f, "Physical cores: %u\n", cpuInfo->physicalCores);
-	fprintf(f, "Logical cores: %u\n", cpuInfo->logicalCores);
-	fprintf(f, "L1 cache: %uKB\n", cpuInfo->L1Cache);
-	fprintf(f, "L2 cache: %uKB\n", cpuInfo->L2Cache);
-	fprintf(f, "L3 cache: %uKB\n", cpuInfo->L3Cache);
 }
 
 bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo)
@@ -204,11 +180,6 @@ bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo)
 	return errorCount == 0;
 }
 
-bool xtCPUHasHyperThreading(const struct xtCPUInfo *cpuInfo)
-{
-	return cpuInfo->logicalCores > cpuInfo->physicalCores;
-}
-
 void xtConsoleClear(void)
 {
 	// Alias for <ESC>c, the VT100 code to reset the terminal :D
@@ -217,18 +188,9 @@ void xtConsoleClear(void)
 
 int xtConsoleFillLine(const char *pattern)
 {
-	// Only initializing it because otherwise GCC warns
-	// us if we use the -O3 option
-	unsigned width = 0;
-	int ret = xtConsoleGetSize(&width, NULL);
+	int ret = _xtConsoleFillLine(pattern);
 	if (ret)
 		return ret;
-	const char *str = pattern && *pattern ? pattern : "-";
-	while (width-- > 0) {
-		if (!*str)
-			str = pattern;
-		putchar(*str++);
-	}
 	putchar('\n');
 	return 0;
 }
