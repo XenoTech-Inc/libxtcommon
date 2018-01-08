@@ -111,13 +111,22 @@ char *xtFormatHex(char *restrict buf, size_t buflen, const void *restrict data, 
 		return NULL;
 	const char *hex = uppercase ? "0123456789ABCDEF" : "0123456789abcdef";
 	const char *ptr = data;
-	for (size_t i = 0, j = 0; i < buflen && j < datalen; i += 3, ++j) {
-		buf[i + 0] = hex[(ptr[j] >> 4) & 0xf];
-		buf[i + 1] = hex[ ptr[j]       & 0xf];
-		buf[i + 2] = sep;
+	size_t i, j;
+	if (sep) {
+		for (i = j = 0; i < buflen && j < datalen; i += 3, ++j) {
+			buf[i + 0] = hex[(ptr[j] >> 4) & 0xf];
+			buf[i + 1] = hex[ ptr[j]       & 0xf];
+			buf[i + 2] = sep;
+		}
+	} else {
+		for (i = j = 0; i < buflen && j < datalen; i += 2, ++j) {
+			buf[i + 0] = hex[(ptr[j] >> 4) & 0xf];
+			buf[i + 1] = hex[ ptr[j]       & 0xf];
+		}
 	}
-	size_t max = buflen - 1 > 3 * datalen ? 3 * datalen : buflen - 1;
-	buf[3 * (max / 3) - 1] = '\0';
+	if (i >= buflen)
+		i = buflen - 1;
+	buf[i] = '\0';
 	return buf;
 }
 
