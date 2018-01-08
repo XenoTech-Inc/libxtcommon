@@ -29,13 +29,12 @@ extern "C" {
 
 /**
  * Compute Cyclic Redundancy Check code from specified data.
- * @param chksum - The initial checksum.
+ * @param checksum - The initial checksum.
  * @param data - Source data.
  * @param datalen - Source data length.
  * @return The computed code.
  */
-uint32_t xtHashCRC32(uint32_t chksum, const void *data, size_t datalen);
-
+uint32_t xtHashCRC32(uint32_t checksum, const void *data, size_t datalen);
 /**
  * The MD5 context. It is not to be used externally.
  */
@@ -77,7 +76,7 @@ enum xtHashAlgorithm {
 };
 /**
  * Contains all functionality for various hashing algorithms.
- * You are free to read all data from this struct, however: Do not modify anything.
+ * You are free to read all data from this struct BUT do not modify anything.
  */
 struct xtHash {
 	union MessageDigesters {
@@ -90,16 +89,13 @@ struct xtHash {
 	 */
 	enum xtHashAlgorithm algorithm;
 	/**
-	 * The hash as ASCII hex string, in lowercase.
-	 * This value is updated after each digest call.
-	 * It shall always be null-terminated.
+	 * The raw hash bytes. It is updated after each call to xtHashDigest().
 	 */
-	char ascii[XT_HASH_LARGEST_HASH_SIZE * 2 + 1];
+	uint8_t hash[XT_HASH_LARGEST_HASH_SIZE];
 	/**
-	 * The raw hash bytes.
-	 * This value is updated after each digest call.
+	 * Tells you the length of the raw hash in bytes.
 	 */
-	uint8_t bytes[XT_HASH_LARGEST_HASH_SIZE];
+	unsigned hashSizeInBytes;
 };
 /**
  * Completes the hash computation by performing final operations such as padding.

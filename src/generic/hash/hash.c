@@ -652,27 +652,17 @@ static void _xtSHA512Update(struct _xtSHA512Context *restrict ctx, const uint8_t
 
 void xtHashDigest(struct xtHash *ctx)
 {
-	unsigned hashSize = 0;
 	switch (ctx->algorithm) {
 	case XT_HASH_MD5 :
-		_xtMD5Digest(&ctx->digesters.md5, ctx->bytes);
-		hashSize = XT_HASH_MD5_HASH_SIZE;
+		_xtMD5Digest(&ctx->digesters.md5, ctx->hash);
 		break;
 	case XT_HASH_SHA256 :
-		_xtSHA256Digest(&ctx->digesters.sha256, ctx->bytes);
-		hashSize = XT_HASH_SHA256_HASH_SIZE;
+		_xtSHA256Digest(&ctx->digesters.sha256, ctx->hash);
 		break;
 	case XT_HASH_SHA512 :
-		_xtSHA512Digest(&ctx->digesters.sha512, ctx->bytes);
-		hashSize = XT_HASH_SHA512_HASH_SIZE;
+		_xtSHA512Digest(&ctx->digesters.sha512, ctx->hash);
 		break;
 	}
-	const char nybble_chars[] = "0123456789abcdef";
-	for (unsigned i = 0, j = 0; i < hashSize; ++i, j += 2) {
-		ctx->ascii[j] = nybble_chars[(ctx->bytes[i] >> 4) & 0x0F];
-		ctx->ascii[j + 1] = nybble_chars[ctx->bytes[i] & 0x0F ];
-	}
-	ctx->ascii[hashSize * 2] = '\0';
 }
 
 void xtHashInit(struct xtHash *ctx, enum xtHashAlgorithm algorithm)
@@ -686,12 +676,15 @@ void xtHashReset(struct xtHash *ctx)
 	switch (ctx->algorithm) {
 	case XT_HASH_MD5 :
 		_xtMD5Init(&ctx->digesters.md5);
+		ctx->hashSizeInBytes = 16;
 		break;
 	case XT_HASH_SHA256 :
 		_xtSHA256Init(&ctx->digesters.sha256);
+		ctx->hashSizeInBytes = 32;
 		break;
 	case XT_HASH_SHA512 :
 		_xtSHA512Init(&ctx->digesters.sha512);
+		ctx->hashSizeInBytes = 64;
 		break;
 	}
 }

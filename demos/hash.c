@@ -9,6 +9,10 @@
 #include "utils.h"
 
 static struct stats stats;
+/**
+ * Used to store the hash as string.
+ */
+static char asciiBuffer[XT_HASH_LARGEST_HASH_SIZE];
 
 static void crc32_test(const char *input, uint32_t expectedResult)
 {
@@ -24,7 +28,8 @@ static void md5_test(const char *input, const char *expectedResult)
 	xtHashInit(&ctx, XT_HASH_MD5);
 	xtHashUpdate(&ctx, input, strlen(input));
 	xtHashDigest(&ctx);
-	if (strcmp(expectedResult, ctx.ascii) == 0)
+	xtFormatHex(asciiBuffer, sizeof asciiBuffer, ctx.hash, ctx.hashSizeInBytes, 0, false);
+	if (strcmp(expectedResult, asciiBuffer) == 0)
 		PASS("xtHash() - MD5");
 	else
 		FAIL("xtHash() - MD5");
@@ -36,7 +41,8 @@ static void sha256_test(const char *input, const char *expectedResult)
 	xtHashInit(&ctx, XT_HASH_SHA256);
 	xtHashUpdate(&ctx, input, strlen(input));
 	xtHashDigest(&ctx);
-	if (strcmp(expectedResult, ctx.ascii) == 0)
+	xtFormatHex(asciiBuffer, sizeof asciiBuffer, ctx.hash, ctx.hashSizeInBytes, 0, false);
+	if (strcmp(expectedResult, asciiBuffer) == 0)
 		PASS("xtHash() - SHA256");
 	else
 		FAIL("xtHash() - SHA256");
@@ -48,7 +54,8 @@ static void sha512_test(const char *input, const char *expectedResult)
 	xtHashInit(&ctx, XT_HASH_SHA512);
 	xtHashUpdate(&ctx, input, strlen(input));
 	xtHashDigest(&ctx);
-	if (strcmp(expectedResult, ctx.ascii) == 0)
+	xtFormatHex(asciiBuffer, sizeof asciiBuffer, ctx.hash, ctx.hashSizeInBytes, 0, false);
+	if (strcmp(expectedResult, asciiBuffer) == 0)
 		PASS("xtHash() - SHA512");
 	else
 		FAIL("xtHash() - SHA512");
