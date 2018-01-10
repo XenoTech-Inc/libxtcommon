@@ -89,7 +89,7 @@ struct xtHash {
 	 */
 	enum xtHashAlgorithm algorithm;
 	/**
-	 * The raw hash bytes. It is updated after each call to xtHashDigest().
+	 * The raw hash bytes. These are updated after each call to xtHashDigest().
 	 */
 	uint8_t hash[XT_HASH_LARGEST_HASH_SIZE];
 	/**
@@ -99,6 +99,7 @@ struct xtHash {
 };
 /**
  * Completes the hash computation by performing final operations such as padding.
+ * You can access the resulting hash by reading xtHash.hash.
  */
 void xtHashDigest(struct xtHash *ctx);
 /**

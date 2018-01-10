@@ -47,22 +47,23 @@ int xtCharToDigit(char c);
  */
 char *xtFormatBytesSI(char *restrict buf, size_t buflen, uint64_t value, unsigned decimals, bool strictBinary, unsigned *restrict base);
 /**
- * Formats every thousand in the number with the specified seperator.
+ * Formats every thousand in the number with the specified separator.
  * \a buf will receive the final string. No bounds checking is performed.
  */
 char *xtFormatCommasLL(char *buf, size_t buflen, long long value, int sep);
 /**
- * Formats every thousand in the number with the specified seperator.
+ * Formats every thousand in the number with the specified separator.
  * \a buf will receive the final string. No bounds checking is performed.
  */
 char *xtFormatCommasLLU(char *buf, size_t buflen, unsigned long long value, int sep);
 /**
- * Format block of data as a hexadecimal string seperating each byte using \a sep.
+ * Format block of data as a hexadecimal string separating each byte using \a sep.
  * @param buf - Will receive the formatted buffer. Bounds checking is performed.
  * @param buflen - Maximum buffer length.
  * @param data - Block of data.
  * @param datalen - Length of data block.
- * @param sep - Separator character for each byte in \a data.
+ * @param sep - Separator character for each byte in \a data. Specify
+ * zero to have no separator.
  * @param uppercase - Whether to print each byte in uppercase or lowercase.
  * @returns A pointer to \a buf.
  */
