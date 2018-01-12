@@ -3,6 +3,7 @@ target=linux
 arch=def
 clean=no
 debug=yes
+tags=no
 cores="$(nproc)"
 
 usage() {
@@ -18,6 +19,7 @@ Options:
 -r       Create release build
 -l       Set target to Linux
 -w       Set target to Windows
+-t       Create tags
 64       Use x86_64
 x64      Use x64_64
 32       Use x86
@@ -58,6 +60,7 @@ while true; do
 	-c) clean=yes;;
 	-d) debug=yes;;
 	-r) debug=no;;
+	-t) tags=yes;;
 	64) arch=x64;;
 	x64) arch=x64;;
 	32) arch=x86;;
@@ -78,15 +81,15 @@ while true; do
 done
 
 # Prepare for build
-if [ $clean = yes ]; then
+if [ "$clean" = yes ]; then
 	echo 'Cleaning project...'
 	make clean
 	cd demos && make clean && cd ..
 fi
 
-buildopts="-- -g -DDEBUG $@"
-if [ $debug = no ]; then
-	buildopts="-- -O3 -ffast-math $@"
+buildopts="-- -g -DDEBUG $*"
+if [ "$debug" = no ]; then
+	buildopts="-- -O3 -ffast-math $*"
 fi
 
 echo "Build options: $buildopts"
@@ -95,14 +98,16 @@ echo "Build options: $buildopts"
 echo "Building for target: $target $arch"
 
 # Make sure windows target is properly setup
-if [ $target != linux ]; then
-	if [ $arch = x64 ]; then
+os=linux
+if [ "$target" != linux ]; then
+	os=windows
+	if [ "$arch" = x64 ]; then
 		buildopts="windows-x64 $buildopts"
 	else
 		buildopts="windows-x86 $buildopts"
 	fi
 else
-	if [ $arch != def ]; then
+	if [ "$arch" != def ]; then
 		echo "Warning: Linux only supports your current architecture" 1>&2
 	fi
 fi
@@ -110,5 +115,9 @@ fi
 # Build project
 ./configure $buildopts
 cd demos && ./configure $buildopts && cd ..
-make -j$cores
-cd demos && make -j$cores && cd ..
+make -j"$cores"
+cd demos && make -j"$cores" && cd ..
+
+if [ "$tags" = yes ]; then
+	ctags $(find include src/generic src/"$os" -name '*.h' -o -name '*.c')
+fi

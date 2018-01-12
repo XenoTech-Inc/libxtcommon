@@ -126,7 +126,7 @@ EOF
 MAKEFILE="Makefile"
 echo Creating cross platform Makefile...
 cat << EOF >$MAKEFILE
-.PHONY: default install clean
+.PHONY: default install clean mrproper
 
 CC=$CC
 INCS=-I"include/" -I"src/include/"
@@ -169,6 +169,8 @@ done
 cat <<EOF >>$MAKEFILE
 clean:
 	rm -f $FINALLIBPATH \$(OBJECTS)
+mrproper: clean
+	rm -f src/generic/_buildopts.c xtcommon.pc
 EOF
 
 cd ..

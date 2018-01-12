@@ -1,5 +1,5 @@
 // XT headers
-#include <xt/os.h>
+#include <_xt/os.h>
 #include <xt/error.h>
 #include <xt/os_macros.h>
 #include <xt/string.h>
@@ -27,11 +27,6 @@ bool xtBatteryIsCharging(void)
 	return status.BatteryFlag & 8;
 }
 
-bool xtBatteryIsPresent(void)
-{
-	return xtBatteryGetPowerLevel() != -1;
-}
-
 int xtBatteryGetPowerLevel(void)
 {
 	SYSTEM_POWER_STATUS status;
@@ -43,25 +38,6 @@ int xtBatteryGetPowerLevel(void)
 	if (status.BatteryLifePercent == 255 || status.BatteryFlag == 128 || status.BatteryFlag == 255)
 		return -1;
 	return status.BatteryLifePercent;
-}
-
-void xtCPUDump(const struct xtCPUInfo *restrict cpuInfo, FILE *restrict f)
-{
-	fprintf(f, "CPU name: %s\n", cpuInfo->name);
-	char cpuArch[16];
-	switch (cpuInfo->architecture) {
-	case XT_CPU_ARCH_X64: strncpy(cpuArch, "x64", sizeof cpuArch); break;
-	case XT_CPU_ARCH_X86: strncpy(cpuArch, "x86", sizeof cpuArch); break;
-	case XT_CPU_ARCH_ARM: strncpy(cpuArch, "ARM", sizeof cpuArch); break;
-	case XT_CPU_ARCH_IA64: strncpy(cpuArch, "IA64", sizeof cpuArch); break;
-	default: strncpy(cpuArch, "Unknown", sizeof cpuArch); break;
-	}
-	fprintf(f, "CPU architecture: %s\n", cpuArch);
-	fprintf(f, "Physical cores: %u\n", cpuInfo->physicalCores);
-	fprintf(f, "Logical cores: %u\n", cpuInfo->logicalCores);
-	fprintf(f, "L1 cache: %uKB\n", cpuInfo->L1Cache);
-	fprintf(f, "L2 cache: %uKB\n", cpuInfo->L2Cache);
-	fprintf(f, "L3 cache: %uKB\n", cpuInfo->L3Cache);
 }
 
 bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo)
@@ -169,11 +145,6 @@ bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo)
 	return errorCount == 0;
 }
 
-bool xtCPUHasHyperThreading(const struct xtCPUInfo *cpuInfo)
-{
-	return cpuInfo->logicalCores > cpuInfo->physicalCores;
-}
-
 void xtConsoleClear(void)
 {
 	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -193,22 +164,9 @@ void xtConsoleClear(void)
 
 int xtConsoleFillLine(const char *pattern)
 {
-	// Only initializing it because otherwise GCC warns
-	// us if we use the -O3 option
-	unsigned width = 0;
-	int ret = xtConsoleGetSize(&width, NULL);
+	int ret = _xtConsoleFillLine(pattern);
 	if (ret)
 		return ret;
-	const char *str = pattern && *pattern ? pattern : "-";
-	while (width-- > 0) {
-		if (!*str)
-			str = pattern;
-		putchar(*str++);
-	}
-	// We must flush stdout since it is line buffered and we do not append a newline character.
-	// We do not insert a newline character on purpose because that completely destroys this
-	// function by inserting a blank new line in the console. And that is the result of Windows'
-	// violation of the general standard behavior of consoles.
 	fflush(stdout);
 	return 0;
 }
@@ -246,7 +204,7 @@ char *xtGetHostname(char *buf, size_t buflen)
 	char *val = getenv("COMPUTERNAME");
 	if (!val)
 		return NULL;
-	snprintf(buf, buflen, "%s", val);
+	xtstrncpy(buf, val, buflen);
 	return buf;
 }
 /**

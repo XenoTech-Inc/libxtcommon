@@ -19,11 +19,13 @@ SYSTEM=`uname -s 2>/dev/null`
 WINARCH=w64-mingw32
 win=no
 
-for i in "$@"; do
-	case "$i" in
+while true; do
+	if [ -z "$1" ]; then
+		break
+	fi
+	case "$1" in
 	windows*)
-		shift 1
-		case "$i" in
+		case "$1" in
 		windows-x86)
 			WIN=i686-$WINARCH
 			;;
@@ -31,7 +33,7 @@ for i in "$@"; do
 			WIN=x86_64-$WINARCH
 			;;
 		*)
-			echo Invalid target: $i 1>&2
+			echo Invalid target: $1 1>&2
 			exit 1;;
 		esac
 		CC="$WIN"-gcc
@@ -41,6 +43,7 @@ for i in "$@"; do
 		fi
 		win=yes
 		LDLIBS=" -lntdll -lpsapi -lws2_32"
+		shift 1
 		continue;;
 	--)
 		shift 1
