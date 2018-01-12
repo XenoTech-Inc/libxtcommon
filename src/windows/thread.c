@@ -2,6 +2,7 @@
 #include <xt/thread.h>
 #include <_xt/error.h>
 #include <xt/error.h>
+#include <xt/dlload.h>
 
 // System headers
 #include <ntstatus.h> // NTSTATUS and STATUS_XXX
@@ -26,21 +27,19 @@ static volatile HANDLE _xtLockMutex = NULL;
 
 static int _xtLockMutexLock(void)
 {
-	dbgs("global mutex lock");
+	dbgs("thread: global mutex lock");
 	if (!_xtLockMutex) {
 		HANDLE p = CreateMutex(NULL, FALSE, NULL);
-		dbgf("global mutex: %p\n", p);
 		while (NULL != InterlockedCompareExchangePointer((PVOID*)&_xtLockMutex, (PVOID)p, NULL)) {
-			dbgf("cmpxchg again %p\n", p);
+			dbgf("thread: cmpxchg again %p\n", p);
 		}
 	}
-	dbgs("wait");
 	return WaitForSingleObject(_xtLockMutex, INFINITE) == WAIT_FAILED;
 }
 
 static int _xtLockMutexUnlock(void)
 {
-	dbgs("global mutex unlock");
+	dbgs("thread: global mutex unlock");
 	return ReleaseMutex(_xtLockMutex);
 }
 
@@ -68,7 +67,7 @@ int xtMutexLock(xtMutex *m)
 	_xtLockMutexLock();
 	/* Create if lock is statically initialized */
 	if (!_xtMutexIsInit(m)) {
-		dbgs("lazy create mutex");
+		dbgs("thread: lazy create mutex");
 		int retval = xtMutexCreate(m);
 		if (retval)
 			return retval;
@@ -84,7 +83,7 @@ int xtMutexTryLock(xtMutex *m)
 	_xtLockMutexLock();
 	/* Create if lock is statically initialized */
 	if (!_xtMutexIsInit(m)) {
-		dbgs("lazy create mutex");
+		dbgs("thread: lazy create mutex");
 		int retval = xtMutexCreate(m);
 		if (retval)
 			return retval;
@@ -154,11 +153,38 @@ size_t xtThreadGetID(const struct xtThread *t)
 		return GetCurrentThreadId();
 }
 
+typedef HRESULT (WINAPI *_xtGetThreadDescription)(HANDLE hThread, PWSTR *description);
+typedef HRESULT (WINAPI *_xtSetThreadDescription)(HANDLE hThread, PCWSTR description);
+
 char *xtThreadGetName(char *buf, size_t buflen)
 {
-	(void)buf;
-	(void)buflen;
-	return NULL;
+	HRESULT hr;
+	PWSTR data = NULL;
+	char *ptr = NULL;
+	_xtGetThreadDescription func = (_xtGetThreadDescription)GetProcAddress(
+		GetModuleHandle(TEXT("kernel32.dll")), "GetThreadDescription"
+	);
+	if (!func) {
+		dbgs("thread: no name support or unknown error");
+		goto fail;
+	}
+	/* Grab name */
+	dbgs("thread: get name");
+	hr = func(GetCurrentThread(), &data);
+	if (!SUCCEEDED(hr)) {
+		dbgs("thread: failed to get name");
+		goto fail;
+	}
+	/* Convert name */
+	if (!WideCharToMultiByte(CP_OEMCP, 0, data, -1, buf, buflen, 0, 0)) {
+		dbgs("thread: failed to convert name");
+		goto fail;
+	}
+	ptr = buf;
+fail:
+	if (data)
+		LocalFree(data);
+	return ptr;
 }
 
 int xtThreadGetSuspendCount(struct xtThread *t)
@@ -191,7 +217,30 @@ int xtThreadJoin(struct xtThread *t, void **ret)
 
 void xtThreadSetName(const char *name)
 {
-	(void)name;
+	size_t len = strlen(name);
+	WCHAR *lname = NULL;
+	_xtSetThreadDescription func = (_xtSetThreadDescription)GetProcAddress(
+		GetModuleHandle(TEXT("kernel32.dll")), "SetThreadDescription"
+	);
+	if (!func) {
+		dbgs("thread: no name support or unknown error");
+		goto fail;
+	}
+	/* Convert name */
+	dbgs("thread: set name");
+	if (!(lname = malloc((len + 1) * sizeof *lname))) {
+		dbgs("thread: failed to allocate name");
+		goto fail;
+	}
+	if (!MultiByteToWideChar(CP_OEMCP, 0, name, -1, lname, len + 1)) {
+		dbgs("thread: failed to convert name");
+		goto fail;
+	}
+	/* Apply name */
+	func(GetCurrentThread(), lname);
+fail:
+	if (lname)
+		free(lname);
 }
 
 int xtThreadSuspend(struct xtThread *t)

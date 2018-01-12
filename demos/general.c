@@ -92,9 +92,9 @@ static void fileTest(void)
 			FAIL("xtFileRemove()");
 	} else {
 		FAIL("xtFileTempFile()");
-		XFAIL("xtFileExecute()");
-		XFAIL("xtFileCopy()");
-		XFAIL("xtFileRemove()");
+		SKIP("xtFileExecute()");
+		SKIP("xtFileCopy()");
+		SKIP("xtFileRemove()");
 	}
 }
 
@@ -192,11 +192,11 @@ static void threadTest(void)
 	char sbuf[256];
 	xtMutex m;
 	struct xtThread t1, t2;
-	if (xtThreadGetName(sbuf, sizeof sbuf))
+	xtThreadSetName("thread_worker");
+	if (xtThreadGetName(sbuf, sizeof sbuf) && !strcmp(sbuf, "thread_worker"))
 		PASS("xtThreadGetName()");
 	else
 		FAIL("xtThreadGetName()");
-	xtThreadSetName("thread_worker");
 	if (xtMutexCreate(&m) == 0) {
 		PASS("xtMutexCreate()");
 		if (xtMutexLock(&m) == 0 && xtMutexUnlock(&m) == 0)
