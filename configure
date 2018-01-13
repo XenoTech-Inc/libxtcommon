@@ -95,10 +95,6 @@ if [ ! -d "$LIBDIR" ]; then
 	echo "Bad libdir $LIBDIR: no directory" 2>&1
 	exit 1
 fi
-if [ ! -d "$PKG_CONFIG_PATH" ]; then
-	echo "Bad pkg-config dir $PKG_CONFIG_PATH: no directory" 2>&1
-	exit 1
-fi
 
 CFLAGS="$CFLAGS $*"
 # Strip trailing spaces (see: http://www.cyberciti.biz/tips/bash-shell-parameter-substitution-2.html)
@@ -126,7 +122,7 @@ EOF
 MAKEFILE="Makefile"
 echo Creating cross platform Makefile...
 cat << EOF >$MAKEFILE
-.PHONY: default install clean mrproper
+.PHONY: default install clean mrproper tests vtests
 
 CC=$CC
 INCS=-I"include/" -I"src/include/"
@@ -167,6 +163,10 @@ for i in $FILES; do
 	echo "" >>$MAKEFILE
 done
 cat <<EOF >>$MAKEFILE
+tests:
+	\$(MAKE) -C demos tests
+vtests:
+	\$(MAKE) -C demos vtests
 clean:
 	rm -f $FINALLIBPATH \$(OBJECTS)
 mrproper: clean

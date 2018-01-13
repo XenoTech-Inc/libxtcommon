@@ -19,17 +19,16 @@ static void map_self(const char *prog)
 
 	fd = open(prog, O_RDONLY);
 	if (fd == -1) {
-		FAIL("map_self: Can't read myself?");
+		FAIL("map_self() - Can't read myself?");
 		goto fail;
 	}
 	if (xtFileGetInfo(&info, prog)) {
-		FAIL("map_self: Can't get file info");
+		FAIL("map_self() - Can't get file info");
 		goto fail;
 	}
-	xtprintf("file size: %lld\n", info.size);
 	map = xtmmap(NULL, info.size, XT_MMAN_PROT_READ, XT_MMAN_MAP_FILE | XT_MMAN_MAP_PRIVATE, fd, 0);
 	if (map == XT_MMAN_MAP_FAILED) {
-		FAIL("map_self: xtmmap");
+		FAIL("map_self() - xtmmap()");
 		goto fail;
 	}
 
@@ -52,7 +51,7 @@ static void simulate_page_alloc(void)
 
 	map = xtmmap(NULL, size, XT_MMAN_PROT_READ | XT_MMAN_PROT_WRITE, XT_MMAN_MAP_ANONYMOUS | XT_MMAN_MAP_PRIVATE, -1, 0);
 	if (map == XT_MMAN_MAP_FAILED) {
-		FAIL("simulate_page_alloc: xtmmap");
+		FAIL("simulate_page_alloc() - xtmmap()");
 		ret = 1;
 		goto fail;
 	}
@@ -61,16 +60,16 @@ static void simulate_page_alloc(void)
 	/* Read back data */
 	for (unsigned char *data = map, *end = data + size; data < end; ++data)
 		if (*data != 0xff) {
-			FAIL("simulate_page_alloc: fill data");
+			FAIL("simulate_page_alloc() - fill data");
 			ret = 1;
 			goto fail;
 		}
 fail:
 	if (map != XT_MMAN_MAP_FAILED)
 		if (xtmunmap(map, size) && ret)
-			FAIL("simulate_page_alloc: xtmunmap");
+			FAIL("simulate_page_alloc() - xtmunmap()");
 	if (!ret)
-		PASS("simulate_page_alloc");
+		PASS("simulate_page_alloc()");
 }
 
 static void simulate_page_resize(void)
@@ -80,7 +79,7 @@ static void simulate_page_resize(void)
 
 	map = xtmmap(NULL, size, XT_MMAN_PROT_READ | XT_MMAN_PROT_WRITE, XT_MMAN_MAP_ANONYMOUS | XT_MMAN_MAP_PRIVATE, -1, 0);
 	if (map == XT_MMAN_MAP_FAILED) {
-		FAIL("simulate_page_resize: xtmmap");
+		FAIL("simulate_page_resize() - xtmmap()");
 		goto fail;
 	}
 	/* Fill page with some data */
@@ -88,11 +87,11 @@ static void simulate_page_resize(void)
 	/* Resize mapping */
 	map2 = xtmremap(map, size, 2 * size, XT_MMAN_MREMAP_MAYMOVE);
 	if (map2 == XT_MMAN_MAP_FAILED) {
-		FAIL("simulate_page_resize: xtmremap");
+		FAIL("simulate_page_resize() - xtmremap()");
 		goto fail;
 	}
 	map = map2;
-	PASS("simulate_page_resize");
+	PASS("simulate_page_resize()");
 fail:
 	if (map != XT_MMAN_MAP_FAILED)
 		xtmunmap(map, size);
@@ -101,9 +100,10 @@ fail:
 int main(int argc, char **argv)
 {
 	stats_init(&stats, "mman");
+	puts("-- MMAN TEST");
 
 	if (argc < 1 || !argv[0] || !*argv[0])
-		SKIP("map_self");
+		SKIP("map_self()");
 	else
 		map_self(argv[0]);
 	simulate_page_alloc();

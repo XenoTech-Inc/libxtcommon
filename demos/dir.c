@@ -57,5 +57,5 @@ int main(void)
 		dump_file(path);
 
 	printf("%d files found\n", i);
-	return xtFileFindClose(&find) == 0;
+	return xtFileFindClose(&find) != 0;
 }

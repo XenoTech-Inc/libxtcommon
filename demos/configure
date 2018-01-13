@@ -13,6 +13,8 @@ Makefile
 *.vim
 # CC
 *.o
+tests.log
+vtests.log
 END
 SYSTEM=`uname -s 2>/dev/null`
 
@@ -75,7 +77,7 @@ CFLAGS="-Wall -Wextra -pedantic -std=c99 $*"
 CFLAGS="$CFLAGS $INCS"
 # Write phony target and overwrite some builtin variables
 cat <<END >Makefile
-.PHONY: default clean
+.PHONY: default clean tests vtests
 
 CC=$CC
 CFLAGS=$CFLAGS
@@ -113,6 +115,39 @@ EOF
 for i in $MAIN; do
 	printf '%s: %s $(LIST) %s\n' "${i/%.c/}" "${i/%.c/.o}" "$LIBPATH" >>Makefile
 done
+
+# Create tests
+cat <<'EOF' >>Makefile
+tests: $(MAIN)
+	>tests.log
+	@echo "RUNNING general"
+	@./general
+	@echo "RUNNING string"
+	@./string
+EOF
+MAIN="${MAIN/general/}"
+MAIN="${MAIN/string/}"
+for i in $MAIN; do
+	if [ -f $i ]; then
+		printf '\t@echo "RUNNING %s"\n\t@./%s >>tests.log 2>&1\n' "${i/%.c/}" "${i/%.c/}" >>Makefile
+	fi
+done
+
+# Create valgrind tests
+cat <<'EOF' >>Makefile
+vtests: $(MAIN)
+	>vtests.log
+	@echo "RUNNING general"
+	@valgrind ./general
+	@echo "RUNNING string"
+	@valgrind ./string
+EOF
+for i in $MAIN; do
+	if [ -f $i ]; then
+		printf '\t@echo "RUNNING %s"\n\t@valgrind ./%s >>vtests.log 2>&1\n' "${i/%.c/}" "${i/%.c/}" >>Makefile
+	fi
+done
+
 cat <<'EOF' >>Makefile
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS)

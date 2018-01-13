@@ -164,7 +164,7 @@ static void string_sort(void)
 	unsigned count = 0;
 	for (const char **ptr = list; *ptr; ++ptr)
 		++count;
-	printf("count: %u\n", count);
+	printf("Count: %u\n", count);
 
 	int type = XT_SORT_QUICK;
 
