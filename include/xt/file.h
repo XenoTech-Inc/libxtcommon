@@ -33,40 +33,40 @@ extern "C" {
 /**
  * @brief Used to scan files in a directory.
  */
-struct xtFileFind {
+struct xtFileIterator {
 #if XT_IS_LINUX
 	DIR *dir;
 	struct dirent *entry;
 #else
 	void *handle;
+	char *path;
 #endif
+	unsigned fileCount;
 };
 /**
- * Opens the directory and fetches the first file name.
+ * Opens the directory.
  * The order in which the files are scanned is undefined.
- * @param buf - Receives the name of the file.
  * @return Zero if the directory was opened and the first file name was fetched,
  * otherwise an error code.
- * @remarks All resources are cleaned up automatically if the function call may
- * fail.
  */
-int xtFileFindFirstFile(
-	struct xtFileFind *restrict handle,
-	const char *restrict path,
-	char *restrict buf, size_t buflen
+int xtFileIteratorStart(
+	struct xtFileIterator *restrict handle,
+	const char *restrict path
 );
 /**
  * Advances to the next file in the list.
  * @param buf - Receives the name of the file.
- * @return Zero if the file name was fetched, otherwise an error code.
+ * @return Zero if the next file name was fetched, otherwise an error
+ * code and the iterator is freed.
  */
-int xtFileFindNextFile(
-	struct xtFileFind *restrict handle,
+int xtFileIteratorNext(
+	struct xtFileIterator *restrict handle,
 	char *restrict buf, size_t buflen);
 /**
  * Cleans up all resources belonging to \a handle.
+ * Use this when you want to prematurely terminate an xtFileIteratorNext().
  */
-int xtFileFindClose(struct xtFileFind *handle);
+int xtFileIteratorEnd(struct xtFileIterator *handle);
 /**
  * All supported access modes for xtFileAccess().
  */

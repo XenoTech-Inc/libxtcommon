@@ -47,15 +47,14 @@ int main(void)
 {
 	puts("-- DIRECTORY TEST");
 	char path[256];
-	struct xtFileFind find;
+	struct xtFileIterator find;
 	unsigned i = 0;
 
-	if (xtFileFindFirstFile(&find, ".", path, sizeof path))
+	if (xtFileIteratorStart(&find, "."))
 		return 1;
-	dump_file(path);
-	for (++i; !xtFileFindNextFile(&find, path, sizeof path); ++i)
+	for (; !xtFileIteratorNext(&find, path, sizeof path); ++i)
 		dump_file(path);
 
 	printf("%d files found\n", i);
-	return xtFileFindClose(&find) != 0;
+	return 0;
 }

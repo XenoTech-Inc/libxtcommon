@@ -16,33 +16,31 @@
 #include <stdlib.h>
 #include <string.h>
 
-int xtFileFindFirstFile(
-	struct xtFileFind *restrict handle,
-	const char *restrict path,
-	char *restrict buf, size_t buflen)
+int xtFileIteratorStart(
+	struct xtFileIterator *restrict handle,
+	const char *restrict path)
 {
-	int ret;
-	if (!(handle->dir = opendir(path))) {
-		ret = _xtTranslateSysError(errno);
-		goto cleanup;
-	}
-	if ((ret = xtFileFindNextFile(handle, buf, buflen)) == 0)
-		return ret;
-cleanup:
-	closedir(handle->dir);
-	return ret;
-}
-
-int xtFileFindNextFile(struct xtFileFind *restrict handle, char *restrict buf, size_t buflen)
-{
-	errno = 0; // We must clear the error flag on every iteration
-	if (!(handle->entry = readdir(handle->dir)))
-		return errno == 0 ? XT_ENOENT : _xtTranslateSysError(errno);
-	xtstrncpy(buf, handle->entry->d_name, buflen);
+	if (!(handle->dir = opendir(path)))
+		return _xtTranslateSysError(errno);
+	handle->fileCount = 0;
 	return 0;
 }
 
-int xtFileFindClose(struct xtFileFind *handle)
+int xtFileIteratorNext(struct xtFileIterator *restrict handle, char *restrict buf, size_t buflen)
+{
+	errno = 0; // We must clear the error flag on every iteration
+	if (!(handle->entry = readdir(handle->dir))) {
+		// Cache error code because it can change.
+		int errnoTemp = errno;
+		xtFileIteratorEnd(handle);
+		return errnoTemp == 0 ? XT_ENOENT : _xtTranslateSysError(errnoTemp);
+	}
+	xtstrncpy(buf, handle->entry->d_name, buflen);
+	++handle->fileCount;
+	return 0;
+}
+
+int xtFileIteratorEnd(struct xtFileIterator *handle)
 {
 	return closedir(handle->dir) == 0 ? 0 : _xtTranslateSysError(errno);
 }

@@ -15,31 +15,44 @@
 #include <stdint.h>
 #include <string.h>
 
-int xtFileFindFirstFile(
-	struct xtFileFind *restrict handle,
-	const char *restrict path,
-	char *restrict buf, size_t buflen)
+int xtFileIteratorStart(
+	struct xtFileIterator *restrict handle,
+	const char *restrict path)
 {
-	char sbuf[PATH_MAX];
-	snprintf(sbuf, sizeof sbuf, "%s\\*.*", path);
-	WIN32_FIND_DATA wfd;
-	if ((handle->handle = FindFirstFile(sbuf, &wfd)) == INVALID_HANDLE_VALUE)
-		return _xtTranslateSysError(GetLastError());
-	xtstrncpy(buf, wfd.cFileName, buflen);
+	const char *format = "%s\\*.*";
+	size_t length = strlen(path) + sizeof format - 2 + 1; // -2 removes "%s"
+	if (!(handle->path = malloc(length)))
+		return XT_ENOMEM;
+	xtsnprintf(handle->path, length, format, path);
+	handle->fileCount = 0;
 	return 0;
 }
 
-int xtFileFindNextFile(struct xtFileFind *restrict handle, char *restrict buf, size_t buflen)
+int xtFileIteratorNext(struct xtFileIterator *restrict handle, char *restrict buf, size_t buflen)
 {
 	WIN32_FIND_DATA wfd;
-	if (!FindNextFile(handle->handle, &wfd))
-		return _xtTranslateSysError(GetLastError());
+	int errorTemp;
+	if (handle->fileCount == 0) {
+		if ((handle->handle = FindFirstFile(handle->path, &wfd)) == INVALID_HANDLE_VALUE)
+			goto fail;
+	} else if (!FindNextFile(handle->handle, &wfd))
+		goto fail;
 	xtstrncpy(buf, wfd.cFileName, buflen);
+	++handle->fileCount;
 	return 0;
+fail:
+	// Cache error code because it can change.
+	errorTemp = GetLastError();
+	xtFileIteratorEnd(handle);
+	return _xtTranslateSysError(errorTemp);
 }
 
-int xtFileFindClose(struct xtFileFind *handle)
+int xtFileIteratorEnd(struct xtFileIterator *handle)
 {
+	if (handle->path) {
+		free(handle->path);
+		handle->path = NULL;
+	}
 	return FindClose(handle->handle) ? 0 : _xtTranslateSysError(GetLastError());
 }
 
