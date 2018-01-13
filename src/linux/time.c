@@ -39,7 +39,7 @@ int xtCalendarIsDST(bool *isDST)
 	return 0;
 }
 
-int xtClockGetRes(struct xtTimestamp *timestamp, enum xtClock clock)
+int xtClockGetResolution(struct xtTimestamp *timestamp, enum xtClock clock)
 {
 	clockid_t clockId;
 	switch (clock) {

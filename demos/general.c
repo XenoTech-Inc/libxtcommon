@@ -225,30 +225,30 @@ static void timeTest(void)
 {
 	char sbuf[256];
 	struct xtTimestamp ts;
-	if (xtClockGetRes(&ts, XT_CLOCK_MONOTONIC) == 0)
-		PASS("xtClockGetRes(XT_CLOCK_MONOTONIC)");
+	if (xtClockGetResolution(&ts, XT_CLOCK_MONOTONIC) == 0)
+		PASS("xtClockGetResolution(XT_CLOCK_MONOTONIC)");
 	else
-		FAIL("xtClockGetRes(XT_CLOCK_MONOTONIC)");
-	if (xtClockGetRes(&ts, XT_CLOCK_MONOTONIC_COARSE) == 0)
-		PASS("xtClockGetRes(XT_CLOCK_MONOTONIC_COARSE)");
+		FAIL("xtClockGetResolution(XT_CLOCK_MONOTONIC)");
+	if (xtClockGetResolution(&ts, XT_CLOCK_MONOTONIC_COARSE) == 0)
+		PASS("xtClockGetResolution(XT_CLOCK_MONOTONIC_COARSE)");
 	else
-		FAIL("xtClockGetRes(XT_CLOCK_MONOTONIC_COARSE)");
-	if (xtClockGetRes(&ts, XT_CLOCK_MONOTONIC_RAW) == 0)
-		PASS("xtClockGetRes(XT_CLOCK_MONOTONIC_RAW)");
+		FAIL("xtClockGetResolution(XT_CLOCK_MONOTONIC_COARSE)");
+	if (xtClockGetResolution(&ts, XT_CLOCK_MONOTONIC_RAW) == 0)
+		PASS("xtClockGetResolution(XT_CLOCK_MONOTONIC_RAW)");
 	else
-		FAIL("xtClockGetRes(XT_CLOCK_MONOTONIC_RAW)");
-	if (xtClockGetRes(&ts, XT_CLOCK_REALTIME) == 0)
-		PASS("xtClockGetRes(XT_CLOCK_REALTIME)");
+		FAIL("xtClockGetResolution(XT_CLOCK_MONOTONIC_RAW)");
+	if (xtClockGetResolution(&ts, XT_CLOCK_REALTIME) == 0)
+		PASS("xtClockGetResolution(XT_CLOCK_REALTIME)");
 	else
-		FAIL("xtClockGetRes(XT_CLOCK_REALTIME)");
-	if (xtClockGetRes(&ts, XT_CLOCK_REALTIME_COARSE) == 0)
-		PASS("xtClockGetRes(XT_CLOCK_REALTIME_COARSE)");
+		FAIL("xtClockGetResolution(XT_CLOCK_REALTIME)");
+	if (xtClockGetResolution(&ts, XT_CLOCK_REALTIME_COARSE) == 0)
+		PASS("xtClockGetResolution(XT_CLOCK_REALTIME_COARSE)");
 	else
-		FAIL("xtClockGetRes(XT_CLOCK_REALTIME_COARSE)");
-	if (xtClockGetRes(&ts, XT_CLOCK_REALTIME_NOW) == 0)
-		PASS("xtClockGetRes(XT_CLOCK_REALTIME_NOW)");
+		FAIL("xtClockGetResolution(XT_CLOCK_REALTIME_COARSE)");
+	if (xtClockGetResolution(&ts, XT_CLOCK_REALTIME_NOW) == 0)
+		PASS("xtClockGetResolution(XT_CLOCK_REALTIME_NOW)");
 	else
-		FAIL("xtClockGetRes(XT_CLOCK_REALTIME_NOW)");
+		FAIL("xtClockGetResolution(XT_CLOCK_REALTIME_NOW)");
 
 	if (xtClockGetTime(&ts, XT_CLOCK_MONOTONIC) == 0)
 		PASS("xtClockGetTime(XT_CLOCK_MONOTONIC)");

@@ -98,7 +98,7 @@ int xtCalendarIsDST(bool *isDST);
  * Finds the resolution (precision) of the specified clock \a clock.
  * The resolution of the available clocks depends on the implementation.
  */
-int xtClockGetRes(struct xtTimestamp *timestamp, enum xtClock clock);
+int xtClockGetResolution(struct xtTimestamp *timestamp, enum xtClock clock);
 /**
  * Retrieves the time for the specified clock \a clock.
  * @return 0 for success, otherwise an error code.
