@@ -39,7 +39,7 @@ struct xtFileIterator {
 	struct dirent *entry;
 #else
 	void *handle;
-	char *path;
+	char *firstFilePath;
 #endif
 	unsigned fileCount;
 };

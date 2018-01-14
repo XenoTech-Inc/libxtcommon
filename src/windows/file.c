@@ -19,11 +19,27 @@ int xtFileIteratorStart(
 	struct xtFileIterator *restrict handle,
 	const char *restrict path)
 {
+	handle->firstFilePath = NULL;
+
 	const char *format = "%s\\*.*";
 	size_t length = strlen(path) + sizeof format - 2 + 1; // -2 removes "%s"
-	if (!(handle->path = malloc(length)))
+	char *winPath;
+	if (!(winPath = malloc(length)))
 		return XT_ENOMEM;
-	xtsnprintf(handle->path, length, format, path);
+	xtsnprintf(winPath, length, format, path);
+
+	WIN32_FIND_DATA wfd;
+	handle->handle = FindFirstFile(winPath, &wfd);
+	free(winPath); // Always clean this up
+
+	if (handle->handle == INVALID_HANDLE_VALUE)
+		return _xtTranslateSysError(GetLastError());
+
+	if (!(handle->firstFilePath = _strdup(wfd.cFileName))) {
+		xtFileIteratorEnd(handle);
+		return _xtTranslateSysError(GetLastError());
+	}
+
 	handle->fileCount = 0;
 	return 0;
 }
@@ -32,12 +48,15 @@ int xtFileIteratorNext(struct xtFileIterator *restrict handle, char *restrict bu
 {
 	WIN32_FIND_DATA wfd;
 	int errorTemp;
+
 	if (handle->fileCount == 0) {
-		if ((handle->handle = FindFirstFile(handle->path, &wfd)) == INVALID_HANDLE_VALUE)
+		xtstrncpy(buf, handle->firstFilePath, buflen);
+	} else {
+		if (!FindNextFile(handle->handle, &wfd))
 			goto fail;
-	} else if (!FindNextFile(handle->handle, &wfd))
-		goto fail;
-	xtstrncpy(buf, wfd.cFileName, buflen);
+		xtstrncpy(buf, wfd.cFileName, buflen);
+	}
+
 	++handle->fileCount;
 	return 0;
 fail:
@@ -49,9 +68,9 @@ fail:
 
 int xtFileIteratorEnd(struct xtFileIterator *handle)
 {
-	if (handle->path) {
-		free(handle->path);
-		handle->path = NULL;
+	if (handle->firstFilePath) {
+		free(handle->firstFilePath);
+		handle->firstFilePath = NULL;
 	}
 	return FindClose(handle->handle) ? 0 : _xtTranslateSysError(GetLastError());
 }

@@ -142,6 +142,7 @@ int _xtTranslateSysError(int syserrnum)
 	case ERROR_INVALID_DRIVE:
 	case ERROR_INVALID_REPARSE_DATA:
 	case ERROR_MOD_NOT_FOUND:
+	case ERROR_NO_MORE_FILES:
 	case ERROR_PATH_NOT_FOUND:
 	case WSAHOST_NOT_FOUND:
 	case WSANO_DATA:                        return XT_ENOENT;
