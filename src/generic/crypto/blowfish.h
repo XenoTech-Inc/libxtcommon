@@ -1,3 +1,5 @@
+/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+
 #ifndef ___XT_BLOWFISH_H
 #define ___XT_BLOWFISH_H
 

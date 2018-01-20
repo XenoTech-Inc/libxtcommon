@@ -1,3 +1,5 @@
+/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+
 /*	$OpenBSD: bcrypt.c,v 1.24 2008/04/02 19:54:05 millert Exp $	*/
 
 /*

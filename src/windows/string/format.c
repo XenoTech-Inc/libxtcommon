@@ -1,3 +1,5 @@
+/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+
 // XT headers
 // NOTE os_macros.h must be first in order for this to work
 #include <xt/os_macros.h>

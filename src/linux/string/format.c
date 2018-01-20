@@ -1,3 +1,5 @@
+/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+
 // STD headers
 #include <stdarg.h>
 #include <stdio.h>

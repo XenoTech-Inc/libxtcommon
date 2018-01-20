@@ -1,3 +1,5 @@
+/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+
 /**
  * @brief Circular fixed queue
  *
@@ -7,7 +9,7 @@
  * @file queue.h
  * @author Folkert van Verseveld
  * @date 2017
- * @copyright XT-License.
+ * @copyright LGPL v3.0.
  */
 
 #ifndef _XT_QUEUE_H

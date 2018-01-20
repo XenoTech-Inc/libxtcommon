@@ -1,3 +1,5 @@
+/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+
 #include <xt/error.h>
 #include <xt/crypto.h>
 #include <xt/os.h>

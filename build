@@ -1,4 +1,6 @@
 #!/bin/bash -e
+# Copyright 2014-2018 XenoTech. See LICENSE for legal details.
+
 target=linux
 arch=def
 clean=no

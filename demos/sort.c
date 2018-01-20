@@ -1,3 +1,5 @@
+/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+
 #include <xt/sort.h>
 #include <xt/time.h>
 #include <xt/os.h>

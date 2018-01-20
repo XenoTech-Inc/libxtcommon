@@ -1,3 +1,5 @@
+/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+
 /**
  * @brief Used to retrieve deep system information.
  *
@@ -6,7 +8,7 @@
  * @file os.h
  * @author Tom Everaarts
  * @date 2017
- * @copyright XT-License.
+ * @copyright LGPL v3.0.
  */
 
 #ifndef _XT_OS_H

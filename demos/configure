@@ -1,4 +1,6 @@
 #!/bin/bash -e
+# Copyright 2014-2018 XenoTech. See LICENSE for legal details.
+
 # Simple script that creates a Makefile for all c files that contain a main function
 CC="gcc"
 INCS="-I../include"

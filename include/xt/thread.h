@@ -1,3 +1,5 @@
+/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+
 /**
  * @brief Cross platform thread functionality.
  *
@@ -5,7 +7,7 @@
  * @file thread.h
  * @author Tom Everaarts
  * @date 2017
- * @copyright XT-License.
+ * @copyright LGPL v3.0.
  */
 
 #ifndef _XT_THREAD_H

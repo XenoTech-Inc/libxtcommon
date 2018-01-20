@@ -1,3 +1,5 @@
+/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+
 #include <xt/file.h>
 #include <xt/mman.h>
 #include <xt/string.h>

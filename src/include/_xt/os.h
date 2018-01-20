@@ -1,9 +1,11 @@
+/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+
 /**
  * @brief OS generic magic.
  * @file os.h
  * @author Folkert van Verseveld
  * @date 2017
- * @copyright XT-License.
+ * @copyright LGPL v3.0.
  */
 
 #ifndef __XT_TIME_H

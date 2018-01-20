@@ -1,3 +1,5 @@
+/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+
 /**
  * @brief Hashmap that hashes items to bucket.
  *
@@ -9,7 +11,7 @@
  * @file hashmap.h
  * @author Folkert van Verseveld and Tom Everaarts
  * @date 2017
- * @copyright XT-License.
+ * @copyright LGPL v3.0.
  */
 
 #ifndef _XT_HASHMAP_H

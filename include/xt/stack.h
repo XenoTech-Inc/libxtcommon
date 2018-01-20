@@ -1,3 +1,5 @@
+/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+
 /**
  * @brief First in first out stack container
  *
@@ -6,7 +8,7 @@
  * @file stack.h
  * @author Folkert van Verseveld
  * @date 2017
- * @copyright XT-License.
+ * @copyright LGPL v3.0.
  */
 
 #ifndef _XT_STACK_H

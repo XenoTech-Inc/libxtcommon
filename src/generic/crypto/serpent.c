@@ -1,7 +1,5 @@
-/*
-Edited by Medicijnman 20150310
-See below for original author and license.
-*/
+/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+
 // Copyright in this code is held by Dr B.R. Gladman but free direct or
 // derivative use is permitted subject to acknowledgement of its origin
 // and subject to any constraints placed on the use of the algorithm by
@@ -15,15 +13,10 @@ See below for original author and license.
 //
 // We hereby give permission for information in this file to be
 // used freely subject only to acknowledgement of its origin
+
 #include <xt/crypto.h>
-#include <xt/error.h>
-
-// FIXME use something better to make it also work normally on windows
-//#ifndef _BSD_SOURCE
-//#define _BSD_SOURCE
-//#endif
-
 #include <xt/endian.h>
+#include <xt/error.h>
 
 #define rotr(x,n) (((x)>>((int)((n)&0x1f)))|((x)<<((int)((32-((n)&0x1f))))))
 #define rotl(x,n) (((x)<<((int)((n)&0x1f)))|((x)>>((int)((32-((n)&0x1f))))))

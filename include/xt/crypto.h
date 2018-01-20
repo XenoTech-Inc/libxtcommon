@@ -1,3 +1,5 @@
+/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+
 /**
  * @brief Contains cryptographic algorithms and structures with various algorithms.
  * Some cryptographic algorithms require acknowledgement (e.g. serpent). See the
@@ -6,7 +8,7 @@
  * @file crypto.h
  * @author Folkert van Verseveld
  * @date 2017
- * @copyright XT-License.
+ * @copyright LGPL v3.0.
  */
 
 #ifndef _XT_CRYPTO_H
@@ -37,7 +39,7 @@ struct xtSerpent {
  * of the key affect all cipherbits.
  */
 
-/* Number of Subkeys */
+/* Number of subkeys */
 #define XT_BLOWFISH_N 16
 /* 448 bits */
 #define XT_BLOWFISH_MAXKEYLEN ((XT_BLOWFISH_N-2)*4)

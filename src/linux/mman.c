@@ -1,4 +1,6 @@
-#define _GNU_SOURCE
+/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+
+#define _GNU_SOURCE // Absolutely necessary!
 // XT headers
 #include <xt/mman.h>
 

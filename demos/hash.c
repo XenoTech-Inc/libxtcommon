@@ -1,3 +1,5 @@
+/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+
 #include <xt/hash.h>
 #include <xt/os.h>
 #include <xt/string.h>

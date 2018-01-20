@@ -1,3 +1,5 @@
+/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+
 #ifndef CHKLIST_H
 #define CHKLIST_H
 #define cat(a,b) a ## b
