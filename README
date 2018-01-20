@@ -1,27 +1,27 @@
 # XenoTech Common Library
 by Tom Everaarts and Folkert van Verseveld
 
-This library is cross platform, however there are some problems.
-All functions which exhibit problems on certain platforms have this
-noted in their documentation.
+This library is cross platform, however there are some problems. All functions
+which exhibit problems on certain platforms have this noted in their
+documentation.
 
-Once the library is installed, you can use pkg-config on Linux
-(and Windows) this: pkg-config --cflags --libs xtcommon
+Once the library is installed, you can use pkg-config on Linux (and Windows)
+like this: pkg-config --cflags --libs xtcommon
 
 Dependencies:
-When using this library, you need to link with other libraries as
-well... This is explained below.
-Read this carefully! You do not need to link with everything if certain
-library functions are not used!
+When using this library, you need to link with other libraries as well... This
+is explained below.
+Read this carefully! You do not need to link with everything if certain library
+functions are not used!
 
-The minimum versions listed below ensure that everything should work
-flawlessly. Most dependencies are present by default on all systems.
+The minimum versions listed below ensure that everything should work flawlessly.
+Most dependencies are present by default on all systems.
 
 Linux kernel 3.00+
-#################################################################
+################################################################################
 Things that you may need to install (or should have):
 
------------------------------------------------------------------
+--------------------------------------------------------------------------------
 Linkage dependencies
 ####################
 dlload.h: -rdynamic and -ldl
@@ -29,16 +29,16 @@ thread.h: -lpthread
 
 Building
 ####################
-Just type (without quotes) "./configure && make" and everything should
-be done! If you want to install the library on your system for easy use
-in other programs, type (without quotes) "make install".
+Just type (without quotes) "./configure && make" and everything should be done!
+If you want to install the library on your system for easy use in other
+programs, type (without quotes) "make install".
 
 
 Windows Vista+
-#################################################################
+################################################################################
 Things that you may need to install (or should have):
 
------------------------------------------------------------------
+--------------------------------------------------------------------------------
 Linkage dependencies
 ####################
 proc.h:   -lpsapi
@@ -46,14 +46,16 @@ socket.h: -lws2_32
 thread.h: -lntdll
 
 Building
-####################
-Use Cygwin to build the lib easily. The following command compiles and
-installs the library:
-make clean && PREFIX="/usr/x86_64-w64-mingw32/sys-root/mingw" PKG_CONFIG_PATH="/lib/pkgconfig/" ./configure windows-x64 && make install
-Do mind that the path of your compiler and pkgconfig folder may be
-different on your system. ./configure [Target system] is explicitly
-necessary on Windows, otherwise the pkg-config file will be garbage.
------------------------------------------------------------------
+################################################################################
+Use Cygwin to build the lib easily. The following command compiles and installs
+the library:
 
-Several demo programs reside in the "demos" folder. The procedure for
-compiling these is the same as for the main library.
+make clean && PREFIX="/usr/x86_64-w64-mingw32/sys-root/mingw" PKG_CONFIG_PATH="/lib/pkgconfig/" ./configure windows-x64 && make install
+
+Do mind that the path of your compiler and pkgconfig folder may be different on
+your system. ./configure [Target system] is explicitly necessary on Windows,
+otherwise the pkg-config file will be garbage.
+--------------------------------------------------------------------------------
+
+Several demo programs reside in the "demos" folder. The procedure for compiling
+these is the same as for the main library.

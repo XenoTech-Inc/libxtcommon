@@ -1,28 +1,30 @@
------------------------------------------------------------------
-                         KNOWN ISSUES
------------------------------------------------------------------
+--------------------------------------------------------------------------------
+                                  KNOWN ISSUES
+--------------------------------------------------------------------------------
 
 # Windows
 
 ## Building
 
-The library does not build properly with some cross compilers for
-mingw32 because the linker fails with an undefined reference to
-strtok_r.
+The library does not build properly with some cross compilers for mingw32
+because the linker fails with an undefined reference to strtok_r.
 
 ## printf, fprintf, snprintf, vsnprintf
 
-We have provided an extended and improved printf family for multiple
-types that are not supported on Windows. This also fixes proper
-NULL-termination if it does not fit on Windows. This is because of
-Windows's major suckage. They do not honor the C standard.
+We have provided an extended and improved printf family for multiple types that
+are not supported on Windows. This also fixes proper null-termination if it does
+not fit on Windows. This is because of Windows's major suckage. They do not
+honor the C standard.
+
+The argument width specifiers are not always reliable, but we think this is a
+problem in the libc implementation of Windows and we cannot fix this.
 
 # Linux
 
 ## File API
 
-xtFileGetInfo(): creationTime is not available on Linux and always uses the
-  UNIX epoch time in UTC instead.
+xtFileGetInfo(): creationTime is not available on Linux and always uses the UNIX
+  epoch time in UTC instead.
 
 ## Proc API
 
@@ -31,9 +33,9 @@ xtProcGetName(): The parameters for the process (e.g. --width 50) are included
 
 ## OS API
 
-xtGetCPUInfo() is known to run very slow if the system is on high load.
-A workaround has been written, but it is not stable and fast enough to
-include in the library yet.
+xtGetCPUInfo(): is known to run very slow if the system is on high load. A
+  workaround has been written, but it is not stable and fast enough to include
+  in the library yet.
 
 # Windows
 
@@ -47,13 +49,13 @@ xtProcKill(): Many signals on Windows are not supported and send a standard kill
 
 ## Thread API
 
-xtThreadCreate(): Specifying a guard size has no effect since the Windows
-  API has no support for such a thing.
-xtThreadSetName(), xtThreadGetName(): These both have no effect on Windows.
-  The Windows API has no support for thread names until Windows 10 and up.
+xtThreadCreate(): Specifying a guard size has no effect since the Windows API
+  has no support for such a thing.
+xtThreadSetName(), xtThreadGetName(): The Windows API has no support for these
+  functions until Windows 10 and up.
 
 ## Time API
-xtClockGetRes(): This function is rather meaningless on Windows. It shall
-  always report the maximum precision that each clock offers on Windows
-  even if your hardware would not support it. This is because Windows
-  just does not offer a way to retrieve the clock accuracy unfortunately.
+xtClockGetResolution(): This function is rather meaningless on Windows. It shall
+  always report the maximum precision that each clock offers on Windows even if
+  your hardware would not support it. This is because Windows just does not
+  offer a way to retrieve the clock accuracy unfortunately.
