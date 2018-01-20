@@ -207,7 +207,7 @@ void compareLists(void)
 			PASS("xtListPGetCount");
 	} else
 		SKIP("xtListPGetCount");
-	
+
 	short valHD;
 	int valD;
 	unsigned valU;
@@ -315,7 +315,7 @@ void create(size_t initialCapacity, size_t maxCapacity)
 		FAIL("xtListPCreate");
 	else
 		init |= INIT_P;
-	
+
 	arrayHD = malloc(maxCapacity * sizeof *arrayHD);
 	arrayD = malloc(maxCapacity * sizeof *arrayD);
 	arrayU = malloc(maxCapacity * sizeof *arrayU);
@@ -383,7 +383,7 @@ void ensureCapacity(size_t newCapacity)
 
 		if (ret || xtListHDGetCapacity(&listHD) != newCapacity) {
 			xtsnprintf(buf, sizeof buf,
-				"xtListHDEnsureCapacity: expected %zu, but got %zu", 
+				"xtListHDEnsureCapacity: expected %zu, but got %zu",
 				newCapacity, xtListHDGetCapacity(&listHD)
 			);
 			FAIL(buf);
@@ -398,7 +398,7 @@ void ensureCapacity(size_t newCapacity)
 
 		if (ret || xtListDGetCapacity(&listD) != newCapacity) {
 			xtsnprintf(buf, sizeof buf,
-				"xtListDEnsureCapacity: expected %zu, but got %zu", 
+				"xtListDEnsureCapacity: expected %zu, but got %zu",
 				newCapacity, xtListDGetCapacity(&listD)
 			);
 			FAIL(buf);
@@ -413,7 +413,7 @@ void ensureCapacity(size_t newCapacity)
 
 		if (ret || xtListUGetCapacity(&listU) != newCapacity) {
 			xtsnprintf(buf, sizeof buf,
-				"xtListUEnsureCapacity: expected %zu, but got %zu", 
+				"xtListUEnsureCapacity: expected %zu, but got %zu",
 				newCapacity, xtListUGetCapacity(&listU)
 			);
 			FAIL(buf);
@@ -428,7 +428,7 @@ void ensureCapacity(size_t newCapacity)
 
 		if (ret || xtListLUGetCapacity(&listLU) != newCapacity) {
 			xtsnprintf(buf, sizeof buf,
-				"xtListLUEnsureCapacity: expected %zu, but got %zu", 
+				"xtListLUEnsureCapacity: expected %zu, but got %zu",
 				newCapacity, xtListLUGetCapacity(&listLU)
 			);
 			FAIL(buf);
@@ -443,7 +443,7 @@ void ensureCapacity(size_t newCapacity)
 
 		if (ret || xtListZUGetCapacity(&listZU) != newCapacity) {
 			xtsnprintf(buf, sizeof buf,
-				"xtListZUEnsureCapacity: expected %zu, but got %zu", 
+				"xtListZUEnsureCapacity: expected %zu, but got %zu",
 				newCapacity, xtListZUGetCapacity(&listZU)
 			);
 			FAIL(buf);
@@ -458,7 +458,7 @@ void ensureCapacity(size_t newCapacity)
 
 		if (ret || xtListPGetCapacity(&listP) != newCapacity) {
 			xtsnprintf(buf, sizeof buf,
-				"xtListPEnsureCapacity: expected %zu, but got %zu", 
+				"xtListPEnsureCapacity: expected %zu, but got %zu",
 				newCapacity, xtListPGetCapacity(&listP)
 			);
 			FAIL(buf);
@@ -542,14 +542,14 @@ int main(void)
 	srand(time(NULL));
 	size_t maxCapacity = rand() % 1024 * 256 + 65535;
 	puts("-- LIST TEST");
-	
+
 	create(maxCapacity / 3, maxCapacity);
 	ensureCapacity(maxCapacity / 2);
 	add(maxCapacity);
 	removeAt();
 	compareLists();
 	destroy();
-	
+
 	stats_info(&stats);
 	return stats_status(&stats);
 }
