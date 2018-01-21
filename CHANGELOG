@@ -4,8 +4,78 @@
                  Get the latest version at "https://xenotech.nl"
 --------------------------------------------------------------------------------
 
-0.9.0.:
-------
+v1.0
+----
+New stuff:
+- Crypto API added including:
+  * Bcrypt
+  * Blowfish
+  * Serpent
+- String API extended
+  * Added safe xtstrncpy()
+  * Base64 encode/decode
+- Hash API extended
+  * Added xtHashCRC32()
+- Console aligned printing (left, centered, right), hard or word wrapping.
+- Virtual memory management API (mman):
+  * xtmmap
+  * xtmunmap
+  * xtmprotect
+  * xtmsync
+  * xtlock
+  * xtmunlock
+  * xtmremap
+  Also works on Windows with some quirks. See documentation for more info.
+- Thread API
+  * Mutexes may be initialized lazily using XT_MUTEX_INIT. Linux already
+    supports this natively, but the Windows code required some changes.
+  * Windows 10 now supports xtThreadGetName() and xtThreadSetName().
+- Configure script
+  * Windows 32 and 64 bit support (cross compiling)
+  * Custom installation directory
+  * Added support for pkgconfig --cflags --libs
+- Reintroduced _base.h (see global bugfix below)
+
+API changes:
+- Global
+  * Private functions that were exposed in public headers (e.g. _xtGMTime())
+    now have their own private header and are thus no longer publicly exposed.
+- File API overhaul
+  * Directory traversing using xtFileIterator
+  * File information (access modes, access times, file types)
+- Thread API
+  * xtThreadJoin() offers the ability to capture the return value (void*) of the
+    terminating thread.
+- Demos
+  * Formatting has been changed to make it more consistent and a nice report is
+    printed to illustrate which tests passed, were expected to fail, skipped or
+    failed.
+
+Bug fixes:
+- Global
+  * Using the lib in a C++ project introduced compilation errors because C++
+    does not support the restrict keyword.
+
+- Console API
+  * xtConsoleFillLine() would crash if using NULL as pattern
+
+- Endian API
+  * _xt_swap64() was broken since v0.5, but it has finally been fixed
+
+- Sort API
+  * xtSortStr() would crash if using XT_SORT_QUICK
+
+- String API
+  * xtStringSplit() libc API fix
+  * xtvsnprintf() and variants buffer overflow fix
+
+Removed:
+- File API overhauled
+  * Couple of old functions removed which are superseded by xtFileGetInfo()
+    and xtFileIterator*().
+
+v0.9
+----
 New stuff:
 - Printf family added. These offer the same features as printf on Linux.
   * xtfprintf
@@ -37,8 +107,8 @@ Removed:
 - Conversion functions in string.h because the new xtprintf family essentially
   replaces them, including: xtSizetToStr(), xtUint64ToStr() and xtInt64ToStr().
 
-0.8.0.:
-------
+v0.8
+----
 New stuff:
 - Added string demo
 - Added xtFormatBytesSI() for metric system numbers
@@ -59,14 +129,14 @@ API changes:
 - Major changes with functions that take strings and buffer length
 - Renamed xtClockFormatTime() to xtFormatTime()
 
-Bugfixes:
+Bug fixes:
 - Fixed segfault with mutexes
 - Fixed xtStringEndsWith() pointer offset underflow
 - Fixed xtStringTrim() off by one error
 - Fixed uninitialized data in xtConsoleFillLine()
 
-0.7.0:
-------
+v0.7
+----
 
 New stuff:
 - Added Proc API
@@ -75,11 +145,11 @@ New stuff:
 - Created xtConsoleFillLine()
 - Improved and extended xtHashmap & xtList
 
-Bugfixes:
+Bug fixes:
 - Fixed xtStackPush*() resizing underflow
 - Fixed xtStringReadline() null termination
 
-0.6.0:
-------
+v0.6
+----
 
-...
+First real release
