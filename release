@@ -11,7 +11,7 @@ if [ -f Makefile ]; then
 fi
 dir="${PWD##*/}"
 cd ..
-tar jcf "$dir".tar.xz --exclude="$dir"/.git --exclude="$dir/docs/html" --exclude=CODING_STYLE --exclude="$dir/docs/DoxyFile" --exclude="$dir/docs/DoxyIcon.jpg" --exclude=tags --exclude='*.swp' --exclude='*.vim' --exclude='.gitignore' --exclude='release' --exclude='dropped' "$dir"
+tar jcf "$dir".tar.xz --exclude="$dir"/.git --exclude="$dir/docs/html" --exclude=CODING_STYLE --exclude="$dir/docs/Doxyfile" --exclude="$dir/docs/DoxyIcon.jpg" --exclude="$dir/tags" --exclude='*.swp' --exclude='*.vim' --exclude='.gitignore' --exclude='release' --exclude='dropped' "$dir" --exclude="$dir/docs/doxygen_sqlite3.db"
 # Make sure environment is sane
 cd "$dir"
 git checkout configure
