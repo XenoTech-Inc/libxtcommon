@@ -15,8 +15,8 @@
 extern "C" {
 #endif
 
-#define XT_VERSION_MAJOR 0
-#define XT_VERSION_MINOR 9
+#define XT_VERSION_MAJOR 1
+#define XT_VERSION_MINOR 0
 #define XT_VERSION_PATCH 0
 
 // STD headers
