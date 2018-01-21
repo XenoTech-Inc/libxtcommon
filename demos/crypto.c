@@ -13,13 +13,17 @@
 
 static struct stats stats;
 
-static void report(uint32_t *data, size_t len)
+static bool report(uint32_t *data, size_t len)
 {
 	for (size_t i = 0; i < len; i += 2)
-		xtfprintf(stderr,
-			"Block: %zu: %08I32x %08I32x.\n",
-			i / 2, data[i], data[i + 1]
-		);
+		if (data[i] != i || data[i + 1] != i + 1) {
+			xtfprintf(stderr,
+				"Block: %zu: %08I32x %08I32x.\n",
+				i / 2, data[i], data[i + 1]
+			);
+			return false;
+		}
+	return true;
 }
 
 static void blowfish_block09(void)
@@ -36,8 +40,10 @@ static void blowfish_block09(void)
 	xtBlowfishEncrypt(&ctx, data, 5);
 	xtBlowfishDecrypt(&ctx, data, 1);
 	xtBlowfishDecrypt(&ctx, data + 2, 4);
-	puts("Should read as 0 - 9.");
-	report(data, 10);
+	if (report(data, 10))
+		PASS("xtBlowfish -- simple");
+	else
+		FAIL("xtBlowfish -- simple");
 }
 
 static void blowfish_encrypt_decrypt(void)
