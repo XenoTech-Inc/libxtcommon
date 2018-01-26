@@ -195,7 +195,7 @@ int xtvfprintf(FILE *stream, const char *format, va_list args)
 			goto fail;
 		buf = dbuf;
 	} else
-		l = XT_PRINTF_BUFSZ;
+		l = XT_PRINTF_BUFSZ - 1;
 	ret = xtvsnprintf(buf, l + 1, format, args);
 fail:
 	if (dbuf)
@@ -229,7 +229,7 @@ int xtvsnprintf(char *str, size_t size, const char *format, va_list args)
 		buf = dbuf;
 		end = buf + l;
 	} else
-		l = XT_PRINTF_BUFSZ;
+		l = XT_PRINTF_BUFSZ - 1;
 	end = buf + XT_PRINTF_BUFSZ;
 	// safe guard termination in case snprintf fucks up
 	// (*ahum* windoze *ahum*)
@@ -473,7 +473,7 @@ char *xtStringReadLine(char *restrict str, size_t num, size_t *restrict bytesRea
 	while (--num > 0 && (c = getc(f)) != EOF) {
 		if (c == '\n') {
 			// Non-Linux line endings
-			if (cs[-1] == '\r')
+			if (cs > str && cs[-1] == '\r')
 				--cs;
 			break;
 		}
@@ -482,7 +482,7 @@ char *xtStringReadLine(char *restrict str, size_t num, size_t *restrict bytesRea
 	if (bytesRead)
 		*bytesRead = cs - str;
 	*cs = '\0';
-	return (c == EOF && cs == str) ? NULL : str;
+	return c == EOF && cs == str ? NULL : str;
 }
 
 char *xtStringReverseLen(char *str, size_t len)
