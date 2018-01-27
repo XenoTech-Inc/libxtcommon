@@ -1,25 +1,7 @@
 /* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
 
 // XT headers
-#include <xt/socket.h>
-#include <xt/endian.h> // htobe16
-#include <_xt/error.h>
-#include <xt/error.h>
-
-// System headers
-#include <arpa/inet.h> // sockaddr_in struct and functions to format IP addresses and ports
-#include <errno.h> // for the error macros
-#include <fcntl.h> // fcntl function
-#include <netdb.h> // hostent struct, gethostbyname(), needed to convert a char* to in_addr
-#include <netinet/tcp.h> // For TCP_NODELAY and such
-#include <sys/epoll.h> // for epoll
-#include <sys/socket.h> // for the socket function
-#include <unistd.h> // close function
-
-// STD headers
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <_xt/socket.h>
 
 /*
  * When porting to Windows, put these macros in the file and overwrite any old ones
@@ -36,151 +18,6 @@
 }
  */
 
-bool xtSockaddrEquals(const struct xtSockaddr *sa1, const struct xtSockaddr *sa2)
-{
-	// DO NOT just check the full memory! It is possible that only the address and port match, which is what we want to check for.
-	return ((struct sockaddr_in*)sa1)->sin_addr.s_addr == ((struct sockaddr_in*)sa2)->sin_addr.s_addr &&
-		((struct sockaddr_in*)sa1)->sin_port == ((struct sockaddr_in*)sa2)->sin_port;
-}
-/**
- * Only initializes the sin_family field in the address. This is VERY IMPORTANT!!!
- * All other fields will be left untouched.
- */
-static void sockaddr_init(struct xtSockaddr *sa)
-{
-	((struct sockaddr_in*)sa)->sin_family = AF_INET;
-}
-
-bool xtSockaddrFromString(struct xtSockaddr *restrict sa, const char *restrict addr, uint16_t port)
-{
-	char buf[32];
-	char *sep = strchr(addr, ':');
-	if (sep) { // Copy the string. Otherwise inet_pton won't work, since it tries to read the whole string
-		if (sizeof buf <= (unsigned)(sep - addr)) // The string is too long
-			return false;
-		strncpy(buf, addr, sep - addr);
-		buf[sep - addr] = '\0'; // To be safe. We need that NULL terminator.
-	} else {
-		strncpy(buf, addr, sizeof buf);
-		buf[sizeof buf - 1] = '\0'; // To be safe, incase an invalid string is passed
-	}
-	if (inet_pton(AF_INET, buf, &((struct sockaddr_in*)sa)->sin_addr) != 1)
-		return false;
-	xtSockaddrSetPort(sa, sep ? (unsigned short)strtoul(++sep, NULL, 10) : port);
-	sockaddr_init(sa); // Init this to be safe
-	return true;
-}
-
-bool xtSockaddrFromAddr(struct xtSockaddr *sa, uint32_t addr, uint16_t port)
-{
-	xtSockaddrSetAddress(sa, addr);
-	xtSockaddrSetPort(sa, port);
-	sockaddr_init(sa); // Init this to be safe
-	return true;
-}
-
-uint32_t xtSockaddrGetAddress(const struct xtSockaddr *sa)
-{
-	return ((struct sockaddr_in*)sa)->sin_addr.s_addr;
-}
-
-uint32_t xtSockaddrGetAddressAny(void)
-{
-	return INADDR_ANY;
-}
-
-uint32_t xtSockaddrGetAddressLocalHost(void)
-{
-	return 16777343;
-}
-
-uint16_t xtSockaddrGetPort(const struct xtSockaddr *sa)
-{
-	return htobe16(((struct sockaddr_in*)sa)->sin_port);
-}
-
-void xtSockaddrInit(struct xtSockaddr *sa)
-{
-	sockaddr_init(sa);
-}
-
-void xtSockaddrSetAddress(struct xtSockaddr *sa, uint32_t addr)
-{
-	((struct sockaddr_in*)sa)->sin_addr.s_addr = addr;
-	sockaddr_init(sa); // Init this to be safe
-}
-
-void xtSockaddrSetPort(struct xtSockaddr *sa, uint16_t port)
-{
-	((struct sockaddr_in*)sa)->sin_port = htobe16(port);
-	sockaddr_init(sa); // Init this to be safe
-}
-
-char *xtSockaddrToString(const struct xtSockaddr *restrict sa, char *restrict buf, size_t buflen)
-{
-	char sbuf[32];
-	if (!inet_ntop(AF_INET, &((struct sockaddr_in*)sa)->sin_addr, sbuf, INET_ADDRSTRLEN))
-		return NULL;
-	snprintf(buf, buflen, "%s:%hu", sbuf, xtSockaddrGetPort(sa));
-	return buf;
-}
-
-// Some macros that spare us a lot of typing
-#define XT_SOCKET_LAST_ERROR errno
-
-int xtSocketBindTo(xtSocket sock, const struct xtSockaddr *sa)
-{
-	if (bind(sock, (const struct sockaddr*)sa, sizeof(struct sockaddr_in)) == 0)
-		return 0;
-	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-}
-
-int xtSocketBindToAny(xtSocket sock, uint16_t port)
-{
-	struct xtSockaddr sa;
-	xtSockaddrSetAddress(&sa, xtSockaddrGetAddressAny());
-	xtSockaddrSetPort(&sa, port);
-	return xtSocketBindTo(sock, &sa);
-}
-
-int xtSocketClose(xtSocket *sock)
-{
-	if (xtSocketIsClosed(*sock))
-		return XT_EBADF;
-	if (xtSocketGetProtocol(*sock) == XT_SOCKET_PROTO_TCP)
-		shutdown(*sock, SHUT_RDWR);
-	close(*sock);
-	// Very important!!! The FD is used for detecting if the socket is valid!
-	*sock = XT_SOCKET_INVALID_FD;
-	return 0;
-}
-
-int xtSocketConnect(xtSocket sock, const struct xtSockaddr *dest)
-{
-	if (connect(sock, (const struct sockaddr*)dest, sizeof(struct sockaddr_in)) == 0)
-		return 0;
-	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-}
-/**
- * Converts an xtSocketProto to the native representation.
- * @return True of the conversion was successful, false otherwise.
- */
-static bool socket_proto_to_native_proto(enum xtSocketProto proto, int *restrict nativeType, int *restrict nativeProto)
-{
-	switch (proto) {
-	case XT_SOCKET_PROTO_TCP:
-		*nativeType = SOCK_STREAM;
-		*nativeProto = IPPROTO_TCP;
-		return true;
-	case XT_SOCKET_PROTO_UDP:
-		*nativeType = SOCK_DGRAM;
-		*nativeProto = IPPROTO_UDP;
-		return true;
-	default:
-		return false;
-	}
-}
-
 int xtSocketCreate(xtSocket *sock, enum xtSocketProto proto)
 {
 	int nativeType, nativeProto;
@@ -195,34 +32,6 @@ int xtSocketCreate(xtSocket *sock, enum xtSocketProto proto)
 void xtSocketDestruct(void)
 {
 	// Nothing to be done on Linux
-}
-
-int xtSocketGetLocalSocketAddress(xtSocket sock, struct xtSockaddr *sa)
-{
-	socklen_t addrlen = sizeof(struct sockaddr_in);
-	if (getsockname(sock, (struct sockaddr*)sa, &addrlen) == 0)
-		return 0;
-	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-}
-
-uint16_t xtSocketGetLocalPort(xtSocket sock)
-{
-	struct xtSockaddr sa;
-	if (xtSocketGetLocalSocketAddress(sock, &sa) == 0)
-		return xtSockaddrGetPort(&sa);
-	return 0;
-}
-/**
- * Converts a native socket protocol to it's xt representation.
- * XT_SOCKET_PROTO_UNKNOWN is returned if the protocol is unsupported.
- */
-static enum xtSocketProto socket_native_proto_to_proto(int nativeProto)
-{
-	switch (nativeProto) {
-	case IPPROTO_TCP: return XT_SOCKET_PROTO_TCP;
-	case IPPROTO_UDP: return XT_SOCKET_PROTO_UDP;
-	default:          return XT_SOCKET_PROTO_UNKNOWN;
-	}
 }
 
 enum xtSocketProto xtSocketGetProtocol(const xtSocket sock)

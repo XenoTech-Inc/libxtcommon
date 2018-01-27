@@ -1,168 +1,7 @@
 /* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
 
 // XT headers
-#include <xt/socket.h>
-#include <xt/endian.h> // htobe16
-#include <_xt/error.h>
-#include <xt/error.h>
-#include <xt/time.h> // sleep
-
-// System headers
-#include <ws2tcpip.h> // Necessary for a hell lot of stuff
-#include <windows.h> // Do this after including winsock (ws2tcpip includes it for us)
-
-// STD headers
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-bool xtSockaddrEquals(const struct xtSockaddr *sa1, const struct xtSockaddr * sa2)
-{
-	// DO NOT just check the full memory! It is possible that only the address and port match, which is what we want to check for.
-	return ((struct sockaddr_in*)sa1)->sin_addr.s_addr == ((struct sockaddr_in*)sa2)->sin_addr.s_addr &&
-		((struct sockaddr_in*)sa1)->sin_port == ((struct sockaddr_in*)sa2)->sin_port;
-}
-/**
- * Only initializes the sin_family field in the address. This is VERY IMPORTANT!!!
- * All other fields will be left untouched.
- */
-static void sockaddr_init(struct xtSockaddr *sa)
-{
-	((struct sockaddr_in*)sa)->sin_family = AF_INET;
-}
-
-bool xtSockaddrFromString(struct xtSockaddr *restrict sa, const char *restrict addr, uint16_t port)
-{
-	char buf[32];
-	char *sep = strchr(addr, ':');
-	if (sep) { // Copy the string. Otherwise inet_pton won't work, since it tries to read the whole string
-		if (sizeof buf <= (unsigned)(sep - addr)) // The string is too long
-			return false;
-		strncpy(buf, addr, sep - addr);
-		buf[sep - addr] = '\0'; // To be safe. We need that NULL terminator.
-	} else {
-		strncpy(buf, addr, sizeof buf);
-		buf[sizeof buf - 1] = '\0'; // To be safe, incase an invalid string is passed
-	}
-	if (inet_pton(AF_INET, buf, &((struct sockaddr_in*) sa)->sin_addr) != 1)
-		return false;
-	xtSockaddrSetPort(sa, sep ? (unsigned short)strtoul(++sep, NULL, 10) : port);
-	sockaddr_init(sa); // Init this to be safe
-	return true;
-}
-
-bool xtSockaddrFromAddr(struct xtSockaddr *sa, uint32_t addr, uint16_t port)
-{
-	xtSockaddrSetAddress(sa, addr);
-	xtSockaddrSetPort(sa, port);
-	sockaddr_init(sa); // Init this to be safe
-	return true;
-}
-
-uint32_t xtSockaddrGetAddress(const struct xtSockaddr *sa)
-{
-	return ((struct sockaddr_in*) sa)->sin_addr.s_addr;
-}
-
-uint32_t xtSockaddrGetAddressAny(void)
-{
-	return INADDR_ANY;
-}
-
-uint32_t xtSockaddrGetAddressLocalHost(void)
-{
-	return 16777343;
-}
-
-uint16_t xtSockaddrGetPort(const struct xtSockaddr *sa)
-{
-	return xthtobe16(((struct sockaddr_in*) sa)->sin_port);
-}
-
-void xtSockaddrInit(struct xtSockaddr *sa)
-{
-	sockaddr_init(sa);
-}
-
-void xtSockaddrSetAddress(struct xtSockaddr *sa, uint32_t addr)
-{
-	((struct sockaddr_in*)sa)->sin_addr.s_addr = addr;
-	sockaddr_init(sa); // Init this to be safe
-}
-
-void xtSockaddrSetPort(struct xtSockaddr *sa, uint16_t port)
-{
-	((struct sockaddr_in*)sa)->sin_port = xthtobe16(port);
-	sockaddr_init(sa); // Init this to be safe
-}
-
-char *xtSockaddrToString(const struct xtSockaddr *restrict sa, char *restrict buf, size_t buflen)
-{
-	char sbuf[32];
-	if (!inet_ntop(AF_INET, &((struct sockaddr_in*)sa)->sin_addr, sbuf, INET_ADDRSTRLEN))
-		return NULL;
-	snprintf(buf, buflen, "%s:%hu", sbuf, xtSockaddrGetPort(sa));
-	return buf;
-}
-
-// Some macros that spare us a lot of typing
-#define XT_SOCKET_LAST_ERROR WSAGetLastError()
-#define close closesocket
-#define SHUT_RDWR SD_BOTH
-
-int xtSocketBindTo(xtSocket sock, const struct xtSockaddr *sa)
-{
-	if (bind(sock, (const struct sockaddr*)sa, sizeof(struct sockaddr_in)) == 0)
-		return 0;
-	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-}
-
-int xtSocketBindToAny(xtSocket sock, uint16_t port)
-{
-	struct xtSockaddr sa;
-	xtSockaddrSetAddress(&sa, xtSockaddrGetAddressAny());
-	xtSockaddrSetPort(&sa, port);
-	return xtSocketBindTo(sock, &sa);
-}
-
-int xtSocketClose(xtSocket *sock)
-{
-	if (xtSocketIsClosed(*sock))
-		return XT_EBADF;
-	if (xtSocketGetProtocol(*sock) == XT_SOCKET_PROTO_TCP)
-		shutdown(*sock, SHUT_RDWR);
-	shutdown(*sock, SHUT_RDWR);
-	close(*sock);
-	// Very important!!! The FD is used for detecting if the socket is valid!
-	*sock = XT_SOCKET_INVALID_FD;
-	return 0;
-}
-
-int xtSocketConnect(xtSocket sock, const struct xtSockaddr *dest)
-{
-	if (connect(sock, (const struct sockaddr*)dest, sizeof(struct sockaddr_in)) == 0)
-		return 0;
-	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-}
-/**
- * Converts an xtSocketProto to the native representation.
- * @return True of the conversion was successful, false otherwise.
- */
-static bool socket_proto_to_native_proto(enum xtSocketProto proto, int *restrict nativeType, int *restrict nativeProto)
-{
-	switch (proto) {
-	case XT_SOCKET_PROTO_TCP:
-		*nativeType = SOCK_STREAM;
-		*nativeProto = IPPROTO_TCP;
-		return true;
-	case XT_SOCKET_PROTO_UDP:
-		*nativeType = SOCK_DGRAM;
-		*nativeProto = IPPROTO_UDP;
-		return true;
-	default:
-		return false;
-	}
-}
+#include <_xt/socket.h>
 
 int xtSocketCreate(xtSocket *sock, enum xtSocketProto proto)
 {
@@ -201,34 +40,6 @@ void xtSocketDestruct(void)
 {
 	// 0 is success, but we dont care, we are terminating anyways
 	WSACleanup();
-}
-
-int xtSocketGetLocalSocketAddress(xtSocket sock, struct xtSockaddr *sa)
-{
-	socklen_t addrlen = sizeof(struct sockaddr_in);
-	if (getsockname(sock, (struct sockaddr*)sa, &addrlen) == 0)
-		return 0;
-	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-}
-
-uint16_t xtSocketGetLocalPort(xtSocket sock)
-{
-	struct xtSockaddr sa;
-	if (xtSocketGetLocalSocketAddress(sock, &sa) == 0)
-		return xtSockaddrGetPort(&sa);
-	return 0;
-}
-/**
- * Converts a native socket protocol to it's xt representation.
- * XT_SOCKET_PROTO_UNKNOWN is returned if the protocol is unsupported.
- */
-static enum xtSocketProto socket_native_proto_to_proto(int nativeProto)
-{
-	switch (nativeProto) {
-	case IPPROTO_TCP: return XT_SOCKET_PROTO_TCP;
-	case IPPROTO_UDP: return XT_SOCKET_PROTO_UDP;
-	default:          return XT_SOCKET_PROTO_UNKNOWN;
-	}
 }
 
 enum xtSocketProto xtSocketGetProtocol(const xtSocket sock)
@@ -426,14 +237,13 @@ int xtSocketTCPRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t
 {
 	ssize_t ret;
 	ret = recv(sock, buf, buflen, 0);
-	if (ret == -1) {
+	if (ret == -1)
 		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-	} else if (ret == 0) { // Gracefull shutdown
+	else if (ret == 0) { // Gracefull shutdown
 		*bytesRead = 0;
 		return XT_ESHUTDOWN;
-	} else {
+	} else
 		*bytesRead = ret;
-	}
 	return 0;
 }
 
@@ -441,11 +251,10 @@ int xtSocketTCPWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, u
 {
 	ssize_t ret;
 	ret = send(sock, (const char*)buf, buflen, 0);
-	if (ret == -1) {
+	if (ret == -1)
 		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-	} else {
+	else
 		*bytesSent = ret;
-	}
 	return 0;
 }
 
@@ -458,9 +267,8 @@ int xtSocketUDPRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t
 	// listening on that port, Windows will report WSAECONNRESET. You should really just ignore it
 	// because it's bullshit. And ignoring it here is exactly what we're doing. This Windows behavior
 	// should be disabled when we're creating new sockets, but still I mention the problem here.
-	if (ret == -1) {
+	if (ret == -1)
 		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-	}
 	*bytesRead = ret;
 	return 0;
 }
@@ -469,11 +277,10 @@ int xtSocketUDPWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, u
 {
 	ssize_t ret;
 	ret = sendto(sock, buf, buflen, 0, (const struct sockaddr*)dest, sizeof(struct sockaddr_in));
-	if (ret == -1) {
+	if (ret == -1)
 		return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
-	} else {
+	else
 		*bytesSent = ret;
-	}
 	return 0;
 }
 
@@ -643,12 +450,11 @@ xtSocket xtSocketPollGetSocket(const struct xtSocketPoll *p, size_t index)
 int xtSocketPollMod(struct xtSocketPoll *p, xtSocket sock, enum xtSocketPollEvent events)
 {
 	int capacity = p->capacity;
-	for (int i = 0; i < capacity; ++i) {
+	for (int i = 0; i < capacity; ++i)
 		if (p->fds[i].fd == sock) {
 			p->fds[i].events = socket_poll_event_fix_sys_flags(socket_poll_event_flags_to_sys(events));
 			return 0;
 		}
-	}
 	return XT_EINVAL;
 }
 
@@ -658,12 +464,11 @@ int xtSocketPollRemove(struct xtSocketPoll *p, xtSocket sock)
 	// Clean up possible sensitive data
 	int index = -1;
 	int capacity = p->capacity;
-	for (int i = 0; i < capacity; ++i) {
+	for (int i = 0; i < capacity; ++i)
 		if (p->fds[i].fd == sock) {
 			index = i;
 			break;
 		}
-	}
 	if (index == -1)
 		return XT_ENOENT;
 	return xtSocketPollRemoveByIndex(p, index);
@@ -688,13 +493,12 @@ int xtSocketPollRemoveByIndex(struct xtSocketPoll *p, size_t index)
 	}
 	int socketsReady = p->socketsReady;
 	// Locate the socket in the ready array
-	for (int i = 0; i < socketsReady; ++i) {
+	for (int i = 0; i < socketsReady; ++i)
 		if (p->readyData[i].fd == sock) {
 			p->readyData[i].fd = XT_SOCKET_INVALID_FD;
 			p->readyData[i].data = NULL;
 			break;
 		}
-	}
 	--p->count;
 	return 0;
 }
@@ -702,12 +506,11 @@ int xtSocketPollRemoveByIndex(struct xtSocketPoll *p, size_t index)
 int xtSocketPollSetEvent(struct xtSocketPoll *p, xtSocket sock, enum xtSocketPollEvent events)
 {
 	int socketsReady = p->socketsReady;
-	for (int i = 0; i < socketsReady; ++i) {
+	for (int i = 0; i < socketsReady; ++i)
 		if (p->readyData[i].fd == sock) {
 			p->readyData[i].events = socket_poll_event_flags_to_sys(events);
 			return 0;
 		}
-	}
 	return XT_EINVAL;
 }
 
