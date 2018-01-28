@@ -148,9 +148,9 @@ default: $FINALLIBPATH \$(OBJECTS)
 
 EOF
 cat <<EOF >>$MAKEFILE
-xtcommon.pc: create_pkgconfig
+install: $FINALLIBPATH
+	rm -f xtcommon.pc
 	./create_pkgconfig $pkgarg
-install: $FINALLIBPATH xtcommon.pc
 	cp -R include/* $INCLUDEDIR
 	cp lib/$LIBNAME $LIBDIR
 	mkdir -p $PKG_CONFIG_PATH
