@@ -59,3 +59,13 @@ otherwise the pkg-config file will be garbage.
 
 Several demo programs reside in the "demos" folder. The procedure for compiling
 these is the same as for the main library.
+
+Cross compiling
+################################################################################
+On Linux, you can cross compile the lib for windows if you have the mingw cross
+compiler installed:
+
+make clean && PREFIX="/usr/x86_64-w64-mingw32/local" PKG_CONFIG_PATH="/usr/x86_64-w64-mingw32/local/lib/pkgconfig/" ./configure windows-x64
+
+Create the prefix directory manually if it does not exist. Then sudo make
+install will cross compile the library.
