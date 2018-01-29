@@ -604,7 +604,7 @@ char *xtFormatTime(char *buf, size_t buflen, unsigned timestamp_secs)
 	return buf;
 }
 
-char *xtFormatTimePrecise(char *buf, size_t buflen, struct xtTimestamp *timestamp)
+char *xtFormatTimePrecise(char *buf, size_t buflen, const struct xtTimestamp *timestamp)
 {
 	if (!xtFormatTime(buf, buflen, timestamp->sec))
 		return NULL;
