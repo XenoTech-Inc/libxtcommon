@@ -6,29 +6,33 @@
 // System headers
 #include <windows.h>
 
-void *xtDLOpen(const char *filename, enum xtDLFlag flag)
+void xtDLClose(xtDLHandle handle)
 {
-	(void) flag;
-	return (void*) LoadLibrary(filename);
-}
-
-void xtDLClose(void *handle)
-{
-	FreeLibrary((HMODULE) handle);
+	FreeLibrary((HMODULE)handle);
 }
 
 char *xtDLError(char *buf, size_t buflen)
 {
 	if (GetLastError() == ERROR_SUCCESS)
 		return NULL;
+
 	DWORD retval = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buf, buflen, NULL);
+
+	SetLastError(ERROR_SUCCESS); // Clear any old error
+
 	return retval > 0 ? buf : NULL;
 }
 
-xtGenericFuncPtr xtDLSym(void *handle, const char *symbol)
+void *xtDLGetProcAddress(xtDLHandle handle, const char *symbol)
 {
-	// Clear any old error
-	SetLastError(ERROR_SUCCESS);
-	return (xtGenericFuncPtr) GetProcAddress((HMODULE) handle, symbol);
+	SetLastError(ERROR_SUCCESS); // Clear any old error
+	FARPROC ptr = GetProcAddress((HMODULE)handle, symbol);
+	return *(void**)&ptr;
+}
+
+xtDLHandle xtDLOpen(const char *path, enum xtDLFlag flag)
+{
+	(void)flag;
+	return LoadLibrary(path);
 }

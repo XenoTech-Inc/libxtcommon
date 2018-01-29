@@ -9,7 +9,28 @@
 // STD headers
 #include <stdio.h> // snprintf
 
-void *xtDLOpen(const char *filename, enum xtDLFlag flag)
+void xtDLClose(xtDLHandle handle)
+{
+	dlclose(handle);
+}
+
+char *xtDLError(char *buf, size_t buflen)
+{
+	char *error = dlerror(); // This clears any errors also
+	if (!error)
+		return NULL;
+
+	snprintf(buf, buflen, "%s", error);
+	return buf;
+}
+
+void *xtDLGetProcAddress(xtDLHandle handle, const char *symbol)
+{
+	dlerror(); // Clear any old error
+	return dlsym(handle, symbol);
+}
+
+xtDLHandle xtDLOpen(const char *path, enum xtDLFlag flag)
 {
 	int _flag;
 	if (flag == XT_DL_LAZY)
@@ -18,35 +39,6 @@ void *xtDLOpen(const char *filename, enum xtDLFlag flag)
 		_flag = RTLD_NOW;
 	else
 		_flag = RTLD_LAZY;
-	return dlopen(filename, _flag);
-}
 
-void xtDLClose(void *handle)
-{
-	dlclose(handle);
-}
-
-char *xtDLError(char *buf, size_t buflen)
-{
-	char *error = dlerror();
-	if (!error)
-		return NULL;
-	snprintf(buf, buflen, "%s", error);
-	return buf;
-}
-
-xtGenericFuncPtr xtDLSym(void *handle, const char *symbol)
-{
-	// Clear any old error
-	dlerror();
-	/*union _utemp {
-		void *ptr;
-		xtGenericFuncPtr fptr;
-	} utemp;
-	utemp.ptr = dlsym(handle, symbol);
-	return utemp.fptr;*/
-	// We need to do this in 2 steps to make it safe
-	void *(*fptr) (void*);
-	*(void **) (&fptr) = dlsym(handle, symbol);
-	return (xtGenericFuncPtr) fptr;
+	return dlopen(path, _flag);
 }

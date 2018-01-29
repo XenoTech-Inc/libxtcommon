@@ -39,6 +39,11 @@ xtGetCPUInfo(): is known to run very slow if the system is on high load. A
 
 # Windows
 
+## DL API
+
+xtDLOpen(): The flag parameter is ignored because Windows just doesn't support a
+  feature like this.
+
 ## Proc API
 
 xtProcGetMemoryInfo(): In the returned memory info structure, the 'swap' and
