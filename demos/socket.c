@@ -6,27 +6,182 @@
 #include <xt/error.h>
 
 #include <stdbool.h>
+#include <string.h>
 
 #include "utils.h"
+
+#define TCP_IO_TRIES 16
 
 static struct stats stats;
 static bool socket_init = false;
 
 struct sock_thread {
-	xtSocket sock;
+	xtSocket sock, peer;
+	struct xtSockaddr peerAddr;
 	int port;
 	int err;
 	bool connected;
+	void *ret;
+	// The test to run after socket is connected.
+	void *(*func)(struct xtThread *t, void *arg);
+	// Tests whether the test has passed.
+	int (*check)(struct xtThread *t, struct sock_thread *info);
 };
+
+static struct xtThread master, slave;
+static struct sock_thread info_master, info_slave;
+
+/* Some text and binary data for the TCP tests. */
+static const char *tcp_text = "Mah BOI, this is what all true warriors strive for!";
+static const unsigned char tcp_binary[] = {
+	0xCA, 0xFE, 0xBA, 0xBE,
+	0xDE, 0xAD, 0xBE, 0xEF,
+	0x13, 0x37, 0x13, 0x37,
+};
+
+static int check_connected(struct xtThread *t, struct sock_thread *info)
+{
+	(void)t;
+	return info->connected ? 0 : 1;
+}
+
+static void *dummy_func(struct xtThread *t, void *arg)
+{
+	(void)t;
+	return arg;
+}
+
+static int sock_thread_join(struct xtThread *t, struct sock_thread *info)
+{
+	return xtThreadJoin(t, &info->ret);
+}
+
+/*
+ * Generic tcp write function that also works if the underlying socket
+ * will send the data in fragments. Up to TCP_IO_TRIES are permitted
+ * before failing.
+ */
+static int tcp_write(xtSocket sock, const void *buf, uint16_t n)
+{
+	int err;
+	uint16_t size = 0, out, rem = n;
+	const unsigned char *ptr = buf;
+
+	for (unsigned i = 0; i < TCP_IO_TRIES; ++i) {
+		err = xtSocketTCPWrite(sock, ptr, rem, &size);
+		out += size;
+
+		if (out >= n)
+			return 0;
+		rem -= out;
+		ptr += out;
+	}
+
+	return err ? err : XT_EIO;
+}
+
+/*
+ * Generic tcp read function that also works if the underlying socket
+ * will read the data in fragments. Up to TCP_IO_TRIES are permitted
+ * before failing.
+ */
+static int tcp_read(xtSocket sock, void *buf, uint16_t n)
+{
+	int err;
+	uint16_t size = 0, in, rem = n;
+	unsigned char *ptr = buf;
+
+	for (unsigned i = 0; i < TCP_IO_TRIES; ++i) {
+		err = xtSocketTCPRead(sock, ptr, rem, &size);
+		in += size;
+
+		if (in >= n)
+			return 0;
+		rem -= n;
+		ptr += n;
+	}
+
+	return err ? err : XT_EIO;
+}
+
+static void *master_tcp_test(struct xtThread *t, void *arg)
+{
+	int err;
+	char buf[256];
+	struct sock_thread *info = arg;
+
+	(void)t;
+	info->err = XT_EAGAIN;
+
+	memset(buf, 0, sizeof buf);
+
+	err = tcp_write(info->peer, tcp_text, strlen(tcp_text) + 1);
+	if (err) {
+		xtPerror("Master: Output error", err);
+		goto fail;
+	}
+
+	err = tcp_read(info->peer, buf, sizeof tcp_binary);
+	if (err) {
+		xtPerror("Master: Input error", err);
+		goto fail;
+	}
+
+	if (memcmp(tcp_binary, buf, sizeof tcp_binary)) {
+		fputs("Master: Slave packet is corrupt\n", stderr);
+		err = XT_EIO;
+	}
+
+fail:
+	info->err = err;
+	return arg;
+}
+
+static void *slave_tcp_test(struct xtThread *t, void *arg)
+{
+	int err;
+	char buf[256];
+	struct sock_thread *info = arg;
+
+	(void)t;
+	info->err = XT_EAGAIN;
+
+	memset(buf, 0, sizeof buf);
+
+	err = tcp_read(info->sock, buf, strlen(tcp_text) + 1);
+	if (err) {
+		xtPerror("Slave: Input error", err);
+		goto fail;
+	}
+
+	printf("Slave: Master said \"%s\"\n", buf);
+	if (strcmp(tcp_text, buf)) {
+		fputs("Slave: Master packet is corrupt\n", stderr);
+		err = XT_EIO;
+	}
+
+	err = tcp_write(info->sock, tcp_binary, sizeof tcp_binary);
+	if (err) {
+		xtPerror("Slave: Output error", err);
+		goto fail;
+	}
+
+fail:
+	info->err = err;
+	return arg;
+}
 
 static int sock_thread_init(struct sock_thread *s)
 {
 	int err;
 	// Setup some dummy values
 	s->sock = XT_SOCKET_INVALID_FD;
+	s->peer = XT_SOCKET_INVALID_FD;
 	s->port = 25659;
 	s->err = 0;
 	s->connected = false;
+	s->func = dummy_func;
+	s->check = check_connected;
 
 	// Setup socket
 	err = xtSocketCreate(&s->sock, XT_SOCKET_PROTO_TCP);
@@ -46,6 +201,12 @@ fail:
 static void sock_thread_free(struct sock_thread *s)
 {
 	int err;
+	if (s->peer != XT_SOCKET_INVALID_FD) {
+		err = xtSocketClose(&s->peer);
+		if (err)
+			xtPerror("sock_thread_free", err);
+		s->peer = XT_SOCKET_INVALID_FD;
+	}
 	if (s->sock != XT_SOCKET_INVALID_FD) {
 		err = xtSocketClose(&s->sock);
 		if (err)
@@ -58,8 +219,6 @@ static void *wait_master(struct xtThread *t, void *arg)
 {
 	int err;
 	struct sock_thread *info = arg;
-	xtSocket peer;
-	struct xtSockaddr peerAddr;
 	(void)t;
 
 	err = xtSocketBindToAny(info->sock, info->port);
@@ -72,16 +231,24 @@ static void *wait_master(struct xtThread *t, void *arg)
 		xtPerror("Master: Could not listen on socket", err);
 		goto fail;
 	}
-	err = xtSocketTCPAccept(info->sock, &peer, &peerAddr);
+	err = xtSocketTCPAccept(info->sock, &info->peer, &info->peerAddr);
 	if (err) {
 		xtPerror("Master: Could not accept peer", err);
 		goto fail;
 	}
+
 	info->connected = true;
 	puts("Master: Got my bitch");
+
+	// Run the real test.
+	info->func(t, arg);
+
 fail:
 	if (err)
 		info->err = err;
+	else if (!info->err)
+		info->err = info->check(t, info);
+
 	sock_thread_free(info);
 	return info;
 }
@@ -109,23 +276,39 @@ static void *wait_slave(struct xtThread *t, void *arg)
 		xtPerror("Slave: Could not connect to master", err);
 		goto fail;
 	}
+
 	info->connected = true;
 	puts("Slave: Hello master");
+
+	// Run the real test.
+	info->func(t, arg);
+
 fail:
 	if (err)
 		info->err = err;
+	else if (!info->err)
+		info->err = info->check(t, info);
+
 	sock_thread_free(info);
 	return info;
 }
 
-static int connect_loop(void)
+static int connect_test(
+	void *(*master_func)(struct xtThread*, void*),
+	int (*master_check)(struct xtThread*, struct sock_thread*),
+	void *(*slave_func)(struct xtThread*, void*),
+	int (*slave_check)(struct xtThread*, struct sock_thread*)
+)
 {
-	struct xtThread master, slave;
-	struct sock_thread info_master, info_slave;
+	int err;
 
 	// Initialize thread info
 	if (sock_thread_init(&info_master) || sock_thread_init(&info_slave))
 		return 1;
+	info_master.func = master_func;
+	info_master.check = master_check;
+	info_slave.func = slave_func;
+	info_slave.check = slave_check;
 
 	// Spawn threads
 	if (xtThreadCreate(&master, wait_master, &info_master, 0, 0)) {
@@ -137,35 +320,52 @@ static int connect_loop(void)
 		return 1;
 	}
 
-	// Try a couple of times before giving up.
-	bool connected = false;
-	for (unsigned i = 0; i < 20; ++i) {
-		xtSleepMS(50);
-		if (info_master.connected && info_slave.connected) {
-			connected = true;
-			break;
-		}
+	// Wait till both have finished.
+	err = sock_thread_join(&master, &info_master);
+	if (err) {
+		xtPerror("Failed to join master thread", err);
+		return 1;
 	}
-	return connected ? 0 : 1;
+	err = sock_thread_join(&slave, &info_slave);
+	if (err) {
+		xtPerror("Failed to join slave thread", err);
+		return 1;
+	}
+
+	// Check if both threads are run successfully.
+	if (info_master.err)
+		return info_master.err;
+	if (info_slave.err)
+		return info_slave.err;
+	return 0;
 }
 
 int main(void)
 {
 	stats_init(&stats, "socket");
 	puts("-- SOCKET TEST");
+
 	if (!xtSocketInit()) {
 		FAIL("xtSocketInit()");
 		goto fail;
 	}
 	PASS("xtSocketInit()");
 	socket_init = true;
-	if (connect_loop())
-		FAIL("connect_loop");
+
+	// Generic tests
+	if (connect_test(dummy_func, check_connected, dummy_func, check_connected))
+		FAIL("connect_loop()");
 	else
-		PASS("connect_loop");
+		PASS("connect_loop()");
+	if (connect_test(master_tcp_test, check_connected, slave_tcp_test, check_connected))
+		FAIL("tcp_test()");
+	else
+		PASS("tcp_test()");
+
 fail:
 	if (socket_init)
 		xtSocketDestruct();
+
 	stats_info(&stats);
 	return stats_status(&stats);
 }
