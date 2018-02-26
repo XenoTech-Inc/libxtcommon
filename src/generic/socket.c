@@ -1,6 +1,9 @@
 /* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
 #include <_xt/socket.h>
 
+// Default retry count for TCP I/O
+#define XT_SOCKET_TCP_IO_TRIES 16
+
 /**
  * Only initializes the sin_family field in the address. This is VERY IMPORTANT!!!
  * All other fields will be left untouched.
@@ -142,4 +145,62 @@ void xtSockaddrSetPort(struct xtSockaddr *sa, uint16_t port)
 {
 	((struct sockaddr_in*)sa)->sin_port = xthtobe16(port);
 	sockaddr_init(sa); // Init this to be safe
+}
+
+int xtSocketTCPReadFully(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead, unsigned retryCount)
+{
+	int err;
+	uint16_t size = 0, in = 0, rem = buflen;
+	unsigned char *ptr = buf;
+
+	if (!retryCount)
+		retryCount = XT_SOCKET_TCP_IO_TRIES;
+
+	for (unsigned i = 0; i < retryCount; ++i) {
+		err = xtSocketTCPRead(sock, ptr, rem, &size);
+		if (err)
+			goto fail;
+
+		in += size;
+		if (in >= buflen)
+			break;
+
+		rem -= buflen;
+		ptr += buflen;
+	}
+
+	if (!err && in < buflen)
+		err = XT_EAGAIN;
+fail:
+	*bytesRead = in;
+	return err;
+}
+
+int xtSocketTCPWriteFully(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent, unsigned retryCount)
+{
+	int err;
+	uint16_t size = 0, out = 0, rem = buflen;
+	const unsigned char *ptr = buf;
+
+	if (!retryCount)
+		retryCount = XT_SOCKET_TCP_IO_TRIES;
+
+	for (unsigned i = 0; i < retryCount; ++i) {
+		err = xtSocketTCPWrite(sock, ptr, rem, &size);
+		if (err)
+			goto fail;
+
+		out += size;
+		if (out >= buflen)
+			break;
+
+		rem -= out;
+		ptr += out;
+	}
+
+	if (!err && out < buflen)
+		err = XT_EAGAIN;
+fail:
+	*bytesSent = out;
+	return err;
 }

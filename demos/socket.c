@@ -4,13 +4,18 @@
 #include <xt/string.h>
 #include <xt/thread.h>
 #include <xt/error.h>
+#include <xt/hash.h>
 
+#include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <time.h>
 
 #include "utils.h"
 
 #define TCP_IO_TRIES 16
+#define DATA_PAGES (8*PAGESIZE)
+#define PAGESIZE 4096
 
 static struct stats stats;
 static bool socket_init = false;
@@ -22,6 +27,8 @@ struct sock_thread {
 	int err;
 	bool connected;
 	void *ret;
+	// Dynamic buffer for random data test
+	void *buf;
 	// The test to run after socket is connected.
 	void *(*func)(struct xtThread *t, void *arg);
 	// Tests whether the test has passed.
@@ -56,58 +63,11 @@ static int sock_thread_join(struct xtThread *t, struct sock_thread *info)
 	return xtThreadJoin(t, &info->ret);
 }
 
-/*
- * Generic tcp write function that also works if the underlying socket
- * will send the data in fragments. Up to TCP_IO_TRIES are permitted
- * before failing.
- */
-static int tcp_write(xtSocket sock, const void *buf, uint16_t n)
-{
-	int err;
-	uint16_t size = 0, out, rem = n;
-	const unsigned char *ptr = buf;
-
-	for (unsigned i = 0; i < TCP_IO_TRIES; ++i) {
-		err = xtSocketTCPWrite(sock, ptr, rem, &size);
-		out += size;
-
-		if (out >= n)
-			return 0;
-		rem -= out;
-		ptr += out;
-	}
-
-	return err ? err : XT_EIO;
-}
-
-/*
- * Generic tcp read function that also works if the underlying socket
- * will read the data in fragments. Up to TCP_IO_TRIES are permitted
- * before failing.
- */
-static int tcp_read(xtSocket sock, void *buf, uint16_t n)
-{
-	int err;
-	uint16_t size = 0, in, rem = n;
-	unsigned char *ptr = buf;
-
-	for (unsigned i = 0; i < TCP_IO_TRIES; ++i) {
-		err = xtSocketTCPRead(sock, ptr, rem, &size);
-		in += size;
-
-		if (in >= n)
-			return 0;
-		rem -= n;
-		ptr += n;
-	}
-
-	return err ? err : XT_EIO;
-}
-
 static void *master_tcp_test(struct xtThread *t, void *arg)
 {
 	int err;
 	char buf[256];
+	uint16_t ioDummy;
 	struct sock_thread *info = arg;
 
 	(void)t;
@@ -115,13 +75,13 @@ static void *master_tcp_test(struct xtThread *t, void *arg)
 
 	memset(buf, 0, sizeof buf);
 
-	err = tcp_write(info->peer, tcp_text, strlen(tcp_text) + 1);
+	err = xtSocketTCPWriteFully(info->peer, tcp_text, strlen(tcp_text) + 1, &ioDummy, TCP_IO_TRIES);
 	if (err) {
 		xtPerror("Master: Output error", err);
 		goto fail;
 	}
 
-	err = tcp_read(info->peer, buf, sizeof tcp_binary);
+	err = xtSocketTCPReadFully(info->peer, buf, sizeof tcp_binary, &ioDummy, TCP_IO_TRIES);
 	if (err) {
 		xtPerror("Master: Input error", err);
 		goto fail;
@@ -130,6 +90,43 @@ static void *master_tcp_test(struct xtThread *t, void *arg)
 	if (memcmp(tcp_binary, buf, sizeof tcp_binary)) {
 		fputs("Master: Slave packet is corrupt\n", stderr);
 		err = XT_EIO;
+	}
+
+	// Create a block of random data
+	info->buf = malloc(DATA_PAGES);
+	if (!info->buf) {
+		fputs("Master: Out of memory\n", stderr);
+		err = XT_ENOMEM;
+		goto fail;
+	}
+
+	xtprintf("Master: Generating %zu bytes random data\n", DATA_PAGES);
+
+	unsigned char *ptr = info->buf, *end = ptr + DATA_PAGES;
+	while (ptr < end)
+		*ptr++ = rand();
+	uint32_t checksum = xtHashCRC32(0, info->buf, DATA_PAGES);
+
+	xtprintf("Master: Block generated. Checksum: %I32X\n", checksum);
+
+	// Send block to client
+	err = xtSocketTCPWriteFully(info->peer, info->buf, DATA_PAGES, &ioDummy, TCP_IO_TRIES);
+	if (err) {
+		xtPerror("Master: Output error", err);
+		goto fail;
+	}
+
+	uint32_t verify;
+	err = xtSocketTCPReadFully(info->peer, &verify, sizeof verify, &ioDummy, TCP_IO_TRIES);
+	if (err) {
+		xtPerror("Master: Input error", err);
+		goto fail;
+	}
+
+	if (verify != checksum) {
+		fputs("Master: Checksum differs\n", stderr);
+		err = XT_EUNKNOWN;
+		goto fail;
 	}
 
 fail:
@@ -141,6 +138,7 @@ static void *slave_tcp_test(struct xtThread *t, void *arg)
 {
 	int err;
 	char buf[256];
+	uint16_t ioDummy;
 	struct sock_thread *info = arg;
 
 	(void)t;
@@ -148,7 +146,7 @@ static void *slave_tcp_test(struct xtThread *t, void *arg)
 
 	memset(buf, 0, sizeof buf);
 
-	err = tcp_read(info->sock, buf, strlen(tcp_text) + 1);
+	err = xtSocketTCPReadFully(info->sock, buf, strlen(tcp_text) + 1, &ioDummy, TCP_IO_TRIES);
 	if (err) {
 		xtPerror("Slave: Input error", err);
 		goto fail;
@@ -160,7 +158,31 @@ static void *slave_tcp_test(struct xtThread *t, void *arg)
 		err = XT_EIO;
 	}
 
-	err = tcp_write(info->sock, tcp_binary, sizeof tcp_binary);
+	err = xtSocketTCPWriteFully(info->sock, tcp_binary, sizeof tcp_binary, &ioDummy, TCP_IO_TRIES);
+	if (err) {
+		xtPerror("Slave: Output error", err);
+		goto fail;
+	}
+
+	xtprintf("Slave: Preparing to read %zu bytes random data\n", DATA_PAGES);
+
+	info->buf = malloc(DATA_PAGES);
+	if (!info->buf) {
+		fputs("Slave: Out of memory\n", stderr);
+		err = XT_ENOMEM;
+		goto fail;
+	}
+
+	// Read block from master
+	err = xtSocketTCPReadFully(info->sock, info->buf, DATA_PAGES, &ioDummy, TCP_IO_TRIES);
+	if (err) {
+		xtPerror("Slave: Input error", err);
+		goto fail;
+	}
+
+	uint32_t verify = xtHashCRC32(0, info->buf, DATA_PAGES);
+	xtprintf("Slave: Block received. Checksum: %I32X\n", verify);
+	err = xtSocketTCPWriteFully(info->sock, &verify, sizeof verify, &ioDummy, TCP_IO_TRIES);
 	if (err) {
 		xtPerror("Slave: Output error", err);
 		goto fail;
@@ -182,6 +204,7 @@ static int sock_thread_init(struct sock_thread *s)
 	s->connected = false;
 	s->func = dummy_func;
 	s->check = check_connected;
+	s->buf = NULL;
 
 	// Setup socket
 	err = xtSocketCreate(&s->sock, XT_SOCKET_PROTO_TCP);
@@ -201,6 +224,9 @@ fail:
 static void sock_thread_free(struct sock_thread *s)
 {
 	int err;
+
+	free(s->buf);
+
 	if (s->peer != XT_SOCKET_INVALID_FD) {
 		err = xtSocketClose(&s->peer);
 		if (err)
@@ -343,6 +369,7 @@ static int connect_test(
 int main(void)
 {
 	stats_init(&stats, "socket");
+	srand(time(NULL));
 	puts("-- SOCKET TEST");
 
 	if (!xtSocketInit()) {
