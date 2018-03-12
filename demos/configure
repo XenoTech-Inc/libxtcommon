@@ -59,7 +59,7 @@ done
 if [ "$win" == no ]; then
 	case "$SYSTEM" in
 		Linux*)
-			LDLIBS=" -lpthread"
+			LDLIBS=" -ldl -lpthread"
 			MACHINE_ARCH=`uname -m`
 			if [ "$MACHINE_ARCH" != "x86_64" ]; then
 				# Enable large file support if we're not on 64 bit
