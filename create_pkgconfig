@@ -3,11 +3,12 @@
 
 cleanup() {
 	rm -f xtcommon.c
+	trap '' EXIT
 }
 trap cleanup EXIT
 
 CPP=cpp
-LIBS='-lm -ldl -lpthread -lxtcommon'
+LIBS='-lm -lpthread -lxtcommon -ldl'
 CFLAGS='-pthread -rdynamic'
 
 WINARCH=w64-mingw32
