@@ -4,6 +4,25 @@
                  Get the latest version at "https://xenotech.nl"
 --------------------------------------------------------------------------------
 
+v1.0.1
+------
+
+Changes:
+- DLLoad API
+  * Removed xtGenericFuncPtr and introduced xtDLHandle.
+  * Renamed xtDLSym() to xtDLGetProcAddress().
+  * Introduced xtDLHandle.
+
+Bug fixes:
+- Configure script
+  * The pkg-config library dependencies order was wrong when a project needed
+    both the DLLoad API and Thread API.
+  * Always recreates pkg-config configuration.
+- Time API
+  * Some arguments that aren't modified weren't declared as const.
+- Utils
+  * xtSeedRand() was called xtSRand() internally causing linker errors
+
 v1.0
 ----
 New stuff:
