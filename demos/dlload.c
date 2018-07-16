@@ -6,6 +6,7 @@
 	#include <windows.h>
 #else
 	#include <math.h>
+	#include <gnu/lib-names.h>
 #endif
 
 #include <stdio.h>
@@ -16,7 +17,7 @@ static struct stats stats;
 
 int main(void)
 {
-	stats_init(&stats, "endian");
+	stats_init(&stats, "dlload");
 	puts("-- DLLOAD TEST");
 
 	xtDLHandle handle = NULL;
@@ -30,7 +31,7 @@ int main(void)
 	typedef double (*cosine)(double);
 	const char *functionName = "cos";
 	cosine funcptr;
-	handle = xtDLOpen("libm.so", XT_DL_LAZY);
+	handle = xtDLOpen(LIBM_SO, XT_DL_LAZY);
 #endif
 
 	if (handle)
@@ -65,8 +66,8 @@ int main(void)
 		goto cleanup;
 	}
 #else
-	printf("%f\n", cos(1234567));
-	if (cos(1234567) == -0.931222)
+	printf("cos(1234567) == %lf\n", cos(1234567));
+	if (fabs(cos(1234567) - -0.931222) < 0.00001)
 		PASS("Execute loaded function");
 	else {
 		FAIL("Execute loaded function");
@@ -77,5 +78,7 @@ int main(void)
 cleanup:
 	if (handle)
 		xtDLClose(handle);
+
+	stats_info(&stats);
 	return stats_status(&stats);
 }
