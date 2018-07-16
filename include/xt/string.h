@@ -87,7 +87,7 @@ char *xtFormatTime(char *buf, size_t buflen, unsigned timestamp_secs);
  * @param timestamp - Your timestamp.
  * @returns A pointer to the buffer. Null is returned on failure.
  */
-char *xtFormatTimePrecise(char *buf, size_t buflen, struct xtTimestamp *timestamp);
+char *xtFormatTimePrecise(char *buf, size_t buflen, const struct xtTimestamp *timestamp);
 /**
  * Fills the buffer with the elapsed time in the specified format.
  * If \a end is a timestamp before \a start, the result is unspecified.

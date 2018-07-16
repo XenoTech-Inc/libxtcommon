@@ -28,7 +28,7 @@ uint64_t xtRandLLU(void)
 		   (((uint64_t) (rand() + rand()) << 48) & 0xFFFF000000000000LLU);
 }
 
-void xtSRand(unsigned seed)
+void xtSeedRand(unsigned seed)
 {
 	srand(seed);
 }

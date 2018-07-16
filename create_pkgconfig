@@ -3,6 +3,7 @@
 
 cleanup() {
 	rm -f xtcommon.c
+	trap '' EXIT
 }
 trap cleanup EXIT
 
