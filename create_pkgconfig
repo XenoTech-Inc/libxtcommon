@@ -8,7 +8,7 @@ cleanup() {
 trap cleanup EXIT
 
 CPP=cpp
-LIBS='-lm -lpthread -lxtcommon -ldl'
+LIBS='-lm -lxtcommon -lpthread -ldl'
 CFLAGS='-pthread -rdynamic'
 
 WINARCH=w64-mingw32
