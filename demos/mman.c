@@ -1,14 +1,18 @@
 /* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
 
+#include <xt/os_macros.h>
+
 #include <xt/file.h>
 #include <xt/mman.h>
 #include <xt/string.h>
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
+
 #include "utils.h"
 
 static struct stats stats;
@@ -20,6 +24,15 @@ static void map_self(const char *prog)
 	struct xtFileInfo info;
 
 	fd = open(prog, O_RDONLY);
+
+#if XT_IS_WINDOWS
+	if (fd == -1) {
+		char buf[4096];
+		snprintf(buf, sizeof buf, "%s.exe", prog);
+		fd = open(prog, O_RDONLY);
+	}
+#endif
+
 	if (fd == -1) {
 		FAIL("map_self() - Can't read myself?");
 		goto fail;
