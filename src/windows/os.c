@@ -1,4 +1,4 @@
-/* Copyright 2014-2018 XenoTech. See LICENSE for legal details. */
+/* Copyright 2014-2019 XenoTech. See LICENSE for legal details. */
 
 // XT headers
 #include <_xt/os.h>
@@ -47,7 +47,7 @@ bool xtCPUGetInfo(struct xtCPUInfo *cpuInfo)
 	// If larger than zero, errors have occurred
 	int errorCount = 0;
 	// Initialize all values first to be safe
-	strncpy(cpuInfo->name, "Unknown", sizeof cpuInfo->name);
+	xtstrncpy(cpuInfo->name, "Unknown", sizeof cpuInfo->name);
 	cpuInfo->architecture = XT_CPU_ARCH_UNKNOWN;
 	cpuInfo->physicalCores = 0;
 	cpuInfo->logicalCores = 0;
@@ -204,10 +204,7 @@ void xtConsoleSetTitle(const char *title)
 char *xtGetHostname(char *buf, size_t buflen)
 {
 	char *val = getenv("COMPUTERNAME");
-	if (!val)
-		return NULL;
-	xtstrncpy(buf, val, buflen);
-	return buf;
+	return val ? xtstrncpy(buf, val, buflen) : NULL;
 }
 /**
  * Special function. Since Windows 8.1 GetVersion is kind of broken and won't
@@ -234,7 +231,8 @@ static bool get_windows_version(RTL_OSVERSIONINFOEXW *rtlOSVersionInfo)
 char *xtGetOSName(char *buf, size_t buflen)
 {
 	char *os = buf;
-	#define APPEND(str) os += snprintf(os, buflen - (os - buf), str)
+	*buf = '\0';
+	#define APPEND(str) os += xtsnprintf(os, buflen - (os - buf), str)
 	APPEND("Windows");
 	RTL_OSVERSIONINFOEXW rtlOSVersionInfo;
 	if (!get_windows_version(&rtlOSVersionInfo))
@@ -285,8 +283,5 @@ int xtRAMGetInfo(struct xtRAMInfo *ramInfo)
 char *xtGetUsername(char *buf, size_t buflen)
 {
 	char *val = getenv("USERNAME");
-	if (!val)
-		return NULL;
-	snprintf(buf, buflen, "%s", val);
-	return buf;
+	return val ? xtstrncpy(buf, val, buflen) : NULL;
 }
