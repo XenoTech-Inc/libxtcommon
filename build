@@ -6,6 +6,7 @@ arch=def
 clean=no
 debug=yes
 tags=no
+pie=no
 cores="$(nproc)"
 
 usage() {
@@ -22,6 +23,7 @@ Options:
 -l       Set target to Linux
 -w       Set target to Windows
 -t       Create tags
+-pie     Force -fPIE (use this when linking fails)
 64       Use x86_64
 x64      Use x64_64
 32       Use x86
@@ -63,6 +65,7 @@ while true; do
 	-d) debug=yes;;
 	-r) debug=no;;
 	-t) tags=yes;;
+	-pie) pie=yes;;
 	64) arch=x64;;
 	x64) arch=x64;;
 	32) arch=x86;;
@@ -112,6 +115,9 @@ else
 	if [ "$arch" != def ]; then
 		echo "Warning: Linux only supports your current architecture" 1>&2
 	fi
+fi
+if [ "$pie" = yes ]; then
+	buildopts="$buildopts -fPIE"
 fi
 
 # Build project
