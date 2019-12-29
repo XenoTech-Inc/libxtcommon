@@ -7,18 +7,23 @@
 v1.1
 ----
 New stuff:
-- build script
+- Build script
   * For gcc, the build script provides the address sanitizer to ease debugging
     library and application code.
+- Demos
+  * New Socket demo (also tests threads, but doesn't test UDP).
 
-Changes:
+API changes:
 - OS API
   * Changed xtGetUsername() return type and arguments.
+- Socket API
+  * Refactored xtSocketTCP and xtSocketUDP to xtSocketTcp and xtSocketUdp.
+  * Refactored xtSockAddr to xtSocketAddress.
 
 Bug fixes:
 - Configure script
   * For some magic linux configurations, the library must be compiled with -fPIE
-    which can be specified using -pie
+    which can be specified using -pie.
 - OS API
   * xtGetUsername() would fail on linux when there is no pseudo terminal
     available.
@@ -31,7 +36,7 @@ Bug fixes:
 v1.0.1
 ------
 
-Changes:
+API changes:
 - DLLoad API
   * Removed xtGenericFuncPtr and introduced xtDLHandle.
   * Renamed xtDLSym() to xtDLGetProcAddress().
