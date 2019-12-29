@@ -40,7 +40,7 @@ extern "C" {
  * This is a wrapper for struct sockaddr_in, which makes it very easy to use. Using the raw struct sockaddr_in can be a real pain.
  * This struct is POD. It is different across platforms though.
  */
-struct xtSockaddr {
+struct xtSocketAddress {
 #if XT_IS_LINUX
 	short sin_family;
 	unsigned short sin_port;
@@ -64,47 +64,47 @@ struct xtSockaddr {
 /**
  * Checks if two addresses are equal.
  */
-bool xtSockaddrEquals(const struct xtSockaddr *sa1, const struct xtSockaddr *sa2);
+bool xtSocketAddressEquals(const struct xtSocketAddress *sa1, const struct xtSocketAddress *sa2);
 /**
  * A constructor which translates the IP address from the provided string.
  * The string MAY contain the port to set. If the string contains the port, then that port value is used. If the string does not contain a port, the value of \a port is used.
  * If the translation fails for whatever reason, then the address is left untouched.
  * String IP format : [IP address] OR [IP address]:[Port]
  */
-bool xtSockaddrFromString(struct xtSockaddr *restrict sa, const char *restrict addr, uint16_t port);
+bool xtSocketAddressFromString(struct xtSocketAddress *restrict sa, const char *restrict addr, uint16_t port);
 /**
  * Sets the address from an ipv4 address represented as decimals. The port is always set by \a port.
  */
-bool xtSockaddrFromAddr(struct xtSockaddr *sa, uint32_t addr, uint16_t port);
+bool xtSocketAddressFromAddr(struct xtSocketAddress *sa, uint32_t addr, uint16_t port);
 /**
  * Returns the IP address as raw 4 byte number.
  */
-uint32_t xtSockaddrGetAddress(const struct xtSockaddr *sa);
+uint32_t xtSocketAddressGetAddress(const struct xtSocketAddress *sa);
 /**
  * This address is used when you don't need to bind a socket to a specific IP.
  * When you use this value as the address when binding a socket, the socket accepts connections to all the IPs of the machine.
  */
-uint32_t xtSockaddrGetAddressAny(void);
+uint32_t xtSocketAddressGetAddressAny(void);
 /**
  * The localhost address as we know it: 127.0.0.1. This address is already prepared for direct use by sockets (Correct endianness).
  * @remarks When wanting to bind to all interfaces, this is NOT the address to use.
- * Instead use xtSockaddrGetAddressAny() for that!
+ * Instead use xtSocketAddressGetAddressAny() for that!
  */
-uint32_t xtSockaddrGetAddressLocalHost(void);
-uint16_t xtSockaddrGetPort(const struct xtSockaddr *sa);
+uint32_t xtSocketAddressGetAddressLocalHost(void);
+uint16_t xtSocketAddressGetPort(const struct xtSocketAddress *sa);
 /**
  * Initializes a sockaddr. This MUST be done before it can be used by any sockets.
- * All xtSockaddr functions which SET a value in the sockaddr do this automatically to be safe. By calling this function,
+ * All xtSocketAddress functions which SET a value in the sockaddr do this automatically to be safe. By calling this function,
  * you can do it manually incase that is desired.
  */
-void xtSockaddrInit(struct xtSockaddr *sa);
-void xtSockaddrSetAddress(struct xtSockaddr *sa, uint32_t addr);
-void xtSockaddrSetPort(struct xtSockaddr *sa, uint16_t port);
+void xtSocketAddressInit(struct xtSocketAddress *sa);
+void xtSocketAddressSetAddress(struct xtSocketAddress *sa, uint32_t addr);
+void xtSocketAddressSetPort(struct xtSocketAddress *sa, uint16_t port);
 /**
  * Returns this address as a string formatted as : [IP]:[PORT].
  * A NULL pointer is returned on failure to translate the address.
  */
-char *xtSockaddrToString(const struct xtSockaddr *restrict sa, char *restrict buf, size_t buflen);
+char *xtSocketAddressToString(const struct xtSocketAddress *restrict sa, char *restrict buf, size_t buflen);
 /**
  * @brief All protocols that are supported by the xtSockets.
  */
@@ -142,7 +142,7 @@ enum xtSocketProto {
  * @return Zero if the socket has been bound successfully, otherwise an error code.
  * @remarks Ports below 1024 may require admin rights.
  */
-int xtSocketBindTo(xtSocket sock, const struct xtSockaddr *sa);
+int xtSocketBindTo(xtSocket sock, const struct xtSocketAddress *sa);
 /**
  * Binds the socket to the specified interface.
  * @param port - The port to bind to. Port 0 lets the kernel pick a random port.
@@ -163,7 +163,7 @@ int xtSocketClose(xtSocket *sock);
  * Data that came from other devices is now simply discarded, as if it never existed. The kernel takes care of this for us.
  * @return Zero if the socket has connected successfully, otherwise an error code.
  */
-int xtSocketConnect(xtSocket sock, const struct xtSockaddr *dest);
+int xtSocketConnect(xtSocket sock, const struct xtSocketAddress *dest);
 /**
  * Creates a new socket which is directly available for use.
  * This socket must always be closed by xtSocketClose().
@@ -185,7 +185,7 @@ void xtSocketDestruct(void);
  * @param sa - A pointer to the structure which will receive the address of the interface.
  * @return Zero if the address has been retrieved, otherwise an error code.
  */
-int xtSocketGetLocalSocketAddress(xtSocket sock, struct xtSockaddr *sa);
+int xtSocketGetLocalSocketAddress(xtSocket sock, struct xtSocketAddress *sa);
 /**
  * Tells you the port of the interface where \a sock is bound to.
  * On error, zero is returned.
@@ -200,7 +200,7 @@ enum xtSocketProto xtSocketGetProtocol(const xtSocket sock);
  * Tells you the address of the peer connected to \a sock.
  * @return Zero if the address has been retrieved, otherwise an error code.
  */
-int xtSocketGetRemoteSocketAddress(const xtSocket sock, struct xtSockaddr *sa);
+int xtSocketGetRemoteSocketAddress(const xtSocket sock, struct xtSocketAddress *sa);
 /**
  * Tells you if an error has occurred on \a sock. After a successful call to this function,
  * the error code is cleared.
@@ -334,7 +334,7 @@ int xtSocketSetTCPNoDelay(xtSocket sock, bool flag);
  * @return Zero if a peer has connected successfully, otherwise an error code.
  * @remarks The socket must be in listen mode for this function to work.
  */
-int xtSocketTcpAccept(xtSocket sock, xtSocket *restrict peerSock, struct xtSockaddr *restrict peerAddr);
+int xtSocketTcpAccept(xtSocket sock, xtSocket *restrict peerSock, struct xtSocketAddress *restrict peerAddr);
 /**
  * Blocks until "some" data has been read on the socket. This does not necessarily have to be the size of \a buflen.
  * @param bytesRead - Receives the amount of bytes that have been read.
@@ -371,14 +371,14 @@ int xtSocketTcpWriteFully(xtSocket sock, const void *restrict buf, uint16_t bufl
  * @param sender - Receives the address of the sender.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
-int xtSocketUdpRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead, struct xtSockaddr *restrict sender);
+int xtSocketUdpRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead, struct xtSocketAddress *restrict sender);
 /**
  * Writes the data in \a buf to the address of \a dest.
  * @param bytesSent - Receives the amount of bytes that have been sent.
  * @param dest - Contains the address of the destination. For a connected UDP socket, you can specify a NULL pointer.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
-int xtSocketUdpWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent, const struct xtSockaddr *restrict dest);
+int xtSocketUdpWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent, const struct xtSocketAddress *restrict dest);
 
 #define XT_SOCKET_POLL_CAPACITY_DEFAULT 1024
 /**

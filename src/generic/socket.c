@@ -8,22 +8,22 @@
  * Only initializes the sin_family field in the address. This is VERY IMPORTANT!!!
  * All other fields will be left untouched.
  */
-static void sockaddr_init(struct xtSockaddr *sa)
+static void sockaddr_init(struct xtSocketAddress *sa)
 {
 	((struct sockaddr_in*)sa)->sin_family = AF_INET;
 }
 
-bool xtSockaddrEquals(const struct xtSockaddr *sa1, const struct xtSockaddr * sa2)
+bool xtSocketAddressEquals(const struct xtSocketAddress *sa1, const struct xtSocketAddress * sa2)
 {
 	// DO NOT just check the full memory! It is possible that only the address and port match, which is what we want to check for.
 	return ((struct sockaddr_in*)sa1)->sin_addr.s_addr == ((struct sockaddr_in*)sa2)->sin_addr.s_addr &&
 		((struct sockaddr_in*)sa1)->sin_port == ((struct sockaddr_in*)sa2)->sin_port;
 }
 
-bool xtSockaddrFromAddr(struct xtSockaddr *sa, uint32_t addr, uint16_t port)
+bool xtSocketAddressFromAddr(struct xtSocketAddress *sa, uint32_t addr, uint16_t port)
 {
-	xtSockaddrSetAddress(sa, addr);
-	xtSockaddrSetPort(sa, port);
+	xtSocketAddressSetAddress(sa, addr);
+	xtSocketAddressSetPort(sa, port);
 	sockaddr_init(sa); // Init this to be safe
 	return true;
 	// Suppress unused function warning
@@ -31,7 +31,7 @@ bool xtSockaddrFromAddr(struct xtSockaddr *sa, uint32_t addr, uint16_t port)
 	(void)socket_native_proto_to_proto;
 }
 
-bool xtSockaddrFromString(struct xtSockaddr *restrict sa, const char *restrict addr, uint16_t port)
+bool xtSocketAddressFromString(struct xtSocketAddress *restrict sa, const char *restrict addr, uint16_t port)
 {
 	char buf[32];
 	char *sep = strchr(addr, ':');
@@ -46,46 +46,46 @@ bool xtSockaddrFromString(struct xtSockaddr *restrict sa, const char *restrict a
 	}
 	if (inet_pton(AF_INET, buf, &((struct sockaddr_in*) sa)->sin_addr) != 1)
 		return false;
-	xtSockaddrSetPort(sa, sep ? (unsigned short)strtoul(++sep, NULL, 10) : port);
+	xtSocketAddressSetPort(sa, sep ? (unsigned short)strtoul(++sep, NULL, 10) : port);
 	sockaddr_init(sa); // Init this to be safe
 	return true;
 }
 
-uint32_t xtSockaddrGetAddress(const struct xtSockaddr *sa)
+uint32_t xtSocketAddressGetAddress(const struct xtSocketAddress *sa)
 {
 	return ((struct sockaddr_in*) sa)->sin_addr.s_addr;
 }
 
-uint32_t xtSockaddrGetAddressAny(void)
+uint32_t xtSocketAddressGetAddressAny(void)
 {
 	return INADDR_ANY;
 }
 
-uint32_t xtSockaddrGetAddressLocalHost(void)
+uint32_t xtSocketAddressGetAddressLocalHost(void)
 {
 	return 16777343;
 }
 
-uint16_t xtSockaddrGetPort(const struct xtSockaddr *sa)
+uint16_t xtSocketAddressGetPort(const struct xtSocketAddress *sa)
 {
 	return xthtobe16(((struct sockaddr_in*) sa)->sin_port);
 }
 
-void xtSockaddrInit(struct xtSockaddr *sa)
+void xtSocketAddressInit(struct xtSocketAddress *sa)
 {
 	sockaddr_init(sa);
 }
 
-char *xtSockaddrToString(const struct xtSockaddr *restrict sa, char *restrict buf, size_t buflen)
+char *xtSocketAddressToString(const struct xtSocketAddress *restrict sa, char *restrict buf, size_t buflen)
 {
 	char sbuf[32];
 	if (!inet_ntop(AF_INET, &((struct sockaddr_in*)sa)->sin_addr, sbuf, INET_ADDRSTRLEN))
 		return NULL;
-	snprintf(buf, buflen, "%s:%hu", sbuf, xtSockaddrGetPort(sa));
+	snprintf(buf, buflen, "%s:%hu", sbuf, xtSocketAddressGetPort(sa));
 	return buf;
 }
 
-int xtSocketGetLocalSocketAddress(xtSocket sock, struct xtSockaddr *sa)
+int xtSocketGetLocalSocketAddress(xtSocket sock, struct xtSocketAddress *sa)
 {
 	socklen_t addrlen = sizeof(struct sockaddr_in);
 	if (getsockname(sock, (struct sockaddr*)sa, &addrlen) == 0)
@@ -95,13 +95,13 @@ int xtSocketGetLocalSocketAddress(xtSocket sock, struct xtSockaddr *sa)
 
 uint16_t xtSocketGetLocalPort(xtSocket sock)
 {
-	struct xtSockaddr sa;
+	struct xtSocketAddress sa;
 	if (xtSocketGetLocalSocketAddress(sock, &sa) == 0)
-		return xtSockaddrGetPort(&sa);
+		return xtSocketAddressGetPort(&sa);
 	return 0;
 }
 
-int xtSocketBindTo(xtSocket sock, const struct xtSockaddr *sa)
+int xtSocketBindTo(xtSocket sock, const struct xtSocketAddress *sa)
 {
 	if (bind(sock, (const struct sockaddr*)sa, sizeof(struct sockaddr_in)) == 0)
 		return 0;
@@ -110,13 +110,13 @@ int xtSocketBindTo(xtSocket sock, const struct xtSockaddr *sa)
 
 int xtSocketBindToAny(xtSocket sock, uint16_t port)
 {
-	struct xtSockaddr sa;
-	xtSockaddrSetAddress(&sa, xtSockaddrGetAddressAny());
-	xtSockaddrSetPort(&sa, port);
+	struct xtSocketAddress sa;
+	xtSocketAddressSetAddress(&sa, xtSocketAddressGetAddressAny());
+	xtSocketAddressSetPort(&sa, port);
 	return xtSocketBindTo(sock, &sa);
 }
 
-int xtSocketConnect(xtSocket sock, const struct xtSockaddr *dest)
+int xtSocketConnect(xtSocket sock, const struct xtSocketAddress *dest)
 {
 	if (connect(sock, (const struct sockaddr*)dest, sizeof(struct sockaddr_in)) == 0)
 		return 0;
@@ -135,13 +135,13 @@ int xtSocketClose(xtSocket *sock)
 	return 0;
 }
 
-void xtSockaddrSetAddress(struct xtSockaddr *sa, uint32_t addr)
+void xtSocketAddressSetAddress(struct xtSocketAddress *sa, uint32_t addr)
 {
 	((struct sockaddr_in*)sa)->sin_addr.s_addr = addr;
 	sockaddr_init(sa); // Init this to be safe
 }
 
-void xtSockaddrSetPort(struct xtSockaddr *sa, uint16_t port)
+void xtSocketAddressSetPort(struct xtSocketAddress *sa, uint16_t port)
 {
 	((struct sockaddr_in*)sa)->sin_port = xthtobe16(port);
 	sockaddr_init(sa); // Init this to be safe

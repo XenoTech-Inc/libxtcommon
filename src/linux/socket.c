@@ -43,7 +43,7 @@ enum xtSocketProto xtSocketGetProtocol(const xtSocket sock)
 	return XT_SOCKET_PROTO_UNKNOWN;
 }
 
-int xtSocketGetRemoteSocketAddress(const xtSocket sock, struct xtSockaddr *sa)
+int xtSocketGetRemoteSocketAddress(const xtSocket sock, struct xtSocketAddress *sa)
 {
 	socklen_t addrlen = sizeof(struct sockaddr_in);
 	if (getpeername(sock, (struct sockaddr*) sa, &addrlen) == 0)
@@ -216,7 +216,7 @@ int xtSocketSetTCPNoDelay(xtSocket sock, bool flag)
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
-int xtSocketTcpAccept(xtSocket sock, xtSocket *restrict peerSock, struct xtSockaddr *restrict peerAddr)
+int xtSocketTcpAccept(xtSocket sock, xtSocket *restrict peerSock, struct xtSocketAddress *restrict peerAddr)
 {
 	socklen_t dummyLen = sizeof(struct sockaddr_in);
 	// Something is happening!
@@ -254,7 +254,7 @@ int xtSocketTcpWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, u
 	return 0;
 }
 
-int xtSocketUdpRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead, struct xtSockaddr *restrict sender)
+int xtSocketUdpRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead, struct xtSocketAddress *restrict sender)
 {
 	socklen_t dummyLen = sizeof(struct sockaddr_in);
 	ssize_t ret;
@@ -269,7 +269,7 @@ int xtSocketUdpRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t
 	return 0;
 }
 
-int xtSocketUdpWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent, const struct xtSockaddr *restrict dest)
+int xtSocketUdpWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent, const struct xtSocketAddress *restrict dest)
 {
 	ssize_t ret;
 	ret = sendto(sock, buf, buflen, 0, (const struct sockaddr*)dest, sizeof(struct sockaddr_in));

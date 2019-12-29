@@ -296,7 +296,7 @@ static void timeTest(void)
 
 static void socketTest(void)
 {
-	struct xtSockaddr sa;
+	struct xtSocketAddress sa;
 	xtSocket serverSock;
 
 	if (xtSocketInit())

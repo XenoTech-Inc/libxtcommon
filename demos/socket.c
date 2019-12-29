@@ -22,7 +22,7 @@ static bool socket_init = false;
 
 struct sock_thread {
 	xtSocket sock, peer;
-	struct xtSockaddr peerAddr;
+	struct xtSocketAddress peerAddr;
 	int port;
 	int err;
 	bool connected;
@@ -281,12 +281,12 @@ fail:
 
 static void *wait_slave(struct xtThread *t, void *arg)
 {
-	int err;
+	int err = 0;
 	struct sock_thread *info = arg;
-	struct xtSockaddr sa;
+	struct xtSocketAddress sa;
 	(void)t;
 
-	if (!xtSockaddrFromAddr(&sa, xtSockaddrGetAddressLocalHost(), info->port)) {
+	if (!xtSocketAddressFromAddr(&sa, xtSocketAddressGetAddressLocalHost(), info->port)) {
 		fputs("Slave: Could not find server address\n", stderr);
 		goto fail;
 	}
