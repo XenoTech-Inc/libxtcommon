@@ -280,8 +280,7 @@ int xtRAMGetInfo(struct xtRAMInfo *ramInfo)
 	return 0;
 }
 
-char *xtGetUsername(char *buf, size_t buflen)
+const char *xtGetUsername(void)
 {
-	char *val = getenv("USERNAME");
-	return val ? xtstrncpy(buf, val, buflen) : NULL;
+	return getenv("USERNAME");
 }

@@ -4,6 +4,30 @@
                  Get the latest version at "https://xenotech.nl"
 --------------------------------------------------------------------------------
 
+v1.1
+----
+New stuff:
+- build script
+  * For gcc, the build script provides the address sanitizer to ease debugging
+    library and application code.
+
+Changes:
+- OS API
+  * Changed xtGetUsername() return type and arguments.
+
+Bug fixes:
+- Configure script
+  * For some magic linux configurations, the library must be compiled with -fPIE
+    which can be specified using -pie
+- OS API
+  * xtGetUsername() would fail on linux when there is no pseudo terminal
+    available.
+  * xtGetOSName() may not properly null terminate the OS name on Windows.
+- Demos
+  * The general and string demos would not properly check on windows if it
+    succeeded (some tests are expected to fail there. Hence, they should not be
+    treated as failures).
+
 v1.0.1
 ------
 

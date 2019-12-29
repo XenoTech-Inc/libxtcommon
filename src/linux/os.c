@@ -11,9 +11,11 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h> // for open() and O_RDONLY
+#include <pwd.h> // for pwd.pw_name
 #include <sys/ioctl.h> // for ioctl() and TIOCGWINSZ
 #include <sys/stat.h>
 #include <sys/sysinfo.h> // for the sysinfo function and struct
+#include <sys/types.h> // for getpwuid
 #include <termios.h>
 #include <unistd.h> // for a ton of functions...
 
@@ -274,8 +276,7 @@ int xtRAMGetInfo(struct xtRAMInfo *ramInfo)
 #endif
 }
 
-char *xtGetUsername(char *buf, size_t buflen)
+const char *xtGetUsername(void)
 {
-	// For in the future maybe, LOGIN_NAME_MAX is the maximum length of the name. in limits.h
-	return getlogin_r(buf, buflen) == 0 ? buf : NULL;
+	return getpwuid(getuid())->pw_name;
 }

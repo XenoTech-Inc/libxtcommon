@@ -176,10 +176,12 @@ struct xtRAMInfo {
  */
 int xtRAMGetInfo(struct xtRAMInfo *ramInfo);
 /**
- * Returns the name of the user who is logged in on this session. On error a
- * NULL pointer is returned.
+ * Returns the name of the user who is logged in on this session.
+ * This value must be copied if it is going to be used for more than directly
+ * comparing it to something else. E.g.: copy the current username, concurrently
+ * calling xtGetUsername, etc. On error, NULL pointer is returned.
  */
-char *xtGetUsername(char *buf, size_t buflen);
+const char *xtGetUsername(void);
 
 #ifdef __cplusplus
 }
