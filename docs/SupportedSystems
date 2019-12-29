@@ -2,13 +2,6 @@ This file contains the results of the compilation process of the library
 across different compilers and OS'.
 
 ################################################################################
-OS group: Linux - Raspbian
-Version : 8 jessie
-Compiler: GCC 4.9.2-10 (Default system compiler)
-Target  : Linux arm6l
-Results : Debug builds work (release not tested)
-Verdict : Safe for usage.
-################################################################################
 OS group: Linux - Debian
 Version : 9.3.0 x64
 Compiler: GCC 7.2.0 x64 (Custom compiler)
@@ -32,14 +25,15 @@ Verdict : Despite everything working fine, the x64 version fails to compile
           this compiler just to safe.
 ################################################################################
 OS group: Linux - Xubuntu
-Version : 16.04.3 LTS x64
-Compiler: GCC 5.4.0 x64 (Default system compiler)
+Version : 18.04.3 LTS x64
+Compiler: GCC 7.4.0 x64 (Default system compiler)
 Target  : Linux x64
 Results : Everything works.
 Verdict : Safe for usage.
 --------------------------------------------------------------------------------
-Version : 14.04.5 LTS x64
-Compiler: GCC 4.8.4 x64 (Default system compiler)
+OS group: Linux - Xubuntu
+Version : 16.04.3 LTS x64
+Compiler: GCC 5.4.0 x64 (Default system compiler)
 Target  : Linux x64
 Results : Everything works.
 Verdict : Safe for usage.
