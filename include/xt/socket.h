@@ -334,51 +334,51 @@ int xtSocketSetTCPNoDelay(xtSocket sock, bool flag);
  * @return Zero if a peer has connected successfully, otherwise an error code.
  * @remarks The socket must be in listen mode for this function to work.
  */
-int xtSocketTCPAccept(xtSocket sock, xtSocket *restrict peerSock, struct xtSockaddr *restrict peerAddr);
+int xtSocketTcpAccept(xtSocket sock, xtSocket *restrict peerSock, struct xtSockaddr *restrict peerAddr);
 /**
  * Blocks until "some" data has been read on the socket. This does not necessarily have to be the size of \a buflen.
  * @param bytesRead - Receives the amount of bytes that have been read.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
-int xtSocketTCPRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead);
+int xtSocketTcpRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead);
 /**
- * Similar to xtSocketTCPRead(), but tries up to \a retryCount before giving up.
- * This is usually what we want, because xtSocketTCPRead() may read less than there is available.
+ * Similar to xtSocketTcpRead(), but tries up to \a retryCount before giving up.
+ * This is usually what we want, because xtSocketTcpRead() may read less than there is available.
  * It is important to use bytesRead to know how much data has been read on failure, because this is almost certainly non-zero.
  * @param bytesRead - Receives the amount of bytes that have been read.
  * @param retryCount - Number of retries before giving up. Use 0 for the default value.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
-int xtSocketTCPReadFully(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead, unsigned retryCount);
+int xtSocketTcpReadFully(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead, unsigned retryCount);
 /**
  * Writes the data in \a buf to the connected remote socket.
  * @param bytesSent - Receives the amount of bytes that have been sent.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
-int xtSocketTCPWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent);
+int xtSocketTcpWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent);
 /**
- * Similar to xtSocketTCPWrite(), but tries up to \a retryCount before giving up.
- * This is usually what we want, because xtSocketTCPWrite() may write less than there is available.
+ * Similar to xtSocketTcpWrite(), but tries up to \a retryCount before giving up.
+ * This is usually what we want, because xtSocketTcpWrite() may write less than there is available.
  * It is important to use bytesSent to know how much data has been read on failure, because this is almost certainly non-zero.
  * @param bytesSent - Receives the amount of bytes that have been sent.
  * @param retryCount - Number of retries before giving up. Use 0 for the default value.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
-int xtSocketTCPWriteFully(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent, unsigned retryCount);
+int xtSocketTcpWriteFully(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent, unsigned retryCount);
 /**
  * Blocks until "some" data has been read on the socket. This does not necessarily have to be the size of \a buflen.
  * @param bytesRead - Receives the amount of bytes that have been read.
  * @param sender - Receives the address of the sender.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
-int xtSocketUDPRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead, struct xtSockaddr *restrict sender);
+int xtSocketUdpRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead, struct xtSockaddr *restrict sender);
 /**
  * Writes the data in \a buf to the address of \a dest.
  * @param bytesSent - Receives the amount of bytes that have been sent.
  * @param dest - Contains the address of the destination. For a connected UDP socket, you can specify a NULL pointer.
  * @returns Zero if the operation has succeeded, otherwise an error code.
  */
-int xtSocketUDPWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent, const struct xtSockaddr *restrict dest);
+int xtSocketUdpWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent, const struct xtSockaddr *restrict dest);
 
 #define XT_SOCKET_POLL_CAPACITY_DEFAULT 1024
 /**

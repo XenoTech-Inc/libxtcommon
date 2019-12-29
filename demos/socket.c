@@ -75,13 +75,13 @@ static void *master_tcp_test(struct xtThread *t, void *arg)
 
 	memset(buf, 0, sizeof buf);
 
-	err = xtSocketTCPWriteFully(info->peer, tcp_text, strlen(tcp_text) + 1, &ioDummy, TCP_IO_TRIES);
+	err = xtSocketTcpWriteFully(info->peer, tcp_text, strlen(tcp_text) + 1, &ioDummy, TCP_IO_TRIES);
 	if (err) {
 		xtPerror("Master: Output error", err);
 		goto fail;
 	}
 
-	err = xtSocketTCPReadFully(info->peer, buf, sizeof tcp_binary, &ioDummy, TCP_IO_TRIES);
+	err = xtSocketTcpReadFully(info->peer, buf, sizeof tcp_binary, &ioDummy, TCP_IO_TRIES);
 	if (err) {
 		xtPerror("Master: Input error", err);
 		goto fail;
@@ -110,14 +110,14 @@ static void *master_tcp_test(struct xtThread *t, void *arg)
 	xtprintf("Master: Block generated. Checksum: %I32X\n", checksum);
 
 	// Send block to client
-	err = xtSocketTCPWriteFully(info->peer, info->buf, DATA_PAGES, &ioDummy, TCP_IO_TRIES);
+	err = xtSocketTcpWriteFully(info->peer, info->buf, DATA_PAGES, &ioDummy, TCP_IO_TRIES);
 	if (err) {
 		xtPerror("Master: Output error", err);
 		goto fail;
 	}
 
 	uint32_t verify;
-	err = xtSocketTCPReadFully(info->peer, &verify, sizeof verify, &ioDummy, TCP_IO_TRIES);
+	err = xtSocketTcpReadFully(info->peer, &verify, sizeof verify, &ioDummy, TCP_IO_TRIES);
 	if (err) {
 		xtPerror("Master: Input error", err);
 		goto fail;
@@ -146,7 +146,7 @@ static void *slave_tcp_test(struct xtThread *t, void *arg)
 
 	memset(buf, 0, sizeof buf);
 
-	err = xtSocketTCPReadFully(info->sock, buf, strlen(tcp_text) + 1, &ioDummy, TCP_IO_TRIES);
+	err = xtSocketTcpReadFully(info->sock, buf, strlen(tcp_text) + 1, &ioDummy, TCP_IO_TRIES);
 	if (err) {
 		xtPerror("Slave: Input error", err);
 		goto fail;
@@ -158,7 +158,7 @@ static void *slave_tcp_test(struct xtThread *t, void *arg)
 		err = XT_EIO;
 	}
 
-	err = xtSocketTCPWriteFully(info->sock, tcp_binary, sizeof tcp_binary, &ioDummy, TCP_IO_TRIES);
+	err = xtSocketTcpWriteFully(info->sock, tcp_binary, sizeof tcp_binary, &ioDummy, TCP_IO_TRIES);
 	if (err) {
 		xtPerror("Slave: Output error", err);
 		goto fail;
@@ -174,7 +174,7 @@ static void *slave_tcp_test(struct xtThread *t, void *arg)
 	}
 
 	// Read block from master
-	err = xtSocketTCPReadFully(info->sock, info->buf, DATA_PAGES, &ioDummy, TCP_IO_TRIES);
+	err = xtSocketTcpReadFully(info->sock, info->buf, DATA_PAGES, &ioDummy, TCP_IO_TRIES);
 	if (err) {
 		xtPerror("Slave: Input error", err);
 		goto fail;
@@ -182,7 +182,7 @@ static void *slave_tcp_test(struct xtThread *t, void *arg)
 
 	uint32_t verify = xtHashCRC32(0, info->buf, DATA_PAGES);
 	xtprintf("Slave: Block received. Checksum: %I32X\n", verify);
-	err = xtSocketTCPWriteFully(info->sock, &verify, sizeof verify, &ioDummy, TCP_IO_TRIES);
+	err = xtSocketTcpWriteFully(info->sock, &verify, sizeof verify, &ioDummy, TCP_IO_TRIES);
 	if (err) {
 		xtPerror("Slave: Output error", err);
 		goto fail;
@@ -257,7 +257,7 @@ static void *wait_master(struct xtThread *t, void *arg)
 		xtPerror("Master: Could not listen on socket", err);
 		goto fail;
 	}
-	err = xtSocketTCPAccept(info->sock, &info->peer, &info->peerAddr);
+	err = xtSocketTcpAccept(info->sock, &info->peer, &info->peerAddr);
 	if (err) {
 		xtPerror("Master: Could not accept peer", err);
 		goto fail;

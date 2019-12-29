@@ -216,7 +216,7 @@ int xtSocketSetTCPNoDelay(xtSocket sock, bool flag)
 	return _xtTranslateSysError(XT_SOCKET_LAST_ERROR);
 }
 
-int xtSocketTCPAccept(xtSocket sock, xtSocket *restrict peerSock, struct xtSockaddr *restrict peerAddr)
+int xtSocketTcpAccept(xtSocket sock, xtSocket *restrict peerSock, struct xtSockaddr *restrict peerAddr)
 {
 	socklen_t dummyLen = sizeof(struct sockaddr_in);
 	// Something is happening!
@@ -228,7 +228,7 @@ int xtSocketTCPAccept(xtSocket sock, xtSocket *restrict peerSock, struct xtSocka
 	return 0;
 }
 
-int xtSocketTCPRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead)
+int xtSocketTcpRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead)
 {
 	ssize_t ret;
 	ret = recv(sock, buf, buflen, 0);
@@ -243,7 +243,7 @@ int xtSocketTCPRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t
 	return 0;
 }
 
-int xtSocketTCPWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent)
+int xtSocketTcpWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent)
 {
 	ssize_t ret;
 	ret = send(sock, (const char*)buf, buflen, 0);
@@ -254,7 +254,7 @@ int xtSocketTCPWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, u
 	return 0;
 }
 
-int xtSocketUDPRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead, struct xtSockaddr *restrict sender)
+int xtSocketUdpRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead, struct xtSockaddr *restrict sender)
 {
 	socklen_t dummyLen = sizeof(struct sockaddr_in);
 	ssize_t ret;
@@ -269,7 +269,7 @@ int xtSocketUDPRead(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t
 	return 0;
 }
 
-int xtSocketUDPWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent, const struct xtSockaddr *restrict dest)
+int xtSocketUdpWrite(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent, const struct xtSockaddr *restrict dest)
 {
 	ssize_t ret;
 	ret = sendto(sock, buf, buflen, 0, (const struct sockaddr*)dest, sizeof(struct sockaddr_in));

@@ -147,7 +147,7 @@ void xtSockaddrSetPort(struct xtSockaddr *sa, uint16_t port)
 	sockaddr_init(sa); // Init this to be safe
 }
 
-int xtSocketTCPReadFully(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead, unsigned retryCount)
+int xtSocketTcpReadFully(xtSocket sock, void *restrict buf, uint16_t buflen, uint16_t *restrict bytesRead, unsigned retryCount)
 {
 	int err;
 	uint16_t size = 0, in = 0, rem = buflen;
@@ -157,7 +157,7 @@ int xtSocketTCPReadFully(xtSocket sock, void *restrict buf, uint16_t buflen, uin
 		retryCount = XT_SOCKET_TCP_IO_TRIES;
 
 	for (unsigned i = 0; i < retryCount; ++i) {
-		err = xtSocketTCPRead(sock, ptr, rem, &size);
+		err = xtSocketTcpRead(sock, ptr, rem, &size);
 		if (err)
 			goto fail;
 
@@ -176,7 +176,7 @@ fail:
 	return err;
 }
 
-int xtSocketTCPWriteFully(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent, unsigned retryCount)
+int xtSocketTcpWriteFully(xtSocket sock, const void *restrict buf, uint16_t buflen, uint16_t *restrict bytesSent, unsigned retryCount)
 {
 	int err;
 	uint16_t size = 0, out = 0, rem = buflen;
@@ -186,7 +186,7 @@ int xtSocketTCPWriteFully(xtSocket sock, const void *restrict buf, uint16_t bufl
 		retryCount = XT_SOCKET_TCP_IO_TRIES;
 
 	for (unsigned i = 0; i < retryCount; ++i) {
-		err = xtSocketTCPWrite(sock, ptr, rem, &size);
+		err = xtSocketTcpWrite(sock, ptr, rem, &size);
 		if (err)
 			goto fail;
 
