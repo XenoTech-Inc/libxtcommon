@@ -22,12 +22,15 @@ SYSTEM=`uname -s 2>/dev/null`
 
 WINARCH=w64-mingw32
 win=no
+asan=no
 
 while true; do
 	if [ -z "$1" ]; then
 		break
 	fi
 	case "$1" in
+	-a)
+		asan=yes;;
 	windows*)
 		case "$1" in
 		windows-x86)
@@ -47,11 +50,13 @@ while true; do
 		fi
 		win=yes
 		LDLIBS=" -lntdll -lpsapi -lws2_32"
-		shift 1
-		continue;;
+		;;
 	--)
 		shift 1
 		break;;
+	*)
+		echo "Invalid option: $1" 1>&2
+		exit 1
 	esac
 	shift 1
 done
@@ -77,12 +82,19 @@ if [ "$win" == no ]; then
 fi
 CFLAGS="-Wall -Wextra -pedantic -std=c99 $*"
 CFLAGS="$CFLAGS $INCS"
+
+if [ "$asan" == yes ]; then
+	CFLAGS="$CFLAGS -fsanitize=address"
+	LDFLAGS="$LDFLAGS -fsanitize=address $(pkg-config --libs check)"
+fi
+
 # Write phony target and overwrite some builtin variables
 cat <<END >Makefile
 .PHONY: default clean tests vtests
 
 CC=$CC
 CFLAGS=$CFLAGS
+LDFLAGS=$LDFLAGS
 LDLIBS=$LDLIBS
 
 END

@@ -7,6 +7,7 @@ clean=no
 debug=yes
 tags=no
 pie=no
+asan=no
 cores="$(nproc)"
 
 usage() {
@@ -24,12 +25,13 @@ Options:
 -w       Set target to Windows
 -t       Create tags
 -pie     Force -fPIE (use this when linking fails)
+-a       Use address sanitizer (note: requires check and libasan3)
 64       Use x86_64
 x64      Use x64_64
 32       Use x86
 x86      Use x86
 
-Default options are: -d -arch linux x64
+Default options are: -d --arch linux x64
 EOF
 }
 
@@ -66,11 +68,13 @@ while true; do
 	-r) debug=no;;
 	-t) tags=yes;;
 	-pie) pie=yes;;
+	-a) asan=yes;;
 	64) arch=x64;;
 	x64) arch=x64;;
 	32) arch=x86;;
 	x86) arch=x86;;
 	--)
+		shift 1
 		break;;
 	-h|--help)
 		usage
@@ -97,8 +101,6 @@ if [ "$debug" = no ]; then
 	buildopts="-- -O3 -ffast-math $*"
 fi
 
-echo "Build options: $buildopts"
-
 # Print settings
 echo "Building for target: $target $arch"
 
@@ -119,6 +121,12 @@ fi
 if [ "$pie" = yes ]; then
 	buildopts="$buildopts -fPIE"
 fi
+
+if [ "$asan" == yes ]; then
+	buildopts="-a $buildopts"
+fi
+
+echo "Build options: $buildopts"
 
 # Build project
 ./configure $buildopts
