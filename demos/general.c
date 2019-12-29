@@ -3,6 +3,7 @@
 #include <xt/error.h>
 #include <xt/file.h>
 #include <xt/os.h>
+#include <xt/os_macros.h>
 #include <xt/socket.h>
 #include <xt/string.h>
 #include <xt/thread.h>
@@ -118,13 +119,23 @@ static void osTest(void)
 	unsigned width, height;
 	if (xtConsoleGetSize(&width, &height) == 0) {
 		PASS("xtConsoleGetSize()");
-	} else
+	} else {
+#if XT_IS_WINDOWS
+		XFAIL("xtConsoleGetSize()");
+#else
 		FAIL("xtConsoleGetSize()");
+#endif
+	}
 
-	if (xtConsoleFillLine("#") == 0)
+	if (xtConsoleFillLine("#") == 0) {
 		PASS("xtConsoleFillLine()");
-	else
+	} else {
+#if XT_IS_WINDOWS
+		XFAIL("xtConsoleFillLine()");
+#else
 		FAIL("xtConsoleFillLine()");
+#endif
+	}
 
 	struct xtCPUInfo info;
 	if (xtCPUGetInfo(&info)) {
